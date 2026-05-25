@@ -14,6 +14,17 @@ import PasswordReset from "../views/examples-api/PasswordReset.vue";
 import UserProfile from "../views/examples-api/profile/UserProfile.vue";
 import Users from "../views/examples-api/users/UsersList.vue";
 
+// Module imports
+import InfrastructurePlans from "../views/modules/InfrastructurePlans.vue";
+import ContractManagement from "../views/modules/ContractManagement.vue";
+import CashflowManagement from "../views/modules/CashflowManagement.vue";
+import EngineeringPlans from "../views/modules/EngineeringPlans.vue";
+import VariationOrders from "../views/modules/VariationOrders.vue";
+import Accomplishments from "../views/modules/Accomplishments.vue";
+import ContractorPerformance from "../views/modules/ContractorPerformance.vue";
+import AuditTrail from "../views/modules/AuditTrail.vue";
+import NotificationsInbox from "../views/modules/NotificationsInbox.vue";
+
 const routes = [
   {
     path: "/",
@@ -89,6 +100,52 @@ const routes = [
     path: '/users',
     name: "Users",
     component: Users
+  },
+  // Module routes
+  {
+    path: "/infrastructure-plans",
+    name: "infrastructure-plans",
+    component: InfrastructurePlans
+  },
+  {
+    path: "/contract-management",
+    name: "contract-management",
+    component: ContractManagement
+  },
+  {
+    path: "/cashflow",
+    name: "cashflow",
+    component: CashflowManagement
+  },
+  {
+    path: "/engineering-plans",
+    name: "engineering-plans",
+    component: EngineeringPlans
+  },
+  {
+    path: "/variation-orders",
+    name: "variation-orders",
+    component: VariationOrders
+  },
+  {
+    path: "/accomplishments",
+    name: "accomplishments",
+    component: Accomplishments
+  },
+  {
+    path: "/contractor-performance",
+    name: "contractor-performance",
+    component: ContractorPerformance
+  },
+  {
+    path: "/audit-trail",
+    name: "audit-trail",
+    component: AuditTrail
+  },
+  {
+    path: "/notifications-inbox",
+    name: "notifications-inbox",
+    component: NotificationsInbox
   }
 ];
 

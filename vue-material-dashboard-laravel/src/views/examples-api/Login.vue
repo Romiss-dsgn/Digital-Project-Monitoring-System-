@@ -1,161 +1,76 @@
 <template>
-    <navbar btnBackground="bg-gradient-success" />
-    <div class="page-header align-items-start min-vh-100" style="
-                      background-image: url('https://images.unsplash.com/photo-1497294815431-9365093b7331?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1950&q=80');
-                    ">
-        <span class="mask bg-gradient-dark opacity-6"></span>
-
-        <div class="container mb-6">
-            <div class="row">
-
-                <div class="header pt-10 w-100  d-flex justify-content-center">
-                    <div class="container">
-                        <div class="header-body text-center mb-7">
-                            <div class="row justify-content-center">
-                                <div class="text-center" style="margin-bottom: 5px;">
-                                    <h3 class="text-white"> Log in to Vue Material Dashboard 2 Laravel Live Preview </h3>
-                                    <p class="text-lead text-white"> Log in to see how you can go from frontend to fullstack
-                                        in an instant with an API-based Laravel backend. </p>
-                                </div>
-                                <div class="text-white">
-                                    <h3 class="text-white"><strong>You can log in with:</strong></h3>
-                                    <div> Username: <b>admin@jsonapi.com</b> &nbsp;&nbsp; Password: <b>secret</b></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="login-page">
+        <div class="brand-bar">
+            <div class="brand-wrapper container">
+                <div class="brand-logo">
+                    <span class="brand-badge">BFP</span>
                 </div>
-
-                <div class="col-lg-4 col-md-8 col-12 mx-auto pb-10">
-                    <div class="card z-index-0 fadeIn3 fadeInBottom">
-                        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-                            <div class="bg-gradient-success shadow-success border-radius-lg py-3 pe-1">
-                                <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">
-                                    Sign in
-                                </h4>
-                                <div class="row mt-3">
-                                    <div class="col-2 text-center ms-auto">
-                                        <a class="btn btn-link px-3" href="javascript:;">
-                                            <i class="fab fa-facebook text-white text-lg"></i>
-                                        </a>
-                                    </div>
-                                    <div class="col-2 text-center px-1">
-                                        <a class="btn btn-link px-3" href="javascript:;">
-                                            <i class="fab fa-github text-white text-lg"></i>
-                                        </a>
-                                    </div>
-                                    <div class="col-2 text-center me-auto">
-                                        <a class="btn btn-link px-3" href="javascript:;">
-                                            <i class="fab fa-google text-white text-lg"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <Form role="form" class="text-start mt-3" :validation-schema="schema" @submit="handleLogin"
-                                @invalid-submit="badSubmit">
-                                <div class="mb-3">
-                                    <material-input-field id="email" v-model:value="user.email" type="email" label="Email"
-                                        name="email" variant="static" />
-                                </div>
-                                <div class="mb-3">
-                                    <material-input-field id="password" v-model:value="user.password" type="password"
-                                        label="Password" name="password" variant="static" />
-                                </div>
-                                <material-switch id="rememberMe" name="Remember Me">Remember me</material-switch>
-                                <div class="text-center">
-                                    <material-button class="my-4 mb-2" variant="gradient" color="success" full-width>
-                                        <span>Sign in</span>
-                                    </material-button>
-                                </div>
-                                <p class="mt-4 text-sm text-center">
-                                    Don't have an account?
-                                    <router-link :to="{ name: 'Signup' }"
-                                        class="text-success text-gradient font-weight-bold">Sign
-                                        up</router-link>
-                                </p>
-                                <p class="text-sm text-center">
-                                    <router-link :to="{ name: 'Password Forgot' }"
-                                        class="text-success text-gradient font-weight-bold">Recover
-                                        Password</router-link>
-                                </p>
-                            </Form>
-                        </div>
-                    </div>
+                <div class="brand-texts">
+                    <span class="brand-title">BUREAU OF FIRE PROTECTION REGION II</span>
+                    <span class="brand-subtitle">Digital Project Monitoring System</span>
                 </div>
             </div>
         </div>
 
-        <footer class="footer position-absolute bottom-2 py-2 w-100">
-            <div class="container">
-                <div class="row align-items-center justify-content-lg-between">
-                    <div class="col-12 col-md-6 my-auto">
-                        <div class="copyright text-center text-sm text-white text-lg-start">
-                            © {{ new Date().getFullYear() }}, made with
-                            <i class="fa fa-heart" aria-hidden="true"></i> by
-                            <a href="https://www.creative-tim.com" class="font-weight-bold text-white"
-                                target="_blank">Creative Tim</a>
-                            and
-                            <a href="https://updivision.com" class="font-weight-bold text-white"
-                                target="_blank">UPDIVISION</a>
-                            for a better web.
+        <div class="login-center">
+            <div class="login-card card shadow-lg">
+                <div class="card-body">
+                    <div class="login-title text-center mb-4">
+                        <h4>LOGIN TO YOUR ACCOUNT</h4>
+                    </div>
+
+                    <Form class="login-form" :validation-schema="schema" @submit="handleLogin" @invalid-submit="badSubmit">
+                        <div class="form-group mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-with-icon">
+                                <i class="material-icons-round text-secondary">person</i>
+                                <input id="username" v-model="user.username" type="text" class="form-control" placeholder="Enter username" />
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <ul class="nav nav-footer justify-content-center justify-content-lg-end">
-                            <li class="nav-item">
-                                <a href="https://www.creative-tim.com" class="nav-link text-white" target="_blank">Creative
-                                    Tim</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="https://updivision.com" class="nav-link text-white" target="_blank">UPDIVISION</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="https://www.creative-tim.com/presentation" class="nav-link text-white"
-                                    target="_blank">About Us</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="https://www.creative-tim.com/blog" class="nav-link text-white"
-                                    target="_blank">Blog</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="https://www.creative-tim.com/license" class="nav-link pe-0 text-white"
-                                    target="_blank">License</a>
-                            </li>
-                        </ul>
-                    </div>
+
+                        <div class="form-group mb-2">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-with-icon">
+                                <i class="material-icons-round text-secondary">lock</i>
+                                <input id="password" v-model="user.password" type="password" class="form-control" placeholder="Enter password" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mb-4">
+                            <router-link :to="{ name: 'Password Forgot' }" class="forgot-link">Forgot Password?</router-link>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-login w-100">LOGIN</button>
+
+                        <div class="login-footer mt-4 text-center">
+                            <span>Contact Support</span>
+                            <span class="mx-2 text-muted">or</span>
+                            <router-link :to="{ name: 'Signup' }" class="access-link">Request Access</router-link>
+                        </div>
+                    </Form>
                 </div>
             </div>
-        </footer>
+        </div>
     </div>
 </template>
 
 <script>
-import Navbar from "@/examples/PageLayout/Navbar.vue";
-import MaterialInputField from "@/components/MaterialInputField.vue";
-import MaterialSwitch from "@/components/MaterialSwitch.vue";
-import MaterialButton from "@/components/MaterialButton.vue";
 import showSwal from "@/mixins/showSwal";
 import { mapMutations } from "vuex";
-import { Form } from "vee-validate"
-import * as Yup from 'yup'
+import { Form } from "vee-validate";
+import * as Yup from 'yup';
 
 export default {
     name: "Login",
     components: {
-        Navbar,
-        MaterialInputField,
-        MaterialSwitch,
-        MaterialButton,
         Form,
     },
     data() {
         return {
-            user: { email: "admin@jsonapi.com", password: "secret" },
+            user: { username: "admin@jsonapi.com", password: "secret" },
             schema: Yup.object().shape({
-                email: Yup.string().email("Email has to be a valid email address").required("Email is a required input"),
-                password: Yup.string().required("Password is a required input")
+                username: Yup.string().required("Username is required"),
+                password: Yup.string().required("Password is required")
             }),
         };
     },
@@ -174,10 +89,16 @@ export default {
     },
     methods: {
         ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
+        badSubmit() {
+            // no-op for validation failures; vee-validate will handle field state
+        },
         async handleLogin() {
             try {
-                await this.$store.dispatch('auth/login', this.user);
-                this.$router.push({ name: 'Dashboard' })
+                await this.$store.dispatch('auth/login', {
+                    email: this.user.username,
+                    password: this.user.password
+                });
+                this.$router.push({ name: 'Dashboard' });
             } catch (error) {
                 showSwal.methods.showSwal({
                     type: "error",
@@ -189,3 +110,155 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.login-page {
+    min-height: 100vh;
+    background-image: linear-gradient(180deg, rgba(200,17,32,.95) 0%, rgba(32,39,65,.92) 70%), url('https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    color: #1f2633;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-bar {
+    width: 100%;
+    padding: 1rem 0.75rem;
+}
+
+.brand-wrapper {
+    max-width: 1140px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255,255,255,0.92);
+    border-radius: 1rem;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 18px 60px rgba(15, 23, 42, 0.15);
+}
+
+.brand-logo {
+    min-width: 62px;
+    min-height: 62px;
+    display: grid;
+    place-items: center;
+    border-radius: 1rem;
+    background: #d32f2f;
+    color: white;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    font-size: 1.1rem;
+}
+
+.brand-texts {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #1f2633;
+    text-transform: uppercase;
+}
+
+.brand-subtitle {
+    font-size: 1rem;
+    color: #5a6270;
+}
+
+.login-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1rem;
+}
+
+.login-card {
+    width: min(100%, 440px);
+    border-radius: 1.25rem;
+    overflow: hidden;
+}
+
+.card-body {
+    padding: 2rem;
+    background: rgba(255,255,255,0.95);
+}
+
+.login-title h4 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #1f2633;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon .material-icons-round {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.input-with-icon input {
+    padding-left: 3rem;
+}
+
+.form-control {
+    border-radius: 0.85rem;
+    height: 3.4rem;
+    border: 1px solid #dfe4ed;
+    box-shadow: none;
+}
+
+.forgot-link,
+.access-link {
+    color: #d32f2f;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.forgot-link:hover,
+.access-link:hover {
+    text-decoration: underline;
+}
+
+.btn-login {
+    background: #d32f2f;
+    border: none;
+    padding: 0.95rem 1rem;
+    border-radius: 0.85rem;
+    box-shadow: 0 20px 25px rgba(211, 47, 47, 0.18);
+}
+
+.login-footer {
+    font-size: 0.95rem;
+    color: #495057;
+}
+
+.login-footer span {
+    font-weight: 500;
+}
+
+@media (max-width: 576px) {
+    .brand-wrapper {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .login-center {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+}
+</style>

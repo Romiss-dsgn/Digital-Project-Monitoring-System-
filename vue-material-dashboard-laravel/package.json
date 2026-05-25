@@ -27,7 +27,7 @@
     "core-js": "3.6.5",
     "jsona": "^1.11.0",
     "sweetalert2": "^11.7.1",
-    "vee-validate": "^4.7.4",
+    "vee-validate": "4.7.4",
     "vue": "3.2.0",
     "vue-router": "4.0.14",
     "vuex": "4.0.2",
