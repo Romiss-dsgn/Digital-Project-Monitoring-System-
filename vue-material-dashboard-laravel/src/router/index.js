@@ -15,7 +15,6 @@ import UserProfile from "../views/examples-api/profile/UserProfile.vue";
 import Users from "../views/examples-api/users/UsersList.vue";
 
 // Module imports
-import InfrastructurePlans from "../views/modules/InfrastructurePlans.vue";
 import ContractManagement from "../views/modules/ContractManagement.vue";
 import CashflowManagement from "../views/modules/CashflowManagement.vue";
 import EngineeringPlans from "../views/modules/EngineeringPlans.vue";
@@ -24,6 +23,9 @@ import Accomplishments from "../views/modules/Accomplishments.vue";
 import ContractorPerformance from "../views/modules/ContractorPerformance.vue";
 import AuditTrail from "../views/modules/AuditTrail.vue";
 import NotificationsInbox from "../views/modules/NotificationsInbox.vue";
+import Admin from "../views/modules/Admin.vue";
+import Reports from "../views/modules/Reports.vue";
+import Settings from "../views/modules/Settings.vue";
 
 const routes = [
   {
@@ -104,8 +106,9 @@ const routes = [
   // Module routes
   {
     path: "/infrastructure-plans",
-    name: "infrastructure-plans",
-    component: InfrastructurePlans
+    alias: ["/Admin", "/admin"],
+    name: "Infrastructure Plans",
+    component: Admin
   },
   {
     path: "/contract-management",
@@ -131,6 +134,16 @@ const routes = [
     path: "/accomplishments",
     name: "accomplishments",
     component: Accomplishments
+  },
+  {
+    path: "/reports",
+    name: "Reports",
+    component: Reports
+  },
+  {
+    path: "/settings",
+    name: "Settings",
+    component: Settings
   },
   {
     path: "/contractor-performance",

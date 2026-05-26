@@ -61,12 +61,37 @@
                       <td>{{ contract.end_date }}</td>
                       <td><status-badge :status="contract.status" /></td>
                       <td>
-                        <button class="btn btn-sm btn-link text-primary">
-                          <i class="material-icons-round">description</i>
-                        </button>
-                        <button class="btn btn-sm btn-link text-info">
-                          <i class="material-icons-round">folder</i>
-                        </button>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary dropdown-toggle"
+                            type="button"
+                            :id="`contractActionDropdown-${contract.id}`"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <i class="material-icons-round">more_vert</i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`contractActionDropdown-${contract.id}`">
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="viewContract(contract)">
+                                <i class="material-icons-round align-middle me-2">visibility</i>
+                                View
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="editContract(contract)">
+                                <i class="material-icons-round align-middle me-2">edit</i>
+                                Edit
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteContract(contract)">
+                                <i class="material-icons-round align-middle me-2">delete</i>
+                                Delete
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -97,6 +122,17 @@ export default {
         { id: 4, contract_id: "REG-II-004", contractor: "Piar Civil Management Corp.", project: "Piar Civil Management Corp.", amount: "₱16,500,000.00", start_date: "05/15/2023", end_date: "06/15/2023", status: "active" }
       ]
     };
+  },
+  methods: {
+    viewContract(contract) {
+      alert(`View contract ${contract.contract_id}`);
+    },
+    editContract(contract) {
+      alert(`Edit contract ${contract.contract_id}`);
+    },
+    deleteContract(contract) {
+      alert(`Delete contract ${contract.contract_id}`);
+    }
   }
 };
 </script>

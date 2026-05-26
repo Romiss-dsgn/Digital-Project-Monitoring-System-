@@ -9,96 +9,79 @@
           </template>
         </sidenav-collapse>
       </li>
+
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="tables" navText="Tables">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="infrastructure-plans" navText="Infrastructure Plans">
           <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">table_view</i>
-          </template>
-        </sidenav-collapse>
-      </li>
-      <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="billing" navText="Billing">
-          <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">receipt_long</i>
-          </template>
-        </sidenav-collapse>
-      </li>
-      <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="rtl-page" navText="Rtl">
-          <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">format_textdirection_r_to_l</i>
-          </template>
-        </sidenav-collapse>
-      </li>
-      <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="notifications"
-          navText="Notifications">
-          <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">notifications</i>
+            <i class="material-icons-round opacity-10 fs-5">account_tree</i>
           </template>
         </sidenav-collapse>
       </li>
 
-      <li class="mt-3 nav-item">
-        <h6 class="text-xs ps-4 text-uppercase font-weight-bolder text-white"
-          :class="this.$store.state.isRTL ? 'me-4' : 'ms-2'">
-          EXAMPLES (API)
-        </h6>
-      </li>
-
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="user-profile"
-          navText="User Profile">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="contract-management" navText="Contract Management">
           <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">person</i>
-          </template>
-        </sidenav-collapse>
-      </li>
-      <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="users" navText="Users">
-          <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">people</i>
+            <i class="material-icons-round opacity-10 fs-5">description</i>
           </template>
         </sidenav-collapse>
       </li>
 
-
-
-      <li class="mt-3 nav-item">
-        <h6 class="text-xs ps-4 text-uppercase font-weight-bolder text-white"
-          :class="this.$store.state.isRTL ? 'me-4' : 'ms-2'">
-          ACCOUNT PAGES
-        </h6>
-      </li>
-
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="profile" navText="Profile">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="cashflow" navText="Cashflows Management">
           <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">person</i>
+            <i class="material-icons-round opacity-10 fs-5">request_quote</i>
           </template>
         </sidenav-collapse>
       </li>
+
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="sign-in" navText="SignIn">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="engineering-plans" navText="Engineering Plans">
           <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">login</i>
+            <i class="material-icons-round opacity-10 fs-5">engineering</i>
           </template>
         </sidenav-collapse>
       </li>
+
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="sign-up" navText="SignUp">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="variation-orders" navText="Variation Orders">
           <template v-slot:icon>
-            <i class="material-icons-round opacity-10 fs-5">assignment</i>
+            <i class="material-icons-round opacity-10 fs-5">fact_check</i>
+          </template>
+        </sidenav-collapse>
+      </li>
+
+      <li class="nav-item">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="accomplishments" navText="Project Accomplishments">
+          <template v-slot:icon>
+            <i class="material-icons-round opacity-10 fs-5">inventory_2</i>
+          </template>
+        </sidenav-collapse>
+      </li>
+
+      <li class="nav-item">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="reports" navText="Reports">
+          <template v-slot:icon>
+            <i class="material-icons-round opacity-10 fs-5">bar_chart</i>
+          </template>
+        </sidenav-collapse>
+      </li>
+
+      <li class="nav-item">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="audit-trail" navText="Audit Logs">
+          <template v-slot:icon>
+            <i class="material-icons-round opacity-10 fs-5">history_toggle_off</i>
+          </template>
+        </sidenav-collapse>
+      </li>
+
+      <li class="nav-item">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="settings" navText="Settings">
+          <template v-slot:icon>
+            <i class="material-icons-round opacity-10 fs-5">settings</i>
           </template>
         </sidenav-collapse>
       </li>
     </ul>
-    <div class="sidenav-footer position-absolute w-100 bottom-0">
-      <div class="mx-3">
-        <a class="btn mt-4 w-100" :class="`bg-gradient-${this.$store.state.color}`"
-          href="https://www.creative-tim.com/product/vue-material-dashboard-laravel-pro?_ga=2.100464214.933780196.1684307546-944306388.1662358829">Upgrade to pro</a>
-      </div>
-    </div>
   </div>
 </template>
 <script>

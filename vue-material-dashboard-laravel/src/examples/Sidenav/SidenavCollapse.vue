@@ -1,11 +1,10 @@
 <template>
   <router-link
     :data-bs-toggle="collapse ? 'collapse' : ''"
-    :to="collapse ? `#${collapseRef}` : collapseRef"
+    :to="routePath"
     :aria-controls="collapseRef"
     :aria-expanded="isExpanded"
     class="nav-link"
-    :class="getRoute() === collapseRef ? `active bg-gradient-${color}` : ''"
     v-bind="$attrs"
     @click="isExpanded = !isExpanded"
   >
@@ -47,14 +46,14 @@ export default {
       isExpanded: false
     };
   },
-  methods: {
-    getRoute() {
-      const routeArr = this.$route.path.split("/");
-      return routeArr[1];
-    }
-  },
   computed: {
-    ...mapState(["isRTL", "color"])
+    ...mapState(["isRTL", "color"]),
+    routePath() {
+      if (this.collapse) {
+        return `#${this.collapseRef}`;
+      }
+      return this.collapseRef.startsWith("/") ? this.collapseRef : `/${this.collapseRef}`;
+    }
   }
 };
 </script>
