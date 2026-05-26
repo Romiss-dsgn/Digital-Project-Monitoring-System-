@@ -66,12 +66,37 @@
                       <td>{{ doc.date_uploaded }}</td>
                       <td><status-badge :status="doc.status" /></td>
                       <td>
-                        <button class="btn btn-sm btn-link text-primary">
-                          <i class="material-icons-round">visibility</i>
-                        </button>
-                        <button class="btn btn-sm btn-link text-info">
-                          <i class="material-icons-round">file_download</i>
-                        </button>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary dropdown-toggle"
+                            type="button"
+                            :id="`documentActionDropdown-${doc.id}`"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <i class="material-icons-round">more_vert</i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`documentActionDropdown-${doc.id}`">
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="viewDocument(doc)">
+                                <i class="material-icons-round align-middle me-2">visibility</i>
+                                View
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="editDocument(doc)">
+                                <i class="material-icons-round align-middle me-2">edit</i>
+                                Edit
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteDocument(doc)">
+                                <i class="material-icons-round align-middle me-2">delete</i>
+                                Delete
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -101,6 +126,17 @@ export default {
         { id: 3, filename: "Electrical Plans", type: "Electrical", project: "Road Widening Project - PRO-II-2023-001", uploaded_by: "Engr. Dela Cruz", date_uploaded: "04/01/2023", status: "completed" }
       ]
     };
+  },
+  methods: {
+    viewDocument(doc) {
+      alert(`View document ${doc.filename}`);
+    },
+    editDocument(doc) {
+      alert(`Edit document ${doc.filename}`);
+    },
+    deleteDocument(doc) {
+      alert(`Delete document ${doc.filename}`);
+    }
   }
 };
 </script>

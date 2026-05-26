@@ -72,9 +72,37 @@
                       <td>{{ order.date_requested }}</td>
                       <td>{{ order.date_approved }}</td>
                       <td>
-                        <button class="btn btn-sm btn-link text-primary">
-                          <i class="material-icons-round">visibility</i>
-                        </button>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary dropdown-toggle"
+                            type="button"
+                            :id="`orderActionDropdown-${order.id}`"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <i class="material-icons-round">more_vert</i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`orderActionDropdown-${order.id}`">
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="viewOrder(order)">
+                                <i class="material-icons-round align-middle me-2">visibility</i>
+                                View
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="editOrder(order)">
+                                <i class="material-icons-round align-middle me-2">edit</i>
+                                Edit
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteOrder(order)">
+                                <i class="material-icons-round align-middle me-2">delete</i>
+                                Delete
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -105,6 +133,17 @@ export default {
         { id: 4, order_num: "VO-2023-007", description: "Additional Road Signage", amount: "₱95,000.00", status: "pending", date_requested: "06/10/2023", date_approved: "-" }
       ]
     };
+  },
+  methods: {
+    viewOrder(order) {
+      alert(`View order ${order.order_num}`);
+    },
+    editOrder(order) {
+      alert(`Edit order ${order.order_num}`);
+    },
+    deleteOrder(order) {
+      alert(`Delete order ${order.order_num}`);
+    }
   }
 };
 </script>

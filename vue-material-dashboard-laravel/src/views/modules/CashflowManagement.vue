@@ -81,9 +81,37 @@
                       <td>{{ invoice.schedule }}</td>
                       <td><status-badge :status="invoice.payment_status" /></td>
                       <td>
-                        <button class="btn btn-sm btn-link text-primary">
-                          <i class="material-icons-round">file_download</i>
-                        </button>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary dropdown-toggle"
+                            type="button"
+                            :id="`invoiceActionDropdown-${invoice.id}`"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <i class="material-icons-round">more_vert</i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`invoiceActionDropdown-${invoice.id}`">
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="viewInvoice(invoice)">
+                                <i class="material-icons-round align-middle me-2">visibility</i>
+                                View
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="editInvoice(invoice)">
+                                <i class="material-icons-round align-middle me-2">edit</i>
+                                Edit
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteInvoice(invoice)">
+                                <i class="material-icons-round align-middle me-2">delete</i>
+                                Delete
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -114,6 +142,17 @@ export default {
         { id: 4, invoice_num: "INV-003", contract: "REG-II-003", amount: "₱200,000.00", schedule: "06/18/2023", payment_status: "pending" }
       ]
     };
+  },
+  methods: {
+    viewInvoice(invoice) {
+      alert(`View invoice ${invoice.invoice_num}`);
+    },
+    editInvoice(invoice) {
+      alert(`Edit invoice ${invoice.invoice_num}`);
+    },
+    deleteInvoice(invoice) {
+      alert(`Delete invoice ${invoice.invoice_num}`);
+    }
   }
 };
 </script>

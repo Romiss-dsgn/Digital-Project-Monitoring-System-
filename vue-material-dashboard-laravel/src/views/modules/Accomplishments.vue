@@ -60,9 +60,37 @@
                       <td>{{ milestone.actual_date }}</td>
                       <td><status-badge :status="milestone.status" /></td>
                       <td>
-                        <button class="btn btn-sm btn-link text-primary">
-                          <i class="material-icons-round">attach_file</i>
-                        </button>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary dropdown-toggle"
+                            type="button"
+                            :id="`milestoneActionDropdown-${milestone.id}`"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <i class="material-icons-round">more_vert</i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`milestoneActionDropdown-${milestone.id}`">
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="viewMilestone(milestone)">
+                                <i class="material-icons-round align-middle me-2">visibility</i>
+                                View
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="editMilestone(milestone)">
+                                <i class="material-icons-round align-middle me-2">edit</i>
+                                Edit
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteMilestone(milestone)">
+                                <i class="material-icons-round align-middle me-2">delete</i>
+                                Delete
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -93,6 +121,17 @@ export default {
         { id: 4, project: "Road Widening Project", milestone: "Asphalt Pavement", completion: 45, target_date: "05/31/2023", actual_date: "-", status: "pending" }
       ]
     };
+  },
+  methods: {
+    viewMilestone(milestone) {
+      alert(`View milestone ${milestone.milestone}`);
+    },
+    editMilestone(milestone) {
+      alert(`Edit milestone ${milestone.milestone}`);
+    },
+    deleteMilestone(milestone) {
+      alert(`Delete milestone ${milestone.milestone}`);
+    }
   }
 };
 </script>

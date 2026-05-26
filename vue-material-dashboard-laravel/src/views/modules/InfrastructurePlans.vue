@@ -54,12 +54,37 @@
                       <td>{{ project.end_date }}</td>
                       <td><status-badge :status="project.status" /></td>
                       <td>
-                        <button class="btn btn-sm btn-link text-primary">
-                          <i class="material-icons-round">visibility</i>
-                        </button>
-                        <button class="btn btn-sm btn-link text-warning">
-                          <i class="material-icons-round">edit</i>
-                        </button>
+                        <div class="dropdown">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary dropdown-toggle"
+                            type="button"
+                            :id="`projectActionDropdown-${project.id}`"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <i class="material-icons-round">more_vert</i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`projectActionDropdown-${project.id}`">
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="viewProject(project)">
+                                <i class="material-icons-round align-middle me-2">visibility</i>
+                                View
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item" href="#" @click.prevent="editProject(project)">
+                                <i class="material-icons-round align-middle me-2">edit</i>
+                                Edit
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteProject(project)">
+                                <i class="material-icons-round align-middle me-2">delete</i>
+                                Delete
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -99,6 +124,17 @@ export default {
         { id: 4, code: "PRO-II-2023-004", name: "Redstone Development, of BFP Regional Office II", phase: "Planning", start_date: "04/01/2023", end_date: "05/15/2023", status: "pending" }
       ]
     };
+  },
+  methods: {
+    viewProject(project) {
+      alert(`View project ${project.code}`);
+    },
+    editProject(project) {
+      alert(`Edit project ${project.code}`);
+    },
+    deleteProject(project) {
+      alert(`Delete project ${project.code}`);
+    }
   }
 };
 </script>
