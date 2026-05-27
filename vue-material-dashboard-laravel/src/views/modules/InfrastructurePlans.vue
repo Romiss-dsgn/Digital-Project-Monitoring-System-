@@ -53,33 +53,33 @@
                       <td>{{ project.start_date }}</td>
                       <td>{{ project.end_date }}</td>
                       <td><status-badge :status="project.status" /></td>
-                      <td>
+                      <td class="align-middle text-end">
                         <div class="dropdown">
                           <button
-                            class="btn btn-sm btn-icon btn-light text-secondary dropdown-toggle"
+                            class="btn btn-sm btn-icon btn-light text-secondary"
                             type="button"
-                            :id="`projectActionDropdown-${project.id}`"
                             data-bs-toggle="dropdown"
                             aria-expanded="false"
                           >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                          <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`projectActionDropdown-${project.id}`">
+                          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                             <li>
                               <a class="dropdown-item" href="#" @click.prevent="viewProject(project)">
-                                <i class="material-icons-round align-middle me-2">visibility</i>
+                                <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
                                 View
                               </a>
                             </li>
                             <li>
                               <a class="dropdown-item" href="#" @click.prevent="editProject(project)">
-                                <i class="material-icons-round align-middle me-2">edit</i>
+                                <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
                                 Edit
                               </a>
                             </li>
+                            <li><hr class="dropdown-divider" /></li>
                             <li>
                               <a class="dropdown-item text-danger" href="#" @click.prevent="deleteProject(project)">
-                                <i class="material-icons-round align-middle me-2">delete</i>
+                                <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
                                 Delete
                               </a>
                             </li>
@@ -144,6 +144,27 @@ export default {
   background: #f7fafc;
   min-height: 100vh;
 }
+
+/* ── Dropdown menu ── */
+.dropdown-menu {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  min-width: 140px;
+  padding: 0.3rem;
+}
+.dropdown-item {
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  display: flex;
+  align-items: center;
+}
+.dropdown-item:hover { background: #f3f4f6; }
+.dropdown-item.text-danger:hover { background: #fef2f2; }
+
+.dropdown-icon { font-size: 1rem; }
+.view-icon { color: #2563eb; }
+.edit-icon { color: #d97706; }
 
 .tabs-navigation {
   display: flex;

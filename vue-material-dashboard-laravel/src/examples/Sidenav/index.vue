@@ -14,12 +14,7 @@
       ></i>
       <a class="m-0 navbar-brand d-flex align-items-center" href="/">
         <img
-          :src="
-            sidebarType === 'bg-white' ||
-            (sidebarType === 'bg-transparent' && !isDarkMode)
-              ? logoDark
-              : logo
-          "
+          :src="logo"
           class="navbar-brand-img"
           alt="main_logo"
         />
@@ -34,8 +29,7 @@
 </template>
 <script>
 import SidenavList from "./SidenavList.vue";
-import logo from "@/assets/img/logo-ct.png";
-import logoDark from "@/assets/img/logo-ct-dark.png";
+import logo from "@/assets/img/system-logo/logo.jpg";
 import { mapState } from "vuex";
 
 export default {
@@ -46,7 +40,6 @@ export default {
   data() {
     return {
       logo,
-      logoDark,
     };
   },
   computed: {

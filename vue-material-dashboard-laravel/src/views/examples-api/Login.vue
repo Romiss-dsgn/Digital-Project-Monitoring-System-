@@ -3,7 +3,7 @@
         <div class="brand-bar">
             <div class="brand-wrapper container">
                 <div class="brand-logo">
-                    <span class="brand-badge">BFP</span>
+                    <img :src="logo" alt="BFP Logo" class="logo-image" />
                 </div>
                 <div class="brand-texts">
                     <span class="brand-title">BUREAU OF FIRE PROTECTION REGION II</span>
@@ -59,6 +59,7 @@ import showSwal from "@/mixins/showSwal";
 import { mapMutations } from "vuex";
 import { Form } from "vee-validate";
 import * as Yup from 'yup';
+import logo from "@/assets/img/system-logo/logo.jpg";
 
 export default {
     name: "Login",
@@ -67,6 +68,7 @@ export default {
     },
     data() {
         return {
+            logo,
             user: { username: "admin@jsonapi.com", password: "secret" },
             schema: Yup.object().shape({
                 username: Yup.string().required("Username is required"),
@@ -151,6 +153,13 @@ export default {
     font-weight: 800;
     letter-spacing: 0.15em;
     font-size: 1.1rem;
+}
+
+.logo-image {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    border-radius: 0.5rem;
 }
 
 .brand-texts {
