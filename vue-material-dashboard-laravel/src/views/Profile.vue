@@ -2,9 +2,7 @@
   <div class="container-fluid">
     <div
       class="page-header min-height-300 border-radius-xl mt-4"
-      style="
-        background-image: url('https://images.unsplash.com/photo-1531512073830-ba890ca4eba2?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
-      "
+      :style="{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }"
     >
       <span class="mask bg-gradient-success opacity-6"></span>
     </div>
@@ -575,6 +573,7 @@ import team1 from "@/assets/img/team-1.jpg";
 import team2 from "@/assets/img/team-2.jpg";
 import team3 from "@/assets/img/team-3.jpg";
 import team4 from "@/assets/img/team-4.jpg";
+import bgImage from "@/assets/img/bg.png";
 
 import setNavPills from "@/assets/js/nav-pills.js";
 import setTooltip from "@/assets/js/tooltip.js";
@@ -583,6 +582,7 @@ export default {
   name: "profile-overview",
   data() {
     return {
+      bgImage,
       showMenu: false,
       sophie,
       marie,

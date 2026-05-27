@@ -64,6 +64,7 @@ import { mapMutations } from "vuex";
 import { Form } from "vee-validate";
 import * as Yup from 'yup';
 import logo from "@/assets/img/BFP 11.png";
+import bgImage from "@/assets/img/bg.png";
 
 export default {
     name: "Login",
@@ -73,6 +74,7 @@ export default {
     data() {
         return {
             logo,
+            bgImage,
             user: { username: "admin@jsonapi.com", password: "secret" },
             schema: Yup.object().shape({
                 username: Yup.string().required("Username is required"),
@@ -81,6 +83,10 @@ export default {
         };
     },
     computed: {
+        backgroundImageUrl() {
+            // Light red tint so bg.png stays visible throughout the page
+            return `linear-gradient(180deg, rgba(200,17,32,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
+        },
         loggedIn() {
             return this.$store.state.auth.loggedIn;
         }
@@ -95,9 +101,7 @@ export default {
     },
     methods: {
         ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
-        badSubmit() {
-            // no-op for validation failures; vee-validate will handle field state
-        },
+        badSubmit() {},
         async handleLogin() {
             try {
                 await this.$store.dispatch('auth/login', {
@@ -118,13 +122,15 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');
+
 /* ─── Page Layout ─────────────────────────────────────────── */
 .login-page {
     min-height: 100vh;
-    background-image: linear-gradient(180deg, rgba(200,17,32,.95) 0%, rgba(32,39,65,.92) 70%),
-        url('https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=1600&q=80');
+    background-image: v-bind(backgroundImageUrl);
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
     position: relative;
     color: #1f2633;
     display: flex;
@@ -134,39 +140,59 @@ export default {
 /* ─── Brand Header Bar ────────────────────────────────────── */
 .brand-bar {
     width: 100%;
-    background: linear-gradient(135deg, #8B0000 0%, #CC1C1C 40%, #AA1515 100%);
+    /* Soft red + blue tint — glassy, blends with bg */
+    background: linear-gradient(
+        135deg,
+        rgba(190, 20, 20, 0.45) 0%,
+        rgba(160, 15, 15, 0.40) 40%,
+        rgba(15, 40, 100, 0.45) 100%
+    );
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    /* Triple border: top blue, bottom thick gold, thin white shimmer */
+    border-top: 3px solid rgba(80, 130, 220, 0.85);
     border-bottom: 4px solid #FFD700;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.15),   /* white shimmer under gold */
+        0 6px 24px rgba(0, 0, 0, 0.25);
 }
 
 .brand-inner {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 18px;
+    gap: 20px;
     padding: 14px 32px;
 }
 
+/* ─── Logo Circle ─────────────────────────────────────────── */
 .brand-logo {
-    width: 80px;
-    height: 80px;
+    width: 82px;
+    height: 82px;
     border-radius: 50%;
+    /* Double ring: outer gold, inner blue glow */
     border: 3px solid #FFD700;
+    outline: 2px solid rgba(80, 130, 220, 0.6);
+    outline-offset: 3px;
     background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+    box-shadow:
+        0 0 0 6px rgba(255, 215, 0, 0.18),
+        0 4px 18px rgba(0, 0, 0, 0.4);
 }
 
 .logo-image {
-    width: 68px;
-    height: 68px;
+    width: 70px;
+    height: 70px;
     object-fit: contain;
     border-radius: 50%;
 }
 
+/* ─── Text Block ──────────────────────────────────────────── */
 .brand-texts {
     display: flex;
     flex-direction: column;
@@ -175,15 +201,20 @@ export default {
 }
 
 .brand-title {
-    font-size: 1.5rem;
+    font-family: 'Cinzel', serif;
+    font-size: 1.55rem;
     font-weight: 900;
+    /* Bright white with a very subtle gold tint */
     color: #FFFFFF;
-    letter-spacing: 2px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
-    text-shadow: 1px 2px 6px rgba(0,0,0,0.45);
+    text-shadow:
+        0 0 18px rgba(255, 215, 0, 0.45),   /* gold glow */
+        1px 2px 8px rgba(0, 0, 0, 0.55);
     white-space: nowrap;
 }
 
+/* ─── Subtitle with decorative lines ─────────────────────── */
 .brand-subtitle-row {
     display: flex;
     align-items: center;
@@ -193,23 +224,28 @@ export default {
 .brand-line {
     display: inline-block;
     height: 2px;
-    width: 60px;
-    background: linear-gradient(to right, transparent, #FFD700);
+    width: 55px;
+    /* Blue-to-gold gradient for the decorative lines */
+    background: linear-gradient(to right, rgba(80, 130, 220, 0.3), #FFD700);
     border-radius: 2px;
 }
 
 .brand-line.right {
-    background: linear-gradient(to left, transparent, #FFD700);
+    background: linear-gradient(to left, rgba(80, 130, 220, 0.3), #FFD700);
 }
 
 .brand-subtitle {
-    font-size: 0.85rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
     font-weight: 700;
-    color: #FFD700;
-    letter-spacing: 3px;
+    /* Bright gold — most highlighted element */
+    color: #FFE566;
+    letter-spacing: 4px;
     text-transform: uppercase;
     white-space: nowrap;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    text-shadow:
+        0 0 12px rgba(255, 215, 0, 0.7),   /* strong gold glow */
+        0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
 /* ─── Login Card ──────────────────────────────────────────── */
@@ -225,11 +261,13 @@ export default {
     width: min(100%, 440px);
     border-radius: 1.25rem;
     overflow: hidden;
+    /* Blue top accent on the card */
+    border-top: 3px solid rgba(80, 130, 220, 0.6) !important;
 }
 
 .card-body {
     padding: 2rem;
-    background: rgba(255,255,255,0.95);
+    background: rgba(255, 255, 255, 0.96);
 }
 
 .login-title h4 {
@@ -264,25 +302,38 @@ export default {
     box-shadow: none;
 }
 
+.form-control:focus {
+    border-color: rgba(80, 130, 220, 0.6);
+    box-shadow: 0 0 0 3px rgba(80, 130, 220, 0.15);
+}
+
 /* ─── Links & Buttons ─────────────────────────────────────── */
 .forgot-link,
 .access-link {
-    color: #d32f2f;
+    color: #c0392b;
     font-weight: 600;
     text-decoration: none;
 }
 
 .forgot-link:hover,
 .access-link:hover {
+    color: #1a4fa0;
     text-decoration: underline;
 }
 
 .btn-login {
-    background: #d32f2f;
+    background: linear-gradient(135deg, #c0392b 0%, #1a4fa0 100%);
     border: none;
     padding: 0.95rem 1rem;
     border-radius: 0.85rem;
-    box-shadow: 0 20px 25px rgba(211, 47, 47, 0.18);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    box-shadow: 0 8px 24px rgba(160, 20, 20, 0.25);
+    transition: opacity 0.2s;
+}
+
+.btn-login:hover {
+    opacity: 0.92;
 }
 
 /* ─── Footer ──────────────────────────────────────────────── */

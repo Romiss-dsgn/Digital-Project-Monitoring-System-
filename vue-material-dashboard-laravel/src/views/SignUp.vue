@@ -11,7 +11,7 @@
         </div>
       </div>
     </div>
-    <main class="mt-0 main-content">
+    <main class="mt-0 main-content" :style="{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }">
       <section>
         <div class="page-header min-vh-100">
           <div class="container">
@@ -22,10 +22,9 @@
                 <div
                   class="position-relative h-100 m-3 px-7 border-radius-lg d-flex flex-column justify-content-center"
                   :style="{
-                    backgroundImage:
-                      'url(' +
-                      require('@/assets/img/illustrations/illustration-signin.jpg') +
-                      ')',
+                    backgroundImage: `url(${bgImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
                   }"
                 ></div>
               </div>
@@ -117,6 +116,7 @@ import Navbar from "@/examples/PageLayout/Navbar.vue";
 import MaterialInput from "@/components/MaterialInput.vue";
 import MaterialCheckbox from "@/components/MaterialCheckbox.vue";
 import MaterialButton from "@/components/MaterialButton.vue";
+import bgImage from "@/assets/img/bg.png";
 const body = document.getElementsByTagName("body")[0];
 import { mapMutations } from "vuex";
 
@@ -127,6 +127,11 @@ export default {
     MaterialInput,
     MaterialCheckbox,
     MaterialButton,
+  },
+  data() {
+    return {
+      bgImage,
+    };
   },
   beforeMount() {
     this.toggleEveryDisplay();
