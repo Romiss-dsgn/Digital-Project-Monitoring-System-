@@ -203,7 +203,7 @@
             <div class="bfp-modal-header">
               <div class="bfp-modal-header-left">
                 <div class="bfp-modal-emblem">
-                  <img src="@/assets/img/system-logo/logo.jpg" alt="BFP Logo" class="bfp-logo-img" />
+                  <img :src="bfpLogo" alt="BFP Logo" class="bfp-logo-img" />
                 </div>
                 <div>
                   <p class="bfp-modal-agency">Bureau of Fire Protection</p>
@@ -473,10 +473,13 @@
 </template>
 
 <script>
+import bfpLogo from "@/assets/img/BFP 11.png";
+
 export default {
   name: "Admin",
   data() {
     return {
+      bfpLogo,
       showModal: false,
       filters: { name: "", code: "", location: "", status: "", phase: "" },
       locations: ["Cagayan", "Isabela", "Nueva Vizcaya", "Quirino"],

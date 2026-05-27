@@ -1,13 +1,17 @@
 <template>
     <div class="login-page">
         <div class="brand-bar">
-            <div class="brand-wrapper container">
+            <div class="brand-inner">
                 <div class="brand-logo">
                     <img :src="logo" alt="BFP Logo" class="logo-image" />
                 </div>
                 <div class="brand-texts">
-                    <span class="brand-title">BUREAU OF FIRE PROTECTION REGION II</span>
-                    <span class="brand-subtitle">Digital Project Monitoring System</span>
+                    <span class="brand-title">Bureau of Fire Protection Region II</span>
+                    <div class="brand-subtitle-row">
+                        <span class="brand-line"></span>
+                        <span class="brand-subtitle">Digital Project Monitoring System</span>
+                        <span class="brand-line right"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,7 +63,7 @@ import showSwal from "@/mixins/showSwal";
 import { mapMutations } from "vuex";
 import { Form } from "vee-validate";
 import * as Yup from 'yup';
-import logo from "@/assets/img/system-logo/logo.jpg";
+import logo from "@/assets/img/BFP 11.png";
 
 export default {
     name: "Login",
@@ -114,9 +118,11 @@ export default {
 </script>
 
 <style scoped>
+/* ─── Page Layout ─────────────────────────────────────────── */
 .login-page {
     min-height: 100vh;
-    background-image: linear-gradient(180deg, rgba(200,17,32,.95) 0%, rgba(32,39,65,.92) 70%), url('https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=1600&q=80');
+    background-image: linear-gradient(180deg, rgba(200,17,32,.95) 0%, rgba(32,39,65,.92) 70%),
+        url('https://images.unsplash.com/photo-1497294815431-9365093b7331?auto=format&fit=crop&w=1600&q=80');
     background-size: cover;
     background-position: center;
     position: relative;
@@ -125,61 +131,88 @@ export default {
     flex-direction: column;
 }
 
+/* ─── Brand Header Bar ────────────────────────────────────── */
 .brand-bar {
     width: 100%;
-    padding: 1rem 0.75rem;
+    background: linear-gradient(135deg, #8B0000 0%, #CC1C1C 40%, #AA1515 100%);
+    border-bottom: 4px solid #FFD700;
 }
 
-.brand-wrapper {
-    max-width: 1140px;
-    margin: 0 auto;
+.brand-inner {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    background: rgba(255,255,255,0.92);
-    border-radius: 1rem;
-    padding: 0.85rem 1rem;
-    box-shadow: 0 18px 60px rgba(15, 23, 42, 0.15);
+    justify-content: center;
+    gap: 18px;
+    padding: 14px 32px;
 }
 
 .brand-logo {
-    min-width: 62px;
-    min-height: 62px;
-    display: grid;
-    place-items: center;
-    border-radius: 1rem;
-    background: #d32f2f;
-    color: white;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    font-size: 1.1rem;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #FFD700;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
 }
 
 .logo-image {
-    width: 50px;
-    height: 50px;
+    width: 68px;
+    height: 68px;
     object-fit: contain;
-    border-radius: 0.5rem;
+    border-radius: 50%;
 }
 
 .brand-texts {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 6px;
 }
 
 .brand-title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: #1f2633;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: 2px;
     text-transform: uppercase;
+    text-shadow: 1px 2px 6px rgba(0,0,0,0.45);
+    white-space: nowrap;
+}
+
+.brand-subtitle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-line {
+    display: inline-block;
+    height: 2px;
+    width: 60px;
+    background: linear-gradient(to right, transparent, #FFD700);
+    border-radius: 2px;
+}
+
+.brand-line.right {
+    background: linear-gradient(to left, transparent, #FFD700);
 }
 
 .brand-subtitle {
-    font-size: 1rem;
-    color: #5a6270;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #FFD700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
+/* ─── Login Card ──────────────────────────────────────────── */
 .login-center {
     flex: 1;
     display: flex;
@@ -206,6 +239,7 @@ export default {
     color: #1f2633;
 }
 
+/* ─── Form Inputs ─────────────────────────────────────────── */
 .input-with-icon {
     position: relative;
 }
@@ -230,6 +264,7 @@ export default {
     box-shadow: none;
 }
 
+/* ─── Links & Buttons ─────────────────────────────────────── */
 .forgot-link,
 .access-link {
     color: #d32f2f;
@@ -250,6 +285,7 @@ export default {
     box-shadow: 0 20px 25px rgba(211, 47, 47, 0.18);
 }
 
+/* ─── Footer ──────────────────────────────────────────────── */
 .login-footer {
     font-size: 0.95rem;
     color: #495057;
@@ -259,10 +295,23 @@ export default {
     font-weight: 500;
 }
 
+/* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 576px) {
-    .brand-wrapper {
+    .brand-inner {
         flex-direction: column;
         text-align: center;
+        padding: 12px 16px;
+    }
+
+    .brand-title {
+        font-size: 1rem;
+        letter-spacing: 1px;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .brand-line {
+        width: 30px;
     }
 
     .login-center {

@@ -29,7 +29,7 @@
 </template>
 <script>
 import SidenavList from "./SidenavList.vue";
-import logo from "@/assets/img/system-logo/logo.jpg";
+import logo from "@/assets/img/BFP 11.png";
 import { mapState } from "vuex";
 
 export default {
