@@ -107,7 +107,7 @@ const routes = [
   {
     path: "/infrastructure-plans",
     alias: ["/Admin", "/admin"],
-    name: "Infrastructure Plans",
+    name: "infrastructure-plans",
     component: InfrastructurePlans
   },
   {
