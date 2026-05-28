@@ -23,7 +23,7 @@ import Accomplishments from "../views/modules/Accomplishments.vue";
 import ContractorPerformance from "../views/modules/ContractorPerformance.vue";
 import AuditTrail from "../views/modules/AuditTrail.vue";
 import NotificationsInbox from "../views/modules/NotificationsInbox.vue";
-import Admin from "../views/modules/Admin.vue";
+import InfrastructurePlans from "../views/modules/InfrastructurePlans.vue";
 import Reports from "../views/modules/Reports.vue";
 import Settings from "../views/modules/Settings.vue";
 
@@ -108,7 +108,7 @@ const routes = [
     path: "/infrastructure-plans",
     alias: ["/Admin", "/admin"],
     name: "Infrastructure Plans",
-    component: Admin
+    component: InfrastructurePlans
   },
   {
     path: "/contract-management",
