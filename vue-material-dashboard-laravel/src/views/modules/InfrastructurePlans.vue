@@ -476,7 +476,7 @@
 import bfpLogo from "@/assets/img/BFP 11.png";
 
 export default {
-  name: "Admin",
+  name: "InfrastructurePlans",
   data() {
     return {
       bfpLogo,
