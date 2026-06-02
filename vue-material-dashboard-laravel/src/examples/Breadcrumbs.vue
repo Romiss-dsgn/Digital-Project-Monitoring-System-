@@ -1,46 +1,62 @@
 <template>
   <nav aria-label="breadcrumb">
-    <ol
-      class="px-0 pt-1 pb-0 mb-0 bg-transparent breadcrumb"
-      :class="isRTL ? '' : ' me-sm-6'"
-    >
-      <li class="text-sm breadcrumb-item" :class="color">
-        <a v-if="isRTL" :class="color" class="opacity-5 ps-2" href="#"
-          >لوحات القيادة</a
-        >
-        <a v-else :class="color" class="opacity-8" href="#">Pages</a>
-      </li>
-      <li
-        class="text-sm breadcrumb-item active"
-        :class="color"
-        aria-current="page"
-      >
-        {{ currentPage }}
+    <ol class="breadcrumb py-0 px-0">
+      <li class="breadcrumb-item active" :class="color ? `text-${color}` : 'text-dark'">
+        <a href="#" class="opacity-7 text-decoration-none">
+          <span class="ms-2">{{ formatPageName }}</span>
+        </a>
       </li>
     </ol>
-    <h6 class="mb-0 font-weight-bolder" :class="color">
-      {{ currentPage }}
-    </h6>
   </nav>
 </template>
 
 <script>
-import { mapState } from "vuex";
-
 export default {
-  name: "breadcrumbs",
+  name: "Breadcrumbs",
   props: {
     currentPage: {
       type: String,
-      required: "",
+      default: "Dashboard",
     },
     color: {
       type: String,
-      default: "text-dark",
+      default: "dark",
     },
   },
   computed: {
-    ...mapState(["isRTL"]),
+    formatPageName() {
+      if (!this.currentPage) return "Dashboard";
+      // Convert camelCase or route names to readable format
+      return this.currentPage
+        .replace(/([A-Z])/g, " $1") // Add space before capital letters
+        .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+        .trim();
+    },
   },
 };
 </script>
+
+<style scoped>
+.breadcrumb {
+  background-color: transparent;
+  margin: 0;
+}
+
+.breadcrumb-item {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.breadcrumb-item a {
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.breadcrumb-item a:hover {
+  opacity: 1 !important;
+}
+
+.opacity-7 {
+  opacity: 0.7;
+}
+</style>

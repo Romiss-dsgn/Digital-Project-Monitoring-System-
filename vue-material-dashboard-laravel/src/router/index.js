@@ -26,6 +26,7 @@ import NotificationsInbox from "../views/modules/NotificationsInbox.vue";
 import InfrastructurePlans from "../views/modules/InfrastructurePlans.vue";
 import Reports from "../views/modules/Reports.vue";
 import Settings from "../views/modules/Settings.vue";
+import UserManagement from "../views/modules/UserManagement.vue";
 
 const routes = [
   {
@@ -159,6 +160,12 @@ const routes = [
     path: "/notifications-inbox",
     name: "notifications-inbox",
     component: NotificationsInbox
+  }
+
+  ,{
+    path: "/user-management",
+    name: "user-management",
+    component: UserManagement
   }
 ];
 
