@@ -207,7 +207,7 @@
               >
                 <i class="material-icons-round" style="font-size:36px;color:#c0392b;display:block;margin-bottom:8px;">add_circle_outline</i>
                 <span style="font-size:0.875rem;color:#374151;">Click to select files</span><br>
-                <span style="font-size:0.75rem;color:#9ca3af;">Maximum file size: 25MB</span>
+                <span style="font-size:0.75rem;color:#9ca3af;">PDF, DOCX, XLSX only. Maximum file size: 25MB</span>
               </div>
             </div>
           </div>
@@ -359,7 +359,13 @@
               <p class="bfp-upload-title">Drag and drop files here</p>
               <p class="bfp-upload-sub">or click to browse from your computer</p>
               <label>
-                <input type="file" multiple hidden @change="handleFileSelect" />
+                <input
+                  type="file"
+                  multiple
+                  hidden
+                  accept=".pdf,.docx,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  @change="handleFileSelect"
+                />
                 <span class="bfp-upload-btn">
                   <i class="material-icons-round" style="font-size:15px;vertical-align:-3px">folder_open</i>
                   Choose Files
@@ -559,6 +565,13 @@ export default {
       showAdvancedFilterModal: false,
       dragOver: false,
       uploadedFiles: [],
+      maxUploadFileSizeMb: 25,
+      allowedUploadExtensions: ['.pdf', '.docx', '.xlsx'],
+      allowedUploadTypes: [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ],
       // Filter states
       filters: {
         categories: [],
@@ -597,15 +610,40 @@ export default {
     editContract(contract)   { alert(`Edit contract ${contract.contract_id}`); },
     deleteContract(contract) { alert(`Delete contract ${contract.contract_id}`); },
     isValidFileType(file) {
-      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-      const allowedExtensions = ['.pdf', '.docx', '.xlsx'];
       const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-      return allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension);
+      return this.allowedUploadTypes.includes(file.type) || this.allowedUploadExtensions.includes(fileExtension);
+    },
+    isValidFileSize(file) {
+      return file.size <= this.maxUploadFileSizeMb * 1024 * 1024;
+    },
+    splitUploadFiles(files) {
+      return files.reduce((groups, file) => {
+        if (!this.isValidFileType(file)) {
+          groups.invalidType.push(file);
+        } else if (!this.isValidFileSize(file)) {
+          groups.invalidSize.push(file);
+        } else {
+          groups.valid.push(file);
+        }
+        return groups;
+      }, { valid: [], invalidType: [], invalidSize: [] });
+    },
+    showUploadRestrictionAlert(invalidType, invalidSize) {
+      const messages = [];
+      if (invalidType.length > 0) {
+        messages.push(`Only PDF, DOCX, and XLSX files are allowed.\nRejected type: ${invalidType.map(f => f.name).join(', ')}`);
+      }
+      if (invalidSize.length > 0) {
+        messages.push(`Maximum file size is ${this.maxUploadFileSizeMb}MB.\nToo large: ${invalidSize.map(f => f.name).join(', ')}`);
+      }
+      if (messages.length > 0) {
+        alert(messages.join('\n\n'));
+      }
     },
     handleFileDrop(event) {
       this.dragOver = false;
       const files = Array.from(event.dataTransfer.files);
-      const validFiles = files.filter(file => this.isValidFileType(file));
+      const validFiles = files.filter(file => this.isValidFileType(file) && this.isValidFileSize(file));
       const invalidFiles = files.filter(file => !this.isValidFileType(file));
       if (invalidFiles.length > 0) {
         alert(`⚠️ Invalid file type(s) detected.\n\nOnly PDF, DOCX, and XLSX files are allowed.\n\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);
@@ -617,7 +655,7 @@ export default {
     },
     handleFileSelect(event) {
       const files = Array.from(event.target.files);
-      const validFiles = files.filter(file => this.isValidFileType(file));
+      const validFiles = files.filter(file => this.isValidFileType(file) && this.isValidFileSize(file));
       const invalidFiles = files.filter(file => !this.isValidFileType(file));
       if (invalidFiles.length > 0) {
         alert(`⚠️ Invalid file type(s) detected.\n\nOnly PDF, DOCX, and XLSX files are allowed.\n\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);

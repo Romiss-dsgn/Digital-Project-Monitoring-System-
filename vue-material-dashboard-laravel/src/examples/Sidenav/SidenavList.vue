@@ -75,6 +75,14 @@
       </li>
 
       <li class="nav-item">
+        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="user-management" navText="User Management">
+          <template v-slot:icon>
+            <i class="material-icons-round opacity-10 fs-5">group</i>
+          </template>
+        </sidenav-collapse>
+      </li>
+
+      <li class="nav-item">
         <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="settings" navText="Settings">
           <template v-slot:icon>
             <i class="material-icons-round opacity-10 fs-5">settings</i>

@@ -12,12 +12,17 @@
       <!-- Filter -->
       <div class="row mb-4">
         <div class="col-md-6 col-lg-3 mb-2">
-          <select class="form-control">
+          <select class="form-control" v-model="selectedContractor">
             <option>All Contractors</option>
             <option>Regi Construction</option>
             <option>Nortech Builders</option>
             <option>Synergy Builders</option>
           </select>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-2">
+          <button class="btn btn-outline-secondary btn-sm" @click="showFilterModal = true">
+            <i class="material-icons-round">filter_list</i> Advanced Filter
+          </button>
         </div>
       </div>
 
@@ -85,19 +90,80 @@
         </div>
       </div>
     </div>
+
+    <BfpModal
+      :show="showFilterModal"
+      title="Contractor Performance Filters"
+      stripe="RATING SEARCH PARAMETERS"
+      confirm-text="Apply Filters"
+      confirm-icon="filter_list"
+      @close="showFilterModal = false"
+      @confirm="showFilterModal = false"
+    >
+      <div class="bfp-section">
+        <div class="bfp-section-label"><i class="material-icons-round">engineering</i> Contractor Scope</div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field-half">
+            <label class="bfp-label">Contractor</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">groups</i>
+              <select class="bfp-input bfp-select" v-model="selectedContractor">
+                <option>All Contractors</option>
+                <option v-for="contractor in contractors" :key="contractor.id">{{ contractor.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Rating Band</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">workspace_premium</i>
+              <select class="bfp-input bfp-select">
+                <option>All Ratings</option>
+                <option>Excellent</option>
+                <option>Good</option>
+                <option>Needs Improvement</option>
+              </select>
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Minimum Score</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">percent</i>
+              <input class="bfp-input" type="number" min="0" max="100" placeholder="0" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Variation Frequency</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">sync_alt</i>
+              <select class="bfp-input bfp-select">
+                <option>Any Frequency</option>
+                <option>0-1 variation</option>
+                <option>2-3 variations</option>
+                <option>4+ variations</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </BfpModal>
   </div>
 </template>
 
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
+import BfpModal from "@/components/BfpModal.vue";
 
 export default {
   name: "ContractorPerformance",
   components: {
-    StatusBadge
+    StatusBadge,
+    BfpModal
   },
   data() {
     return {
+      selectedContractor: "All Contractors",
+      showFilterModal: false,
       contractors: [
         { id: 1, name: "Regi Construction", overall_score: 92, rating: "Excellent", completion: 95, timeline: 88, variations: 2, status: "approved" },
         { id: 2, name: "Nortech Builders", overall_score: 85, rating: "Excellent", completion: 90, timeline: 80, variations: 1, status: "approved" },

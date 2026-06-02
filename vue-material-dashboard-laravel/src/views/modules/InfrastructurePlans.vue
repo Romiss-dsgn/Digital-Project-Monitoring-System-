@@ -48,25 +48,9 @@
           </select>
         </div>
         <div class="col-sm-6 col-md-4 col-lg-2 d-grid">
-          <div class="dropdown">
-            <button
-              class="btn btn-outline-primary btn-sm dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              Apply Filters
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-              <li>
-                <a class="dropdown-item" href="#" @click.prevent="setFilterStatus('')">All Status</a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li v-for="(label, key) in statusOptions" :key="key">
-                <a class="dropdown-item" href="#" @click.prevent="setFilterStatus(key)">{{ label }}</a>
-              </li>
-            </ul>
-          </div>
+          <button class="btn btn-outline-primary btn-sm" type="button" @click="showFilterModal = true">
+            Apply Filters
+          </button>
         </div>
       </div>
 
@@ -469,18 +453,84 @@
       </Transition>
     </Teleport>
 
+    <BfpModal
+      :show="showFilterModal"
+      title="Infrastructure Plan Filters"
+      stripe="PROJECT SEARCH PARAMETERS"
+      confirm-text="Apply Filters"
+      confirm-icon="filter_list"
+      @close="showFilterModal = false"
+      @confirm="showFilterModal = false"
+    >
+      <div class="bfp-section">
+        <div class="bfp-section-label"><i class="material-icons-round">tune</i> Project Criteria</div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field-half">
+            <label class="bfp-label">Project Name</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">business</i>
+              <input v-model="filters.name" class="bfp-input" type="text" placeholder="Search project name" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Project Code</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">tag</i>
+              <input v-model="filters.code" class="bfp-input" type="text" placeholder="Search project code" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Province</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">location_on</i>
+              <select v-model="filters.location" class="bfp-input bfp-select">
+                <option value="">All Provinces</option>
+                <option v-for="location in locations" :key="location" :value="location">{{ location }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Phase</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">layers</i>
+              <select v-model="filters.phase" class="bfp-input bfp-select">
+                <option value="">All Phases</option>
+                <option v-for="phase in phases" :key="phase" :value="phase">{{ phase }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bfp-section">
+        <div class="bfp-section-label"><i class="material-icons-round">flag</i> Status</div>
+        <div class="bfp-filter-grid">
+          <label class="bfp-check-option">
+            <input type="radio" value="" v-model="filters.status" />
+            All Status
+          </label>
+          <label v-for="(label, key) in statusOptions" :key="key" class="bfp-check-option">
+            <input type="radio" :value="key" v-model="filters.status" />
+            {{ label }}
+          </label>
+        </div>
+      </div>
+    </BfpModal>
+
   </div>
 </template>
 
 <script>
 import bfpLogo from "@/assets/img/BFP 11.png";
+import BfpModal from "@/components/BfpModal.vue";
 
 export default {
   name: "InfrastructurePlans",
+  components: { BfpModal },
   data() {
     return {
       bfpLogo,
       showModal: false,
+      showFilterModal: false,
       filters: { name: "", code: "", location: "", status: "", phase: "" },
       locations: ["Cagayan", "Isabela", "Nueva Vizcaya", "Quirino"],
       phases: ["Planning", "Foundation", "Construction", "Finishing", "Post-Eval"],

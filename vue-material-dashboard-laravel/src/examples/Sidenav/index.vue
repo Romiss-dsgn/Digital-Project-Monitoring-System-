@@ -34,7 +34,7 @@
 
 <script>
 import SidenavList from "./SidenavList.vue";
-import logo from "@/assets/img/BFP 11.png";
+import logo from "@/assets/img/system-logo/logo.jpg";
 import bgImage from "@/assets/img/bg.png";
 import { mapState } from "vuex";
 
@@ -69,7 +69,7 @@ export default {
   color: #fff;
 }
 
-/* Overlay layer — tweak opacity here to show more/less bg image */
+/* Overlay layer */
 .sidenav::before {
   content: "";
   position: absolute;
@@ -92,105 +92,81 @@ export default {
   z-index: 1;
 }
 
-
 /* ── Logo wrapper ─────────────────────────────── */
-.navbar-brand-img {
-  width: 62px;
-  height: 62px;
-  object-fit: contain;
+.logo-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 50%;
   flex-shrink: 0;
-  border-radius: 16px;
-  background: transparent;
-  padding: 4px;
-  border: 1.5px solid rgba(255, 255, 255, 0.30);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.10),
-    0 4px 18px rgba(0, 0, 0, 0.30);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.navbar-brand-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  transition: transform 0.25s ease;
 }
 
 .navbar-brand:hover .navbar-brand-img {
   transform: scale(1.06);
-  box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.35),
-    0 6px 22px rgba(0, 0, 0, 0.4);
 }
 
 /* Soft radial glow behind the logo */
 .logo-glow {
-  position: absolute;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,80,80,0.25) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.navbar-brand-img {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-  flex-shrink: 0;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.15);
-  padding: 6px;
-  box-shadow:
-    0 0 0 1.5px rgba(255, 255, 255, 0.25),
-    0 4px 16px rgba(0, 0, 0, 0.35),
-    0 1px 3px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.navbar-brand:hover .navbar-brand-img {
-  transform: scale(1.06);
-  box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.4),
-    0 6px 20px rgba(0, 0, 0, 0.45);
-}
-
-/* Soft radial glow behind the logo */
-.logo-glow {
-  position: absolute;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,80,80,0.35) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: -1;
+  display: none;
 }
 
 /* ── Brand text ───────────────────────────────── */
 .brand-text-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .sidebar-brand-text {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
+  line-height: 1.05rem;
+  letter-spacing: 0.01em;
   color: #fff !important;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-brand-sub {
-  font-size: 0.62rem;
-  color: rgba(255, 255, 255, 0.6) !important;
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
 /* ── Navbar brand padding ─────────────────────── */
 .sidenav .navbar-brand {
-  padding-left: 1.25rem;
+  padding-left: 1rem;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+  gap: 0.75rem;
+  overflow: visible;
+  width: 100%;
 }
 
 /* ── Global color overrides ───────────────────── */
