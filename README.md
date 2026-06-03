@@ -1,460 +1,241 @@
-# [Vue Material Dashboard 2 Laravel](http://demos.creative-tim.com/vue-material-dashboard-2/#/?ref=readme-vmd2) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/intent/tweet?url=https://www.creative-tim.com/product/vue-material-dashboard-2&text=Check%20Vue%20Material%20Dashboard%202%20made%20by%20@CreativeTim%20#webdesign%20#dashboard%20#materialdesign%20#vue%20https://www.creative-tim.com/product/vue-material-dashboard)
+# ConTrackPro - Digital Project Monitoring System
 
-![version](https://img.shields.io/badge/version-3.0.0-blue.svg) [![GitHub issues open](https://img.shields.io/github/issues/creativetimofficial/vue-material-dashboard-2.svg)](https://github.com/creativetimofficial/vue-material-dashboard-2/issues?q=is%3Aopen+is%3Aissue) [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/creativetimofficial/vue-material-dashboard-2.svg)](https://github.com/creativetimofficial/vue-material-dashboard-2/issues?q=is%3Aissue+is%3Aclosed)
+ConTrackPro is a web-based contract and infrastructure project monitoring system. It is intended to help track project records, contract documents, engineering plans, cashflows, variation orders, project accomplishments, contractor performance, notifications, and audit history in one portal.
 
-![Image](https://s3.amazonaws.com/creativetim_bucket/products/331/original/vue-material-dashboard-laravel.jpg?1684309813)
+This repository currently contains a Vue frontend and a Laravel JSON:API backend scaffold. As of this version, the Vue folder has been updated with ConTrackPro screens and routes. The Laravel backend and database schema have not yet been converted to the full ConTrackPro domain model.
 
-Vue Material Dashboard 2 is our newest free Admin Template based on Vue3 & Bootstrap5. If you’re a developer looking to create an admin dashboard that is developer-friendly, rich with features, and highly customisable, here is your match. Our innovative Vue3 & Bootstrap5 dashboard comes with a beautiful design inspired by Google's Material Design and it will help you create stunning websites & web apps to delight your clients
+## Current Status
 
-# Download
+| Area | Status |
+| --- | --- |
+| Vue frontend | Updated with ConTrackPro module pages and navigation routes. |
+| Laravel backend | Still the inherited Laravel JSON:API auth/users/profile scaffold. |
+| Database | Draft ConTrackPro schema migration has been added; API integration and data workflows are still pending. |
+| API integration | Auth/user endpoints exist; ConTrackPro module endpoints are still pending. |
+| Documentation | Root docs now describe the actual project scope and current implementation state. |
 
-For the free version of the project you can either
+## Project Structure
 
-- download the .zip file from the Creative Tim site and extract it or
-- make a clone from the Github repository
-You will get two project folders: one for the Laravel API project and one for the Vue frontend.
-
-
-# Table of Contents
-
-- [Versions](#versions)
-- [Demo](#demo)
-- [Quick Start](#quick-start)
-- [Usage](#usage)
-- [Documentation](#documentation)
-- [File Structure](#file-structure)
-- [Browser Support](#browser-support)
-- [Resources](#resources)
-- [Reporting Issues](#reporting-issues)
-- [Technical Support or Questions](#technical-support-or-questions)
-- [Licensing](#licensing)
-- [Useful Links](#useful-links)
-
-# Versions
-
-[<img src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/logos/vue-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/vue-material-dashboard-2?ref=readme-vmd2)
-
-| VueJS |
-| ----- |
-
-[![Vue Material Dashboard 2](https://s3.amazonaws.com/creativetim_bucket/products/331/original/vue-material-dashboard-laravel.jpg?1684309813)](http://demos.creative-tim.com/vue-material-dashboard-2/?ref=readme-vmd2)
-
-# Demo
-
-- [Profile](https://demos.creative-tim.com/vue-material-dashboard-2/#/profile?ref=readme-vmd2)
-- [Sign In](https://demos.creative-tim.com/vue-material-dashboard-2/#/sign-in?ref=readme-vmd2)
-- [Sign Up](https://demos.creative-tim.com/vue-material-dashboard-2/#/sign-up?ref=readme-vmd2)
-
-[View More](https://demos.creative-tim.com/vue-material-dashboard-2/#/dashboard?ref=readme-vmd2).
-
-# Quick start
-
-Quick start options:
-
-- Download from [Creative Tim](https://www.creative-tim.com/product/vue-material-dashboard-2?ref=readme-vmd2).
-
-## Introduction
-
-JSON:API is a specification for how a client should request that resources be fetched or modified, and how a server should respond to those requests. It is designed to minimize both the number of requests and the amount of data transmitted between clients and servers. This efficiency is achieved without compromising readability, flexibility, or discoverability.
-
-## Prerequisites
-
-### JSON:API backend
-The Laravel JSON:API backend project requires a proper multi-threaded web server such as Apache/Nginx environment with PHP, Composer and MySQL.
-
-[Click here to go to the JSON:API docs]()
-
-**Do not use `php artisan serve` as it will result in stalled requests due to the single-threaded nature of the built-in PHP web server.**
-
-We strongly recommend using [Laradock](https://laradock.io/) for Linux and Mac or [Laragon](https://laragon.org/download/) for Windows if possible.
-
-Other options for your local environment:
-
-- Windows: [How to install WAMP on Windows](https://updivision.com/blog/post/beginner-s-guide-to-setting-up-your-local-development-environment-on-windows)
-- Linux & Mac: [How to install LAMP on Linux & Mac](https://updivision.com/blog/post/guide-what-is-lamp-and-how-to-install-it-on-ubuntu-and-macos)
-
-You will also need to install Composer 2: https://getcomposer.org/doc/00-intro.md
-
-
-### Vue Material frontend
-
-The Vue Material frontend project requires a working local environment with NodeJS version 8.9 or above (8.11.0+ recommended), npm, VueCLI.
-
-Install Node: https://nodejs.org/ (version 8.11.0+ recommended)
-
-Install NPM: https://www.npmjs.com/get-npm
-
-Install VueCLI: https://cli.vuejs.org/guide/installation.html
-
-## Laravel JSON:API Project Installation
-
-1. Navigate in your Laravel API project folder: cd `your-laravel-json-api-project`
-2. Install project dependencies: `composer install`
-3. Create a new .env file: `cp .env.example .env`
-4. Add your own database credentials in the .env file in DB_DATABASE, DB_USERNAME, DB_PASSWORD
-5. Create users table: `php artisan migrate --seed`
-6. Generate application key: `php artisan key:generate`
-7. Install Laravel Passport: `php artisan passport:install` and set in the .env file the CLIENT_ID and CLIENT_SECRET that you receive
-8. Add your own mailtrap.io credentials in MAIL_USERNAME and MAIL_PASSWORD in the .env file
-
-## Vue Material Dashboard Project Installation
-
-1. Navigate to your Vue Dashboard project folder: `cd your-vue-material-dashbord-project`
-2. Install project dependencies: `npm install`
-3. Create a new .env file: `cp .env.example .env`
-4. `VUE_APP_BASE_URL` should contain the URL of your Vue Material Dashboard Project (eg. http://localhost:8080/)
-5. `VUE_APP_API_BASE_URL` should contain the URL of your Laravel JSON:API Project. (eg. http://localhost:3000/api/v1)
-6. Run `npm run dev` to start the application in a local development environment or npm run build to build release distributables.
-
-## Fully Coded Elements
-
-Vue Material Dashboard 2 is built with over 70 frontend individual elements, like buttons, inputs, navbars, nav tabs, cards, or alerts, giving you the freedom of choosing and combining. All components can take variations in color, which you can easily modify using sass files. You will save a lot of time going from prototyping to full-functional code because all elements are implemented.
-
-This free Vue3 & Bootstrap5 Dashboard is coming with prebuilt design blocks, so the development process is seamless,
-switching from our pages to the real website is very easy to be done.
-
-View [all components here](https://www.creative-tim.com/learning-lab/vue/alerts/material-dashboard/).
-
-# Usage
-
-Register a user or login using admin@jsonapi.com and secret and start testing the theme.
-
-Besides the dashboard and the auth pages this theme also has an edit profile page. All the necessary files are installed out of the box and all the needed routes are added to `src\router\index.js`. Keep in mind that all the features can be viewed once you log in using the credentials provided above or by registering your own user.
-
-### Dashboard
-You can access the dashboard either by using the "**Dashboard**" link in the left sidebar or by adding **/dashboard** in the URL.
-
-### Login
-The login functionality is fully implemented in our theme helping you to start your project in no time. To login into dashboard you just have to add **/login** in the URL and fill the login form with the credentials (user: admin@jsonapi.com and password: **secret**).
-
-The `src\views\examples-api\Login.vue` is the Vue component which handles the login functinality. You can easily adapt it to your needs.
-
-It uses the auth store located in `src\store\auth.module.js.`
-
-#### Login example
-```
-<div class="card-body">
-    <Form role="form" class="text-start mt-3" :validation-schema="schema" @submit="handleLogin"
-     @invalid-submit="badSubmit">
-        <div class="mb-3">
-            <material-input-field id="email" v-model:value="user.email" type="email" label="Email"
-             name="email" variant="static" />
-        </div>
-        <div class="mb-3">
-            <material-input-field id="password" v-model:value="user.password" type="password"
-             label="Password" name="password" variant="static" />
-        </div>
-        <material-switch id="rememberMe" name="Remember Me">Remember me</material-switch>
-        <div class="text-center">
-            <material-button class="my-4 mb-2" variant="gradient" color="success" full-width>
-                <span>Sign in</span>
-            </material-button>
-        </div>
-        <p class="mt-4 text-sm text-center">
-            Don't have an account?
-            <router-link :to="{ name: 'Signup' }"
-             class="text-success text-gradient font-weight-bold">Sign up
-            </router-link>
-        </p>
-        <p class="text-sm text-center">
-            <router-link :to="{ name: 'Password Forgot' }"
-             class="text-success text-gradient font-weight-bold">Recover Password
-            </router-link>
-        </p>
-    </Form>
-</div>
+```text
+.
+|-- laravel-json-api/
+|   |-- app/
+|   |-- database/
+|   |-- routes/
+|   `-- composer.json
+|-- vue-material-dashboard-laravel/
+|   |-- public/
+|   |-- src/
+|   |   |-- router/
+|   |   |-- services/
+|   |   |-- store/
+|   |   `-- views/
+|   `-- package.json
+|-- CHANGELOG.md
+|-- ISSUE_TEMPLATE.md
+`-- README.md
 ```
 
-### Register
-The register functionality is fully implemented in our theme helping you to start your project in no time. To register a new user you just have to add **/signup** in the URL or click on register link from login page and fill the register form with user details.
+## Implemented Frontend Modules
 
-The `src\views\examples-api\Signup.vue` is the Vue component which handles the register functinality. You can easily extend it to your needs.
+The current Vue application includes routes and screens for:
 
-It uses the auth store located in src\store\auth.module.js.
+- Dashboard
+- Infrastructure Plans Management
+- Contract Management
+- Cashflow Management
+- Engineering Plans Management
+- Variation Orders Monitoring
+- Project Accomplishments Monitoring
+- Reports
+- Contractor Performance Rating
+- Audit Trail
+- Notifications Inbox
+- User Management
+- Settings
+- Login, registration, password reset, profile, and user list screens inherited from the starter project
 
-#### Register example
+Main frontend route definitions are in:
 
-```
-<div class="card mt-8">
-    <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-        <div class="bg-gradient-success shadow-success border-radius-lg py-3 pe-1 text-center py-4">
-            <h4 class="font-weight-bolder text-white mt-1">
-                Join us today
-            </h4>
-            <p class="mb-1 text-white text-sm">
-                Enter your email and password to register
-            </p>
-        </div>
-    </div>
-    <div class="card-body pb-3">
-        <Form role="form" :validation-schema="schema" @submit="handleSignup">
-            <div class="mb-3">
-                <material-input-field id="name" v-model:value="user.name" label="Name"
-                    name="name" />
-            </div>
-            <div class="mb-3">
-                <material-input-field id="email" v-model:value="user.email" type="email"
-                    label="Email" name="email" />
-            </div>
-            <div class="mb-3">
-                <material-input-field id="password" v-model:value="user.password" type="password"
-                    label="Password" name="password" />
-            </div>
-            <div class="mb-3">
-                <material-input-field id="confirmPassword" v-model:value="user.confirmPassword"
-                    type="password" label="Confirm Password" name="confirmPassword" />
-            </div>
-            <material-checkbox-field id="flexCheckDefault" v-model:checked="termsChecked"
-                name="checkbox">
-                I agree the
-                <a href="../../../pages/privacy.html" class="text-dark font-weight-bolder">Terms and
-                    Conditions</a>
-            </material-checkbox-field>
-            <div class="text-center">
-                <material-button color="success" variant="gradient" full-width
-                    class="mt-4 mb-0">Sign up</material-button>
-            </div>
-        </Form>
-    </div>
-    <div class="card-footer text-center pt-0 px-sm-4 px-1">
-        <p class="mb-4 mx-auto">
-            Already have an account?
-            <router-link :to="{ name: 'Login' }"
-                class="text-success text-gradient font-weight-bold">Sign in</router-link>
-        </p>
-    </div>
-</div>
+```text
+vue-material-dashboard-laravel/src/router/index.js
 ```
 
-### Profile edit
+ConTrackPro module screens are in:
 
-You have the option to edit the current logged in user's profile information (name, email, profile picture) and password. To access this page, just click the "**User Profile**" link in the left sidebar or add **/user-profile** in the URL.
-
-The `src\views\examples-api\profile` is the folder with Vue components that handle the update of the user information and password.
-
-#### Profile edit example
-
-```
-<div class="multisteps-form__panel border-radius-xl bg-white" data-animation="FadeIn">
-    <h5 class="font-weight-bolder mb-0">About me</h5>
-    <div class="multisteps-form__content">
-
-      <div class="row mt-4 overflow-hidden">
-        <div>
-          <material-avatar :img="imgSource" shadow="regular" class="img-fluid w-20 mt-7">
-          </material-avatar>
-        </div>
-        <div class="mt-1  mb-2">
-          <material-button size="sm" type="button">
-            <label for="imageInput" class="mb-0 text-white small">Select Image</label>
-            <input id="imageInput" @change.prevent="onFileChange" type="file" style="display: none;" accept="image/*">
-          </material-button>
-        </div>
-      </div>
-
-
-      <div class="row mt-5">
-
-        <material-input id="name" label="Name" variant="static" v-model:value="user.name" name="name" />
-        <validation-error :errors="apiValidationErrors.name" />
-
-      </div>
-
-      <div class="row mt-5">
-        <material-input id="email" type="email" label="Email Address" variant="static" v-model:value="user.email"
-          name="email" />
-
-        <validation-error :errors="apiValidationErrors.email" />
-      </div>
-
-      <div class="button-row d-flex mt-4">
-        <material-button type="button" color="dark" variant="gradient" class="ms-auto mb-0 js-btn-next"
-          @click="handleSubmit">Submit Changes</material-button>
-      </div>
-    </div>
-  </div>
+```text
+vue-material-dashboard-laravel/src/views/modules/
 ```
 
-#### Password edit example
+## Intended System Scope
 
-```
-<div class="multisteps-form__panel border-radius-xl bg-white" data-animation="FadeIn">
-    <h5 class="font-weight-bolder mb-0">Change Password</h5>
-    <div class="multisteps-form__content mt-4">
-      <div class="row">
-        <div class="col-12">
-          <div class="mt-2">
-            <material-input id="password" v-model:value="user.password" type="password" label="Password"
-              name="password" />
+The planned full system covers the following modules:
 
-            <validation-error :errors="apiValidationErrors.password" />
-          </div>
-          <div class="mt-5">
-            <material-input id="confirmPassword" v-model:value="user.password_confirmation" type="password"
-              label="Confirm Password" name="confirmPassword" />
-          </div>
-        </div>
-      </div>
-      <div class="button-row d-flex mt-4">
-        <material-button type="button" color="dark" variant="gradient" class="ms-auto mb-0 js-btn-next"
-          @click="handleChange">Change Password</material-button>
-      </div>
-    </div>
-  </div>
-```
+- Infrastructure plans and project phase tracking
+- Contract records and contractor information management
+- Contract document upload, viewing, and download
+- Cashflow, invoice, payment, budget, and variance tracking
+- Engineering document repository
+- Variation order amount, approval, status, and supporting document tracking
+- Milestone and project accomplishment monitoring
+- Role-based user access for administrative staff, records personnel, contract monitoring personnel, and engineers
+- In-system notifications for status changes, approvals, and deadlines
+- Non-editable audit trail entries with timestamps and responsible users
+- Contractor performance rating based on defined project indicators
 
-# Documentation
+These features are partly represented in the Vue UI. Backend persistence, validation, file storage, permissions, reporting logic, and audit trail enforcement still need to be implemented in Laravel and the database.
 
-Each element is well presented in very complex documentation.
-You can read more about the [documentation here](https://www.creative-tim.com/learning-lab/vue/overview/material-dashboard/).
+## Technology Stack
 
-### File Structure
+Frontend:
 
-Within the download you'll find the following directories and files:
+- Vue 3
+- Vue Router 4
+- Vuex 4
+- Bootstrap 5
+- Material Dashboard UI components
+- Axios
+- Vee Validate and Yup
+- Chart.js
+- SweetAlert2
+- Sass
 
-```
-vue-material-dashboard-2
-    ├── public
-    │   ├── favicon.png
-    │   └── index.html
-    ├── src
-    │   ├── assets
-    │   │   ├── css
-    │   │   ├── fonts
-    │   │   ├── img
-    │   │   ├── js
-    │   │   └── scss
-    │   ├── components
-    │   │   ├── MaterialAlert.vue
-    │   │   ├── MaterialAvatar.vue
-    │   │   ├── MaterialBadge.vue
-    │   │   ├── MaterialButton.vue
-    │   │   ├── MaterialCheckbox.vue
-    │   │   ├── MaterialCheckboxField.vue
-    │   │   ├── MaterialInput.vue
-    │   │   ├── MaterialInputField.vue
-    │   │   ├── MaterialPagination.vue
-    │   │   ├── MaterialPaginationItem.vue
-    │   │   ├── MaterialProgress.vue
-    │   │   ├── MaterialRadio.vue
-    │   │   ├── MaterialSnackbar.vue
-    │   │   ├── MaterialSwitch.vue
-    │   │   ├── MaterialTextarea.vue
-    |   |   └── ValidationError.vue
-    │   ├── examples
-    │   │   ├── Cards
-    │   │   ├── Charts
-    │   │   ├── Navbars
-    │   │   ├── PageLayout
-    │   │   ├── Sidenav
-    │   │   ├── Breadcrumbs.vue
-    │   │   ├── Configurator.vue
-    │   │   └── Footer.vue
-    │   ├── mixins
-    │   │   ├── formMixin.js
-    │   │   └── showSwal.js
-    │   ├── router
-    |   |    └── index.js
-    │   ├── services
-    │   │   ├── auth-header.js
-    │   │   ├── auth.service.js
-    │   │   └── profile.service.js
-    │   ├── store
-    │   │   ├── auth.module.js
-    |   |   ├── index.js
-    │   │   └── profile.module.js
-    │   ├── views
-    │   │   ├── components
-    |   |   ├── examples-api
-    |   |   |   ├── profile
-    |   |   |   ├── users
-    |   |   |   ├── Login.vue
-    |   |   |   ├── PasswordForgot.vue
-    |   |   |   ├── PasswordReset.vue
-    │   │   |   └── Signup.vue
-    │   │   ├── Billing.vue
-    │   │   ├── Dashboard.vue
-    │   │   ├── Home.vue
-    │   │   ├── Notification.vue
-    │   │   ├── Profile.vue
-    │   │   ├── Rtl.vue
-    │   │   ├── Sales.vue
-    │   │   ├── SignIn.vue
-    │   │   ├── SignUp.vue
-    │   │   └── Tables.vue
-    │   ├── App.vue
-    │   ├── main.js
-    │   └── material-dashboard.js
-    ├── .browserslistrc
-    ├── .eslintrc.js
-    ├── .gitignore
-    ├── babel.config.json
-    ├── CHANGELOG.md
-    ├── ISSUE_TEMPLATE.md
-    ├── package.json
-    └── README.md
+Backend scaffold:
+
+- PHP 8.2 or 8.3 for the current lockfile
+- Laravel 11
+- Laravel JSON:API
+- Laravel Passport
+- Laravel Sanctum
+- Composer
+- PHP sodium extension
+- PHP zip extension or a system `7z`/`unzip` command for Composer package downloads
+- MySQL or MariaDB
+
+## Frontend Setup
+
+```bash
+cd vue-material-dashboard-laravel
+npm install
 ```
 
-### Special thanks
+Create the frontend environment file:
 
-During the development of this dashboard, we have used many existing resources from awesome developers. We want to thank them for providing their tools open source:
+```bash
+cp .env.example .env
+```
 
-- [Popper.js](https://popper.js.org/) - Kickass library used to manage poppers
-- [Charts Js](https://www.chartjs.org/) - Simple yet flexible JavaScript charting for designers & developers
+On Windows PowerShell:
 
-Let us know your thoughts below. And good luck with development!
+```powershell
+Copy-Item .env.example .env
+```
 
-## Browser Support
+Typical local values:
 
-At present, we officially aim to support the last two versions of the following browsers:
+```env
+VUE_APP_BASE_URL=http://localhost:8080/
+VUE_APP_API_BASE_URL=http://localhost:8000/api/v2
+VUE_APP_API_KEY=""
+VUE_APP_IS_DEMO=1
+```
 
-<img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/chrome.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/firefox.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/edge.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/safari.png" width="64" height="64"> <img src="https://s3.amazonaws.com/creativetim_bucket/github/browser/opera.png" width="64" height="64">
+Run the frontend:
 
+```bash
+npm run serve
+```
 
-## Resources
+Build for production:
 
-- [Live Preview](https://demos.creative-tim.com/vue-material-dashboard-2/#/?ref=readme-vmd2)
-- [Download Page](https://www.creative-tim.com/product/vue-material-dashboard-2?ref=readme-vmd2)
-- Documentation is [here](https://www.creative-tim.com/learning-lab/vue/overview/material-dashboard/?ref=readme-vmd2)
-- [License Agreement](https://www.creative-tim.com/license?ref=readme-vmd2)
-- [Support](https://www.creative-tim.com/contact-us?ref=readme-vmd2)
-- Issues: [Github Issues Page](https://github.com/creativetimofficial/ct-vue-material-dashboard-2-pro/issues)
+```bash
+npm run build
+```
 
-## Reporting Issues
+Run linting:
 
-We use GitHub Issues as the official bug tracker for the Vue Material Dashboard 2. Here are some advices for our users that want to report an issue:
+```bash
+npm run lint
+```
 
-1. Make sure that you are using the latest version of the Vue Material Dashboard 2. Check the CHANGELOG from your dashboard on our [website](https://www.creative-tim.com/product/vue-material-dashboard-2?ref=readme-vmd2).
-2. Providing us reproducible steps for the issue will shorten the time it takes for it to be fixed.
-3. Some issues may be browser specific, so specifying in what browser you encountered the issue might help.
+## Backend Setup
 
-## Technical Support or Questions
+The backend is present but not yet updated for the ConTrackPro modules. Use this setup only when working on auth/users/profile or when starting the Laravel implementation work.
 
-If you have questions or need help integrating the product please [contact us](https://www.creative-tim.com/contact-us?ref=readme-vmd2) instead of opening an issue.
+The checked-in `composer.lock` currently expects PHP 8.2 or 8.3. PHP 8.4 will fail on locked packages such as `lcobucci/clock`, `nette/schema`, and `nette/utils` unless the backend dependencies are updated. The Laravel Passport/JWT stack also requires the PHP `sodium` extension to be enabled. Composer also needs the PHP `zip` extension or a system `7z`/`unzip` command to install packages from downloaded archives.
 
-## Licensing
+On Windows with XAMPP, make sure Composer uses XAMPP PHP instead of Herd Lite PHP:
 
-- Copyright 2022 [Creative Tim](https://www.creative-tim.com?ref=readme-vmd2)
-- Creative Tim [license](https://www.creative-tim.com/license?ref=readme-vmd2)
+```cmd
+set PATH=C:\xampp\php;%PATH%
+where php
+php -v
+php --ini
+php -m | findstr /i "sodium zip"
+```
 
-## Useful Links
+Expected checks:
 
-- [More products](https://www.creative-tim.com/templates?ref=readme-vmd2) from Creative Tim
+- `where php` should list `C:\xampp\php\php.exe` first.
+- `php -v` should show PHP 8.2.x or 8.3.x.
+- `php --ini` should load `C:\xampp\php\php.ini`.
+- The module check should print both `sodium` and `zip`.
 
-- [Tutorials](https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w)
+```bash
+cd laravel-json-api
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-- [Freebies](https://www.creative-tim.com/bootstrap-themes/free?ref=readme-vmd2) from Creative Tim
+Configure database values in `.env`, then run:
 
-- [Affiliate Program](https://www.creative-tim.com/affiliates/new?ref=readme-vmd2) (earn money)
+```bash
+php artisan migrate
+php artisan passport:install
+```
 
-##### Social Media
+Current API routes are focused on:
 
-Twitter: <https://twitter.com/CreativeTim>
+- Login
+- Logout
+- Registration
+- Forgot password
+- Reset password
+- Current user profile
+- Users resource
 
-Facebook: <https://www.facebook.com/CreativeTim>
+The route file is:
 
-Dribbble: <https://dribbble.com/creativetim>
+```text
+laravel-json-api/routes/api.php
+```
 
-Google+: <https://plus.google.com/+CreativetimPage>
+The first-pass ConTrackPro schema migration is:
 
-Instagram: <https://instagram.com/creativetimofficial>
+```text
+laravel-json-api/database/migrations/2026_06_03_000001_create_contrackpro_schema.php
+```
+
+It adds the planned tables for roles, permissions, contractors, projects, contracts, documents, engineering plans, cashflows, invoices, variation orders, accomplishments, contractor ratings, notifications, and audit logs.
+
+## Development Notes
+
+- Treat the Vue module pages as the current active implementation area.
+- Do not assume the Laravel backend already exposes ConTrackPro module records through API endpoints.
+- Before connecting module screens to real data, create the Laravel models, JSON:API schemas, controllers, policies, seeders, and tests for each module.
+- Replace any static frontend data with API-backed services only after the matching backend endpoint exists.
+- File upload features will need storage configuration, validation, access rules, and download/view endpoints.
+- Audit logs should be generated server-side so users cannot edit or bypass activity history.
+
+## Suggested Next Work
+
+1. Review and finalize the draft ConTrackPro schema migration.
+2. Add Laravel models for projects, contracts, contractors, cashflows, documents, variation orders, accomplishments, notifications, audit logs, and ratings.
+3. Define roles and permissions for each user type.
+4. Implement JSON:API resources and request validation.
+5. Connect Vue module screens to backend services.
+6. Add file upload, viewing, and download workflows.
+7. Add dashboard/report calculations.
+8. Add backend and frontend tests for the core workflows.
+9. Prepare deployment and user turnover notes.

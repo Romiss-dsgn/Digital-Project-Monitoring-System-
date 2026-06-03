@@ -1,25 +1,23 @@
 # Changelog
 
-All notable changes to `Vue Material Dashboard Laravel`  will be documented in this file.
+All notable project-owned changes to ConTrackPro will be documented in this file.
 
-## Version 2.1.0
-- Update to Laravel 11.x
+## Unreleased
 
-## Version 2.0.0
-- Vue Material 2 Dashboard Free
-- Bootstrap5
-- Vue3
+### Changed
 
-## Version 1.0.0
+- Replaced inherited starter-template README content with ConTrackPro-specific project documentation.
+- Documented the current implementation status: Vue frontend updated, draft database schema added, and Laravel API work still pending for ConTrackPro modules.
+- Replaced the inherited issue template with a concise project issue report format.
+- Added the first-pass Laravel migration for the draft ConTrackPro database schema.
 
-### Added
-- Vue Material Dashboard Free
-- Login
-- Register
-- Profile edit
+### Current Frontend Scope
 
-## Version 1.0.1
-Compatibility with node.js v16.x LTS
+- Added or confirmed frontend module screens and routes for infrastructure plans, contract management, cashflow management, engineering plans, variation orders, project accomplishments, reports, contractor performance, audit trail, notifications, user management, and settings.
 
-## Version 1.0.2
-Update to Laravel 9.x
+### Pending
+
+- Review and finalize the draft ConTrackPro database schema.
+- Build Laravel JSON:API endpoints for all ConTrackPro modules.
+- Replace static frontend module data with API-backed services.
+- Add role-based access control, file upload storage, notifications, audit trail enforcement, and report calculations.
