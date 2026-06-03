@@ -3,19 +3,22 @@
         <main class="access-center">
             <section class="access-card">
                 <aside class="access-panel">
-                    <div>
+                    <div class="brand-lockup">
                         <div class="panel-mark">
                             <img :src="logo" alt="BFP Region II Logo" />
                         </div>
-                        <p class="system-name">ConTrackPro</p>
+                        <div class="brand-copy">
+                            <p class="system-name">ConTrackPro</p>
+                            <p class="system-subtitle">BFP Region II Project Monitoring</p>
+                        </div>
                     </div>
 
                     <div class="panel-copy">
-                        <p class="panel-label">ConTrackPro Monitoring Portal</p>
-                        <h1>Request secure system access</h1>
+                        <p class="panel-label">Official Monitoring Portal</p>
+                        <h1>Request secure access</h1>
                         <p>
-                            BFP Region II's digital portal for infrastructure project
-                            monitoring, contract records, engineering plans, cashflows,
+                            A controlled workspace for BFP Region II infrastructure
+                            projects, contract records, engineering plans, cashflows,
                             variation orders, accomplishments, contractor performance,
                             notifications, and audit history.
                         </p>
@@ -27,10 +30,9 @@
                             <span>Secure Government Network</span>
                         </div>
                         <p>
-                            Access is restricted to authorized Bureau of Fire Protection
-                            personnel. Account requests are reviewed before activation,
-                            and system activity is logged for compliance and audit
-                            accountability.
+                            Account requests are reviewed before activation. System
+                            activity is logged to support compliance, audit accountability,
+                            and secure government operations.
                         </p>
                     </div>
                 </aside>
@@ -202,7 +204,8 @@ import showSwal from "@/mixins/showSwal";
 import { mapMutations } from "vuex";
 import { Form } from "vee-validate";
 import * as Yup from "yup";
-import logo from "@/assets/img/BFP 11.png";
+import logo from "@/assets/img/system-logo/logo.jpg";
+import bgImage from "@/assets/img/bg.png";
 
 export default {
     name: "Signup",
@@ -212,6 +215,7 @@ export default {
     data() {
         return {
             logo,
+            bgImage,
             termsChecked: true,
             user: {
                 name: "",
@@ -242,6 +246,11 @@ export default {
                 ),
             }),
         };
+    },
+    computed: {
+        backgroundImageUrl() {
+            return `url(${this.bgImage})`;
+        },
     },
     beforeMount() {
         this.toggleEveryDisplay();
@@ -285,11 +294,9 @@ export default {
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap");
-
 .access-page {
     min-height: 100vh;
-    background: #f4f6fb;
+    background: linear-gradient(135deg, #f6f7fb 0%, #eef2f7 100%);
     color: #1f2633;
     display: flex;
     flex-direction: column;
@@ -315,38 +322,87 @@ export default {
 }
 
 .access-panel {
+    position: relative;
+    isolation: isolate;
     background:
-        linear-gradient(180deg, rgba(138, 5, 7, 0.94) 0%, rgba(104, 0, 6, 0.98) 100%),
-        radial-gradient(circle at 20% 10%, rgba(255, 215, 0, 0.16), transparent 32%);
+        linear-gradient(175deg, rgba(176, 14, 27, 0.86) 0%, rgba(120, 10, 20, 0.82) 38%, rgba(24, 31, 54, 0.88) 100%),
+        v-bind(backgroundImageUrl);
+    background-size: cover;
+    background-position: center;
     color: #fff;
     padding: clamp(2rem, 4vw, 4.25rem);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    overflow: hidden;
+}
+
+.access-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(255, 217, 92, 0.22), transparent 30%),
+        linear-gradient(180deg, rgba(17, 24, 39, 0.08) 0%, rgba(17, 24, 39, 0.48) 100%);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+
+.access-panel::after {
+    content: "";
+    position: absolute;
+    inset: 1.25rem;
+    z-index: -1;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+}
+
+.brand-lockup {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
 }
 
 .panel-mark {
-    width: 44px;
-    height: 44px;
-    border-radius: 0.75rem;
-    background: #fff;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.96);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28), 0 0 0 7px rgba(255, 255, 255, 0.12);
+    flex: 0 0 auto;
 }
 
 .panel-mark img {
-    width: 34px;
-    height: 34px;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     border-radius: 50%;
 }
 
+.brand-copy {
+    min-width: 0;
+}
+
 .system-name {
-    margin: 0.85rem 0 0;
+    margin: 0;
+    color: #fff;
+    font-size: 1.08rem;
     font-weight: 800;
-    letter-spacing: 0.01em;
+    line-height: 1.1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+}
+
+.system-subtitle {
+    margin: 0.28rem 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-transform: uppercase;
 }
 
 .panel-copy {
@@ -354,34 +410,45 @@ export default {
 }
 
 .panel-label {
+    display: inline-flex;
+    align-items: center;
     margin-bottom: 1rem;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
     font-size: 0.78rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.3;
     text-transform: uppercase;
     color: #ffe8ba;
 }
 
 .panel-copy h1 {
-    max-width: 360px;
+    max-width: 390px;
     margin: 0 0 1rem;
     color: #fff;
-    font-size: clamp(2.35rem, 4vw, 4.4rem);
-    line-height: 1.05;
+    font-size: clamp(2.35rem, 4.2vw, 4.7rem);
+    font-weight: 900;
+    line-height: 0.98;
     letter-spacing: 0;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
 }
 
 .panel-copy p,
 .security-note p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.86);
-    font-size: 0.88rem;
-    line-height: 1.55;
+    max-width: 470px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.92rem;
+    line-height: 1.7;
 }
 
 .security-note {
-    padding-top: 1.25rem;
+    padding: 1.15rem;
     border-top: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(11, 18, 32, 0.24);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .security-title {
