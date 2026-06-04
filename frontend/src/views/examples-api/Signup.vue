@@ -4,20 +4,25 @@
             <section class="access-card">
                 <aside class="access-panel">
                     <div>
-                        <div class="panel-mark">
-                            <img :src="logo" alt="BFP Region II Logo" />
+                        <div class="panel-brand">
+                            <div class="panel-mark">
+                                <img :src="logo" alt="BFP Region II Logo" />
+                            </div>
+                            <div class="panel-brand-copy">
+                                <p class="system-name">BFP Region II</p>
+                                <p class="system-subtitle">Bureau of Fire Protection</p>
+                            </div>
                         </div>
-                        <p class="system-name">ConTrackPro</p>
                     </div>
 
                     <div class="panel-copy">
                         <p class="panel-label">ConTrackPro Monitoring Portal</p>
-                        <h1>Request secure system access</h1>
+                        <h1>Request Secure System Access</h1>
                         <p>
-                            BFP Region II's digital portal for infrastructure project
-                            monitoring, contract records, engineering plans, cashflows,
-                            variation orders, accomplishments, contractor performance,
-                            notifications, and audit history.
+                            Official digital project monitoring portal for BFP Region II
+                            infrastructure records, engineering plans, contracts,
+                            cashflows, variation orders, accomplishments, contractor
+                            performance, notifications, and audit history.
                         </p>
                     </div>
 
@@ -201,13 +206,15 @@
 import showSwal from "@/mixins/showSwal";
 import { mapMutations } from "vuex";
 import * as Yup from "yup";
-import logo from "@/assets/img/BFP 11.png";
+import logo from "@/assets/img/system-logo/logo.jpg";
+import bgImage from "@/assets/img/bg.png";
 
 export default {
     name: "Signup",
     data() {
         return {
             logo,
+            bgImage,
             termsChecked: true,
             user: {
                 name: "",
@@ -238,6 +245,11 @@ export default {
                 ),
             }),
         };
+    },
+    computed: {
+        panelBackgroundImage() {
+            return `linear-gradient(175deg, rgba(180, 14, 26, 0.84) 0%, rgba(120, 10, 20, 0.80) 35%, rgba(28, 34, 58, 0.82) 100%), url(${this.bgImage})`;
+        },
     },
     beforeMount() {
         this.toggleEveryDisplay();
@@ -311,38 +323,92 @@ export default {
 }
 
 .access-panel {
-    background:
-        linear-gradient(180deg, rgba(138, 5, 7, 0.94) 0%, rgba(104, 0, 6, 0.98) 100%),
-        radial-gradient(circle at 20% 10%, rgba(255, 215, 0, 0.16), transparent 32%);
+    background-image: v-bind(panelBackgroundImage);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: #fff;
     padding: clamp(2rem, 4vw, 4.25rem);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.access-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 38%),
+        radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.12), transparent 24%);
+    pointer-events: none;
+}
+
+.access-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+.panel-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
 }
 
 .panel-mark {
-    width: 44px;
-    height: 44px;
-    border-radius: 0.75rem;
-    background: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.98);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+    flex: 0 0 auto;
+    overflow: hidden;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.38),
+        0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 .panel-mark img {
-    width: 34px;
-    height: 34px;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     border-radius: 50%;
+    transition: transform 0.25s ease;
+}
+
+.panel-brand:hover .panel-mark img {
+    transform: scale(1.06);
+}
+
+.panel-brand-copy {
+    min-width: 0;
 }
 
 .system-name {
-    margin: 0.85rem 0 0;
+    margin: 0;
+    color: #fff;
+    font-size: 0.98rem;
     font-weight: 800;
+    line-height: 1.08;
     letter-spacing: 0.01em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.34);
+    white-space: nowrap;
+}
+
+.system-subtitle {
+    margin: 0.2rem 0 0;
+    color: rgba(255, 255, 255, 0.94);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .panel-copy {
@@ -350,29 +416,35 @@ export default {
 }
 
 .panel-label {
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
     font-size: 0.78rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.3;
     text-transform: uppercase;
-    color: #ffe8ba;
+    color: #ffe566;
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .panel-copy h1 {
-    max-width: 360px;
-    margin: 0 0 1rem;
+    max-width: 420px;
+    margin: 0 0 1.1rem;
     color: #fff;
-    font-size: clamp(2.35rem, 4vw, 4.4rem);
-    line-height: 1.05;
+    font-size: clamp(2.45rem, 4vw, 4.05rem);
+    font-weight: 900;
+    line-height: 1.02;
     letter-spacing: 0;
+    text-wrap: balance;
+    text-shadow: 0 3px 14px rgba(0, 0, 0, 0.34);
 }
 
 .panel-copy p,
 .security-note p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.86);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.88rem;
     line-height: 1.55;
+    max-width: 520px;
 }
 
 .security-note {
