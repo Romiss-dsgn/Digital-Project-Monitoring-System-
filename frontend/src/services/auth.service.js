@@ -32,8 +32,17 @@ export default {
     var response = await axios.post(API_URL + '/register', {
       name: user.name,
       email: user.email,
+      badge_number: user.badgeNumber,
+      department: user.department,
+      requested_role: user.requestedRole,
       password: user.password,
       password_confirmation: user.confirmPassword
+    },
+    {
+      headers: {
+        Accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+      }
     });
     if (response.data.access_token) {
       localStorage.setItem('user_free', JSON.stringify(response.data.access_token));

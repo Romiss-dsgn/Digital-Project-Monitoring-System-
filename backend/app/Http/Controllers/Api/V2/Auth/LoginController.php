@@ -8,6 +8,7 @@ use LaravelJsonApi\Core\Document\Error;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -21,6 +22,16 @@ class LoginController extends Controller
      */
     public function __invoke(LoginRequest $request): Response|Error
     {
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user?->is_active) {
+            return Error::fromArray([
+                'title' => Response::$statusTexts[Response::HTTP_FORBIDDEN],
+                'detail' => 'This account is pending administrator approval.',
+                'status' => Response::HTTP_FORBIDDEN,
+            ]);
+        }
+
         $client = DB::table('oauth_clients')->where('password_client', 1)->first();
 
         $request = Request::create(config('app.url') . '/oauth/token', 'POST', [

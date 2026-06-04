@@ -26,8 +26,9 @@ export const auth = {
     },
     async register({ commit }, user) {
       try {
-        await AuthService.register(user);
-        commit('isLoggedIn', true);
+        const response = await AuthService.register(user);
+        commit('isLoggedIn', false);
+        return response;
       } catch (error) {
         commit('isLoggedIn', false);
         throw(error)

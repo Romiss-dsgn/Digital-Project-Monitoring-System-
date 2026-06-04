@@ -23,7 +23,7 @@
                         <h4>LOGIN TO YOUR ACCOUNT</h4>
                     </div>
 
-                    <Form class="login-form" :validation-schema="schema" @submit="handleLogin" @invalid-submit="badSubmit">
+                    <form class="login-form" @submit.prevent="handleLogin">
                         <div class="form-group mb-3">
                             <label for="username" class="form-label">Username</label>
                             <div class="input-with-icon">
@@ -51,7 +51,7 @@
                             <span class="mx-2 text-muted">or</span>
                             <router-link :to="{ name: 'Signup' }" class="access-link">Request Access</router-link>
                         </div>
-                    </Form>
+                    </form>
                 </div>
             </div>
         </div>
@@ -61,25 +61,16 @@
 <script>
 import showSwal from "@/mixins/showSwal";
 import { mapMutations } from "vuex";
-import { Form } from "vee-validate";
-import * as Yup from 'yup';
 import logo from "@/assets/img/BFP 11.png";
 import bgImage from "@/assets/img/bg.png";
 
 export default {
     name: "Login",
-    components: {
-        Form,
-    },
     data() {
         return {
             logo,
             bgImage,
             user: { username: "admin@jsonapi.com", password: "secret" },
-            schema: Yup.object().shape({
-                username: Yup.string().required("Username is required"),
-                password: Yup.string().required("Password is required")
-            }),
         };
     },
     computed: {
@@ -101,8 +92,16 @@ export default {
     },
     methods: {
         ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
-        badSubmit() {},
         async handleLogin() {
+            if (!this.user.username || !this.user.password) {
+                showSwal.methods.showSwal({
+                    type: "error",
+                    message: "Username and password are required.",
+                    width: 500
+                });
+                return;
+            }
+
             try {
                 await this.$store.dispatch('auth/login', {
                     email: this.user.username,
