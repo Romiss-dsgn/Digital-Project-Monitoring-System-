@@ -148,11 +148,19 @@
                                     <input
                                         id="password"
                                         v-model="user.password"
-                                        type="password"
-                                        class="form-control"
+                                        :type="showPassword ? 'text' : 'password'"
+                                        class="form-control password-input"
                                         placeholder="Enter password"
                                         name="password"
                                     />
+                                    <button
+                                        type="button"
+                                        class="password-toggle-btn"
+                                        @click="showPassword = !showPassword"
+                                        :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                                    >
+                                        <i class="material-icons-round">{{ showPassword ? 'visibility_off' : 'visibility' }}</i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -163,11 +171,19 @@
                                     <input
                                         id="confirmPassword"
                                         v-model="user.confirmPassword"
-                                        type="password"
-                                        class="form-control"
+                                        :type="showConfirmPassword ? 'text' : 'password'"
+                                        class="form-control password-input"
                                         placeholder="Confirm password"
                                         name="confirmPassword"
                                     />
+                                    <button
+                                        type="button"
+                                        class="password-toggle-btn"
+                                        @click="showConfirmPassword = !showConfirmPassword"
+                                        :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
+                                    >
+                                        <i class="material-icons-round">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -216,6 +232,8 @@ export default {
             logo,
             bgImage,
             termsChecked: true,
+            showPassword: false,
+            showConfirmPassword: false,
             user: {
                 name: "",
                 badgeNumber: "",
@@ -564,6 +582,38 @@ export default {
     border-color: rgba(80, 130, 220, 0.7);
     box-shadow: 0 0 0 3px rgba(80, 130, 220, 0.15);
     outline: none;
+}
+
+/* ─── Password Toggle ─────────────────────────────────────── */
+.password-input {
+    padding-right: 3rem;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #7b849a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+    line-height: 1;
+}
+
+.password-toggle-btn:hover {
+    color: #1a4fa0;
+}
+
+.password-toggle-btn .material-icons-round {
+    font-size: 1.15rem;
+    position: static;
+    transform: none;
 }
 
 .terms-row {
