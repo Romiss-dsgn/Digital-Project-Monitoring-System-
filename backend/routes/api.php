@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
+use App\Http\Controllers\Api\V2\Admin\UserAccessController;
+use App\Http\Controllers\Api\V2\Admin\UserManagementController;
 use App\Http\Controllers\Api\V2\Auth\LoginController;
 use App\Http\Controllers\Api\V2\Auth\LogoutController;
 use App\Http\Controllers\Api\V2\Auth\RegisterController;
@@ -29,6 +31,16 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
     Route::post('/register', RegisterController::class);
     Route::post('/password-forgot', ForgotPasswordController::class);
     Route::post('/password-reset', ResetPasswordController::class)->name('password.reset');
+
+    Route::middleware('auth:api')->prefix('admin')->group(function () {
+        Route::get('/access-requests', [UserAccessController::class, 'index']);
+        Route::patch('/access-requests/{accessRequest}/approve', [UserAccessController::class, 'approve']);
+        Route::patch('/access-requests/{accessRequest}/reject', [UserAccessController::class, 'reject']);
+
+        Route::get('/users', [UserManagementController::class, 'index']);
+        Route::get('/users/{user}', [UserManagementController::class, 'show']);
+        Route::patch('/users/{user}', [UserManagementController::class, 'update']);
+    });
 });
 
 JsonApiRoute::server('v2')->prefix('v2')->resources(function (ResourceRegistrar $server) {

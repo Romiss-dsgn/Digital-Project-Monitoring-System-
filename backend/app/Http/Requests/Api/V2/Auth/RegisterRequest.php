@@ -7,54 +7,52 @@ use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'full_name' => $this->input('full_name', $this->input('name')),
+            'office_unit' => $this->input('office_unit', $this->input('department')),
+        ]);
+    }
+
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'badge_number' => ['required', 'string', 'max:255', 'unique:users,badge_number'],
-            'department' => [
+            'full_name' => ['required', 'string', 'max:255'],
+            'email' => [
                 'required',
                 'string',
-                Rule::in([
-                    'contract-documentation',
-                    'records-management',
-                    'contract-monitoring',
-                    'engineering-planning',
-                    'engineering-supervision',
-                    'engineering-monitoring',
-                    'regional-admin',
-                ]),
+                'email',
+                'max:255',
+                'unique:users,email',
+                Rule::unique('access_requests', 'email')->where('status', 'Pending'),
             ],
-            'requested_role' => [
+            'badge_number' => [
                 'required',
                 'string',
-                Rule::in([
-                    'administrative-staff',
-                    'records-management-personnel',
-                    'contract-monitoring-personnel',
-                    'engineer-planning',
-                    'engineer-supervision',
-                    'engineer-monitoring',
-                    'system-administrator',
-                ]),
+                'max:255',
+                'unique:users,badge_number',
+                Rule::unique('access_requests', 'badge_number')->where('status', 'Pending'),
             ],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
+            'position' => ['nullable', 'string', 'max:255'],
+            'office_unit' => ['required', 'string', 'max:255'],
+            'requested_role_id' => ['nullable', 'integer', 'exists:roles,id', 'required_without:requested_role'],
+            'requested_role' => ['nullable', 'string', 'max:255', 'required_without:requested_role_id'],
+            'reason' => ['nullable', 'string', 'max:2000'],
+
+            // Accepted for backward compatibility with the current request-access form.
+            // Password setup should happen after an administrator approves the account.
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'department' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

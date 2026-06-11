@@ -17,7 +17,7 @@ class UserPolicy
      */
     public function viewAny(User $user)
     {
-        return true;
+        return $this->isSystemAdministrator($user);
     }
 
     /**
@@ -29,7 +29,7 @@ class UserPolicy
      */
     public function view(User $user, User $model)
     {
-        return true;
+        return $user->is($model) || $this->isSystemAdministrator($user);
     }
 
     /**
@@ -40,7 +40,7 @@ class UserPolicy
      */
     public function create(User $user)
     {
-        return true;
+        return $this->isSystemAdministrator($user);
     }
 
     /**
@@ -52,7 +52,7 @@ class UserPolicy
      */
     public function update(User $user, User $model)
     {
-        return true;
+        return $user->is($model) || $this->isSystemAdministrator($user);
     }
 
     /**
@@ -64,7 +64,7 @@ class UserPolicy
      */
     public function delete(User $user, User $model)
     {
-        return true;
+        return $this->isSystemAdministrator($user);
     }
 
     /**
@@ -89,5 +89,10 @@ class UserPolicy
     public function forceDelete(User $user, User $model)
     {
         //
+    }
+
+    private function isSystemAdministrator(User $user): bool
+    {
+        return $user->role?->name === 'System Administrator';
     }
 }

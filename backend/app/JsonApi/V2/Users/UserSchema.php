@@ -5,6 +5,7 @@ namespace App\JsonApi\V2\Users;
 use App\Models\User;
 use Carbon\Carbon;
 use LaravelJsonApi\Eloquent\Contracts\Paginator;
+use LaravelJsonApi\Eloquent\Fields\Boolean;
 use LaravelJsonApi\Eloquent\Fields\DateTime;
 use LaravelJsonApi\Eloquent\Fields\ID;
 use LaravelJsonApi\Eloquent\Fields\Str;
@@ -31,8 +32,17 @@ class UserSchema extends Schema
     {
         return [
             ID::make(),
+            Str::make('username')->sortable(),
             Str::make('name')->sortable(),
             Str::make('email')->sortable(),
+            Str::make('badge_number')->sortable(),
+            Str::make('contact_number'),
+            Str::make('position'),
+            Str::make('office_unit'),
+            Boolean::make('is_active')->readOnly(),
+            DateTime::make('last_login_at')
+                ->serializeUsing(static fn(?Carbon $value) => $value?->format('Y-m-d H:i:s'))
+                ->readOnly(),
             Str::make('password')->hidden(),
             Str::make('password_confirmation')->hidden(),
             DateTime::make('created_at')

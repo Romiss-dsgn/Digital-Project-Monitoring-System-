@@ -25,13 +25,13 @@ class User extends Authenticatable
         'name',
         'email',
         'badge_number',
-        'department',
-        'requested_role',
+        'contact_number',
+        'position',
+        'office_unit',
         'role_id',
         'is_active',
-        'access_status',
-        'access_requested_at',
-        'access_approved_at',
+        'email_verified_at',
+        'last_login_at',
         'password',
     ];
 
@@ -53,8 +53,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
-        'access_requested_at' => 'datetime',
-        'access_approved_at' => 'datetime',
+        'last_login_at' => 'datetime',
     ];
 
     /**
@@ -77,5 +76,25 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function createdProjects()
+    {
+        return $this->hasMany(Project::class, 'created_by');
+    }
+
+    public function createdContracts()
+    {
+        return $this->hasMany(Contract::class, 'created_by');
+    }
+
+    public function reviewedAccessRequests()
+    {
+        return $this->hasMany(AccessRequest::class, 'reviewed_by');
     }
 }

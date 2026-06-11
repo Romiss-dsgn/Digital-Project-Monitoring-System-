@@ -54,6 +54,8 @@ class LoginController extends Controller
             ]);
         }
 
+        $user->forceFill(['last_login_at' => now()])->save();
+
         return $response;
     }
 }

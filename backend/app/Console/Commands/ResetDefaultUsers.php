@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Models\Role;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 
 class ResetDefaultUsers extends Command
 {
@@ -28,11 +28,20 @@ class ResetDefaultUsers extends Command
     public function handle(): void
     {
         if (env('IS_DEMO')) {
-            $user = User::find('1');
+            $adminRole = Role::where('name', 'System Administrator')->first();
+            $user = User::where('email', 'admin@contrackpro.test')->first();
+
             if ($user) {
-                $user->update(['name' => 'Admin', 'email' => 'admin@jsonapi.com', 'password' => 'secret']);
-                $users = User::where('id', '!=', '1');
-                $users->delete();
+                $user->update([
+                    'username' => 'admin@contrackpro.test',
+                    'name' => 'ConTrackPro Administrator',
+                    'email' => 'admin@contrackpro.test',
+                    'position' => 'System Administrator',
+                    'office_unit' => 'BFP Region II - System Administration',
+                    'role_id' => $adminRole?->id,
+                    'is_active' => true,
+                    'password' => 'password',
+                ]);
             }
         }
     }

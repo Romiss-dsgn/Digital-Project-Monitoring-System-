@@ -2,29 +2,30 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class UsersSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        Schema::disableForeignKeyConstraints();
-        DB::table('users')->truncate();
-        Schema::enableForeignKeyConstraints();
+        $adminRole = Role::where('name', 'System Administrator')->first();
 
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@jsonapi.com',
-            'password' => 'secret'
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@contrackpro.test'],
+            [
+                'username' => 'admin@contrackpro.test',
+                'name' => 'ConTrackPro Administrator',
+                'badge_number' => 'BFP-ADMIN-0001',
+                'contact_number' => null,
+                'position' => 'System Administrator',
+                'office_unit' => 'BFP Region II - System Administration',
+                'role_id' => $adminRole?->id,
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'password' => 'password',
+            ]
+        );
     }
 }
