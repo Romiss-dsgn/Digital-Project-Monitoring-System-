@@ -1,0 +1,59 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: contrackpro_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: contrackpro
+      DB_USERNAME: contrackpro
+      DB_PASSWORD: contrackpro
+    working_dir: /var/www/html
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: contrackpro_mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: contrackpro
+      MYSQL_USER: contrackpro
+      MYSQL_PASSWORD: contrackpro
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - contrackpro_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: contrackpro_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  contrackpro_mysql_data:
