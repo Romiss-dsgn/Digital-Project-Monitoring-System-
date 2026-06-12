@@ -2,28 +2,30 @@
 
 ConTrackPro is a web-based contract and infrastructure project monitoring system. It is intended to help track project records, contract documents, engineering plans, cashflows, variation orders, project accomplishments, contractor performance, notifications, and audit history in one portal.
 
-This repository currently contains a Vue frontend and a Laravel JSON:API backend scaffold. As of this version, the Vue folder has been updated with ConTrackPro screens and routes. The Laravel backend and database schema have not yet been converted to the full ConTrackPro domain model.
+This repository contains a Vue frontend and a Laravel JSON:API backend. The backend now includes the finalized ConTrackPro schema foundation, role seeders, admin user seeding, request-access registration, and administrator access approval endpoints.
 
 ## Current Status
 
 | Area | Status |
 | --- | --- |
-| Vue frontend | Updated with ConTrackPro module pages and navigation routes. |
-| Laravel backend | Still the inherited Laravel JSON:API auth/users/profile scaffold. |
-| Database | Draft ConTrackPro schema migration has been added; API integration and data workflows are still pending. |
-| API integration | Auth/user endpoints exist; ConTrackPro module endpoints are still pending. |
-| Documentation | Root docs now describe the actual project scope and current implementation state. |
+| Vue frontend | Updated with ConTrackPro auth and module page foundations. |
+| Laravel backend | Auth, users, roles, access requests, admin approval flow, models, and seeders are in progress. |
+| Database | Finalized ConTrackPro schema foundation is represented in Laravel migrations. |
+| API integration | Auth and admin access approval endpoints are working; module CRUD endpoints are still pending. |
+| Docker | Development containers are available for backend, MySQL, and phpMyAdmin. |
 
 ## Project Structure
 
 ```text
 .
-|-- laravel-json-api/
+|-- backend/
 |   |-- app/
 |   |-- database/
 |   |-- routes/
+|   |-- Dockerfile
+|   |-- .env.docker.example
 |   `-- composer.json
-|-- vue-material-dashboard-laravel/
+|-- frontend/
 |   |-- public/
 |   |-- src/
 |   |   |-- router/
@@ -31,6 +33,10 @@ This repository currently contains a Vue frontend and a Laravel JSON:API backend
 |   |   |-- store/
 |   |   `-- views/
 |   `-- package.json
+|-- docker-compose.yml
+|-- DOCKER.md
+|-- scripts/
+|   `-- docker-setup.ps1
 |-- CHANGELOG.md
 |-- ISSUE_TEMPLATE.md
 `-- README.md
@@ -58,13 +64,13 @@ The current Vue application includes routes and screens for:
 Main frontend route definitions are in:
 
 ```text
-vue-material-dashboard-laravel/src/router/index.js
+frontend/src/router/index.js
 ```
 
 ConTrackPro module screens are in:
 
 ```text
-vue-material-dashboard-laravel/src/views/modules/
+frontend/src/views/modules/
 ```
 
 ## Intended System Scope
@@ -112,10 +118,28 @@ Backend scaffold:
 - PHP zip extension or a system `7z`/`unzip` command for Composer package downloads
 - MySQL or MariaDB
 
+## Docker Development Setup
+
+Use Docker when you want the backend, database, and phpMyAdmin to run in a reproducible containerized environment.
+
+```powershell
+.\scripts\docker-setup.ps1
+```
+
+Docker services:
+
+```text
+Backend API: http://localhost:8000
+phpMyAdmin: http://localhost:8081
+MySQL: 127.0.0.1:3307
+```
+
+See [DOCKER.md](DOCKER.md) for the full setup, daily commands, environment rules, and troubleshooting notes.
+
 ## Frontend Setup
 
 ```bash
-cd vue-material-dashboard-laravel
+cd frontend
 npm install
 ```
 
@@ -160,7 +184,7 @@ npm run lint
 
 ## Backend Setup
 
-The backend is present but not yet updated for the ConTrackPro modules. Use this setup only when working on auth/users/profile or when starting the Laravel implementation work.
+Use Docker for the most consistent backend setup. If you work without Docker, use XAMPP PHP 8.2 and XAMPP MySQL.
 
 The checked-in `composer.lock` currently expects PHP 8.2 or 8.3. PHP 8.4 will fail on locked packages such as `lcobucci/clock`, `nette/schema`, and `nette/utils` unless the backend dependencies are updated. The Laravel Passport/JWT stack also requires the PHP `sodium` extension to be enabled. Composer also needs the PHP `zip` extension or a system `7z`/`unzip` command to install packages from downloaded archives.
 
@@ -182,7 +206,7 @@ Expected checks:
 - The module check should print both `sodium` and `zip`.
 
 ```bash
-cd laravel-json-api
+cd backend
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -199,7 +223,7 @@ Current API routes are focused on:
 
 - Login
 - Logout
-- Registration
+- Request-access registration
 - Forgot password
 - Reset password
 - Current user profile
@@ -208,16 +232,16 @@ Current API routes are focused on:
 The route file is:
 
 ```text
-laravel-json-api/routes/api.php
+backend/routes/api.php
 ```
 
 The first-pass ConTrackPro schema migration is:
 
 ```text
-laravel-json-api/database/migrations/2026_06_03_000001_create_contrackpro_schema.php
+backend/database/migrations/2026_06_03_000001_create_contrackpro_final_schema.php
 ```
 
-It adds the planned tables for roles, permissions, contractors, projects, contracts, documents, engineering plans, cashflows, invoices, variation orders, accomplishments, contractor ratings, notifications, and audit logs.
+It adds the core tables for roles, permissions, access requests, contractors, projects, contracts, documents, engineering plans, cashflow periods, invoices, payments, variation orders, time extensions, work suspensions, accomplishments, contractor ratings, notifications, and audit logs.
 
 ## Development Notes
 
