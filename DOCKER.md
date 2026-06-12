@@ -62,6 +62,12 @@ Run this from the repository root:
 .\scripts\docker-setup.ps1
 ```
 
+If you previously used XAMPP/local MySQL and already have a `backend\.env`, reset it to Docker values:
+
+```powershell
+.\scripts\docker-setup.ps1 -ResetEnv
+```
+
 The setup script:
 
 - copies `backend\.env.docker.example` to `backend\.env` if `.env` is missing
@@ -78,7 +84,7 @@ The script runs `migrate:fresh --seed`, so it resets the Docker database.
 ## Manual Setup
 
 ```powershell
-Copy-Item backend\.env.docker.example backend\.env
+Copy-Item backend\.env.docker.example backend\.env -Force
 docker compose up -d --build
 docker compose exec backend composer install --no-interaction --prefer-dist --optimize-autoloader
 docker compose exec backend php artisan key:generate --force --no-interaction
