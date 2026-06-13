@@ -55,7 +55,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end mb-4">
-                            <router-link :to="{ name: 'Password Forgot' }" class="forgot-link">Forgot Password?</router-link>
+                            <span class="forgot-link" @click="showForgotModal = true">Forgot Password?</span>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-login w-100">LOGIN</button>
@@ -69,6 +69,56 @@
                             <router-link :to="{ name: 'Signup' }" class="access-link">Request Access</router-link>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forgot Password Modal -->
+        <div v-if="showForgotModal" class="contact-modal-backdrop" @click.self="showForgotModal = false">
+            <div class="contact-modal">
+                <div class="contact-modal-header">
+                    <div class="contact-modal-icon">
+                        <i class="material-icons-round">lock_reset</i>
+                    </div>
+                    <div>
+                        <h5>Forgot Password?</h5>
+                        <p>Bureau of Fire Protection Region II</p>
+                    </div>
+                    <button class="contact-modal-close" @click="showForgotModal = false">
+                        <i class="material-icons-round">close</i>
+                    </button>
+                </div>
+                <div class="contact-modal-body">
+                    <div class="forgot-reminder-banner">
+                        <i class="material-icons-round">admin_panel_settings</i>
+                        <div>
+                            <span class="forgot-reminder-title">Contact the System Administrator</span>
+                            <span class="forgot-reminder-desc">
+                                Password resets are handled by the IT Admin. Please reach out directly to have your password reset.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="material-icons-round">email</i>
+                        <div>
+                            <span class="contact-label">Email Address</span>
+                            <a href="mailto:itsupport@bfp2.gov.ph" class="contact-value contact-link">itsupport@bfp2.gov.ph</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="material-icons-round">phone</i>
+                        <div>
+                            <span class="contact-label">Office Telephone</span>
+                            <a href="tel:+6378846-1234" class="contact-value contact-link">(078) 846-1234</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="material-icons-round">schedule</i>
+                        <div>
+                            <span class="contact-label">Office Hours</span>
+                            <span class="contact-value">Monday – Friday, 8:00 AM – 5:00 PM</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -141,6 +191,7 @@ export default {
             user: { username: "admin@jsonapi.com", password: "secret" },
             showPassword: false,
             showContactModal: false,
+            showForgotModal: false,
         };
     },
     computed: {
@@ -401,14 +452,25 @@ export default {
 }
 
 /* ─── Links & Buttons ─────────────────────────────────────── */
-.forgot-link,
+.forgot-link {
+    color: #c0392b;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.forgot-link:hover {
+    color: #1a4fa0;
+    text-decoration: underline;
+}
+
 .access-link {
     color: #c0392b;
     font-weight: 600;
     text-decoration: none;
 }
 
-.forgot-link:hover,
 .access-link:hover {
     color: #1a4fa0;
     text-decoration: underline;
@@ -452,7 +514,7 @@ export default {
     text-decoration: underline;
 }
 
-/* ─── Contact Support Modal ───────────────────────────────── */
+/* ─── Shared Modal Styles ─────────────────────────────────── */
 .contact-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -490,8 +552,8 @@ export default {
 }
 
 .contact-modal-icon {
-    width: 42px;
-    height: 42px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: linear-gradient(135deg, #c0392b, #1a4fa0);
     display: flex;
@@ -542,7 +604,7 @@ export default {
 }
 
 .contact-modal-body {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -593,13 +655,46 @@ export default {
 }
 
 .contact-modal-footer {
-    padding: 1rem 1.5rem;
+    padding: 0.85rem 1.5rem;
     background: #f8f9fc;
     border-top: 1px solid #edf0f5;
 }
 
 .contact-modal-footer p {
-    margin: 0;
+    margin: 0.75;
+    font-size: 0.8rem;
+    color: #667085;
+    line-height: 1.5;
+}
+
+/* ─── Forgot Password Reminder Banner ────────────────────── */
+.forgot-reminder-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.3rem;
+    background: linear-gradient(135deg, rgba(192, 57, 43, 0.07), rgba(26, 79, 160, 0.07));
+    border: 1px solid rgba(192, 57, 43, 0.2);
+    border-radius: 0.85rem;
+    padding: 1rem;
+}
+
+.forgot-reminder-banner > .material-icons-round {
+    color: #c0392b;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.forgot-reminder-title {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1f2633;
+    margin-bottom: 0.2rem;
+}
+
+.forgot-reminder-desc {
+    display: block;
     font-size: 0.8rem;
     color: #667085;
     line-height: 1.5;
