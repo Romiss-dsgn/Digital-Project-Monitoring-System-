@@ -62,6 +62,12 @@ Run this from the repository root:
 .\scripts\docker-setup.ps1
 ```
 
+If you previously used XAMPP/local MySQL and already have a `backend\.env`, reset it to Docker values:
+
+```powershell
+.\scripts\docker-setup.ps1 -ResetEnv
+```
+
 The setup script:
 
 - copies `backend\.env.docker.example` to `backend\.env` if `.env` is missing
@@ -75,10 +81,36 @@ The setup script:
 
 The script runs `migrate:fresh --seed`, so it resets the Docker database.
 
+## Verify Database Setup
+
+After running the setup script, confirm the containers are healthy:
+
+```powershell
+docker compose ps
+```
+
+Confirm the Docker database has tables:
+
+```powershell
+docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro -e "SHOW TABLES;"
+```
+
+Confirm the seed data exists:
+
+```powershell
+docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro --batch --execute="SELECT 'users' AS item, COUNT(*) AS count FROM users UNION ALL SELECT 'roles', COUNT(*) FROM roles UNION ALL SELECT 'admin_exists', COUNT(*) FROM users WHERE email = 'admin@contrackpro.test';"
+```
+
+If phpMyAdmin opens but shows no tables, make sure you selected the `contrackpro` database in the left sidebar. Also check that the backend container is not restarting:
+
+```powershell
+docker compose logs backend --tail=100
+```
+
 ## Manual Setup
 
 ```powershell
-Copy-Item backend\.env.docker.example backend\.env
+Copy-Item backend\.env.docker.example backend\.env -Force
 docker compose up -d --build
 docker compose exec backend composer install --no-interaction --prefer-dist --optimize-autoloader
 docker compose exec backend php artisan key:generate --force --no-interaction
