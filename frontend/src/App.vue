@@ -29,30 +29,21 @@ Coded by www.creative-tim.com
       v-if="showNavbar"
     />
     <router-view />
-    <app-footer v-show="showFooter" />
-    <configurator
-      :toggle="toggleConfigurator"
-      :class="[showConfig ? 'show' : '', hideConfigButton ? 'd-none' : '']"
-    />
   </main>
 </template>
 <script>
 import Sidenav from "./examples/Sidenav";
-import Configurator from "@/examples/Configurator.vue";
 import Navbar from "@/examples/Navbars/Navbar.vue";
-import AppFooter from "@/examples/Footer.vue";
 import { mapMutations, mapState } from "vuex";
 
 export default {
   name: "App",
   components: {
     Sidenav,
-    Configurator,
-    Navbar,
-    AppFooter
+    Navbar
   },
   methods: {
-    ...mapMutations(["toggleConfigurator", "navbarMinimize"])
+    ...mapMutations(["navbarMinimize"])
   },
   computed: {
     ...mapState([
@@ -63,10 +54,7 @@ export default {
       "navbarFixed",
       "absolute",
       "showSidenav",
-      "showNavbar",
-      "showFooter",
-      "showConfig",
-      "hideConfigButton"
+      "showNavbar"
     ])
   },
   beforeMount() {
