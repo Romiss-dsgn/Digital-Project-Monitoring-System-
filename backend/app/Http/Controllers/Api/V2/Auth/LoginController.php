@@ -34,7 +34,15 @@ class LoginController extends Controller
 
         $client = DB::table('oauth_clients')->where('password_client', 1)->first();
 
-        $request = Request::create(config('app.url') . '/oauth/token', 'POST', [
+        if (!$client?->id || !$client?->secret) {
+            return Error::fromArray([
+                'title' => Response::$statusTexts[Response::HTTP_INTERNAL_SERVER_ERROR],
+                'detail' => 'Passport password client is not configured. Run php artisan passport:client --password inside the backend container.',
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+            ]);
+        }
+
+        $request = Request::create('/oauth/token', 'POST', [
             'grant_type'    => 'password',
             'client_id'     => $client->id,
             'client_secret' => $client->secret,
@@ -47,10 +55,18 @@ class LoginController extends Controller
         $response = app()->handle($request);
 
         if ($response->getStatusCode() !== Response::HTTP_OK) {
+            $payload = json_decode($response->getContent(), true) ?: [];
+            $detail = $payload['error_description']
+                ?? $payload['message']
+                ?? $payload['error']
+                ?? $response->exception?->getMessage()
+                ?? 'Authentication failed.';
+            $status = $response->getStatusCode();
+
             return Error::fromArray([
-                'title'  => Response::$statusTexts[Response::HTTP_BAD_REQUEST],
-                'detail' => $response->exception->getMessage(),
-                'status' => Response::HTTP_BAD_REQUEST,
+                'title'  => Response::$statusTexts[$status] ?? Response::$statusTexts[Response::HTTP_BAD_REQUEST],
+                'detail' => $detail,
+                'status' => $status,
             ]);
         }
 
