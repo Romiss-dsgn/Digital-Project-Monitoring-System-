@@ -45,7 +45,7 @@ Invoke-Compose up -d --build
 
 Write-Host ""
 Write-Host "Installing Composer dependencies..."
-Invoke-Compose exec -T backend composer install --no-interaction --prefer-dist --optimize-autoloader
+Invoke-Compose exec -T backend composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
 
 Write-Host ""
 Write-Host "Preparing Laravel application..."

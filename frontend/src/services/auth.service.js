@@ -1,7 +1,8 @@
 import axios from 'axios';
 import authHeader from './auth-header';
+import apiBaseUrl from './api-base';
 
-const API_URL = process.env.VUE_APP_API_BASE_URL
+const API_URL = apiBaseUrl()
 const BASE_URL = process.env.VUE_APP_BASE_URL
 
 export default {

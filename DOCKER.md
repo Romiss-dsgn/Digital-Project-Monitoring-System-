@@ -178,6 +178,17 @@ Expected result: an OAuth access token.
 - Run Laravel commands inside the backend container when using Docker.
 - Do not mix local XAMPP Artisan commands with Docker database testing unless you intentionally maintain two environments.
 - The MySQL data lives in the named Docker volume `contrackpro_mysql_data`.
+- Composer dependencies live in the named Docker volume `backend_vendor`.
+  This avoids slow or failed installs when the project is stored in OneDrive or another synced Windows folder.
 - The backend source is bind-mounted into the container for fast development feedback.
 - The Docker image defines the runtime dependencies; the compose file defines the local service topology.
 - The entrypoint bootstraps fresh clones by installing Composer dependencies and generating an app key if needed.
+
+If the backend keeps restarting with Composer timeout errors, rebuild the backend and recreate the vendor volume:
+
+```powershell
+docker compose down
+docker volume rm digital-project-monitoring-system-_backend_vendor
+docker compose up -d --build
+docker compose exec -T backend composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+```
