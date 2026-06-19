@@ -188,7 +188,7 @@ export default {
         return {
             logo,
             bgImage,
-            user: { username: "admin@jsonapi.com", password: "secret" },
+            user: { username: "admin@contrackpro.test", password: "password" },
             showPassword: false,
             showContactModal: false,
             showForgotModal: false,
@@ -229,9 +229,17 @@ export default {
                 });
                 this.$router.push({ name: 'Dashboard' });
             } catch (error) {
+                const apiDetail = error.response?.data?.errors?.[0]?.detail;
+                const message = apiDetail
+                    || (error.code === "ECONNABORTED"
+                        ? "Login timed out. Make sure the backend is running on port 8000."
+                        : error.response
+                            ? "Invalid credentials!"
+                            : "Unable to reach the server. Check that the backend is running.");
+
                 showSwal.methods.showSwal({
                     type: "error",
-                    message: "Invalid credentials!",
+                    message,
                     width: 500
                 });
             }
