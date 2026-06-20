@@ -32,6 +32,8 @@ class User extends Authenticatable
         'is_active',
         'email_verified_at',
         'last_login_at',
+        'accepted_at',
+        'rejected_at',
         'password',
     ];
 
@@ -54,6 +56,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
         'last_login_at' => 'datetime',
+        'accepted_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     /**

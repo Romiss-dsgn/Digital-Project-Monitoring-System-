@@ -25,10 +25,10 @@
 
                     <form class="login-form" @submit.prevent="handleLogin">
                         <div class="form-group mb-3">
-                            <label for="username" class="form-label">Username</label>
+                            <label for="email" class="form-label">Email</label>
                             <div class="input-with-icon">
-                                <i class="material-icons-round text-secondary">person</i>
-                                <input id="username" v-model="user.username" type="text" class="form-control" placeholder="Enter username" />
+                                <i class="material-icons-round text-secondary">mail</i>
+                                <input id="email" v-model="user.email" type="email" class="form-control" placeholder="Enter email" />
                             </div>
                         </div>
 
@@ -188,7 +188,7 @@ export default {
         return {
             logo,
             bgImage,
-            user: { username: "admin@contrackpro.test", password: "password" },
+            user: { email: "admin@contrackpro.test", password: "password" },
             showPassword: false,
             showContactModal: false,
             showForgotModal: false,
@@ -213,10 +213,10 @@ export default {
     methods: {
         ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
         async handleLogin() {
-            if (!this.user.username || !this.user.password) {
+            if (!this.user.email || !this.user.password) {
                 showSwal.methods.showSwal({
                     type: "error",
-                    message: "Username and password are required.",
+                    message: "Email and password are required.",
                     width: 500
                 });
                 return;
@@ -224,7 +224,7 @@ export default {
 
             try {
                 await this.$store.dispatch('auth/login', {
-                    email: this.user.username,
+                    email: this.user.email,
                     password: this.user.password
                 });
                 this.$router.push({ name: 'Dashboard' });

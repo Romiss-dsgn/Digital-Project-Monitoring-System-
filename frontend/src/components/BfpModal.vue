@@ -61,7 +61,9 @@ export default {
     confirmText: { type: String, default: "Save" },
     confirmIcon: { type: String, default: "save" },
     showFooter: { type: Boolean, default: true },
-    width: { type: String, default: "620px" }
+   width: { type: String, default: "620px" },
+   loading: { type: Boolean, default: false },
+   confirmVariant: { type: String, default: "primary" }
   },
   emits: ["close", "confirm"],
   data() {
