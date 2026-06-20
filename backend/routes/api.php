@@ -14,17 +14,6 @@ use App\Http\Controllers\Api\V2\MeController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
 Route::prefix('v2')->middleware('json.api')->group(function () {
     Route::post('/login', LoginController::class)->name('login');
     Route::post('/logout', LogoutController::class)->middleware('auth:api');
@@ -37,9 +26,19 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
         Route::patch('/access-requests/{accessRequest}/approve', [UserAccessController::class, 'approve']);
         Route::patch('/access-requests/{accessRequest}/reject', [UserAccessController::class, 'reject']);
 
-        Route::get('/users', [UserManagementController::class, 'index']);
-        Route::get('/users/{user}', [UserManagementController::class, 'show']);
-        Route::patch('/users/{user}', [UserManagementController::class, 'update']);
+        Route::get('/users/stats',              [UserManagementController::class, 'stats']);
+        Route::get('/users',                    [UserManagementController::class, 'index']);
+        Route::post('/users',                   [UserManagementController::class, 'store']);
+        Route::get('/users/{user}',             [UserManagementController::class, 'show']);
+        Route::put('/users/{user}',             [UserManagementController::class, 'update']);
+        Route::patch('/users/{user}/status',    [UserManagementController::class, 'updateStatus']);
+        Route::delete('/users/{user}',          [UserManagementController::class, 'destroy']);
+
+        // NEW: Accept / Reject pending users
+        Route::post('/users/{user}/accept',     [UserManagementController::class, 'accept']);
+        Route::delete('/users/{user}/reject',   [UserManagementController::class, 'reject']);
+
+        Route::get('/roles',                    [UserManagementController::class, 'roles']);
     });
 });
 

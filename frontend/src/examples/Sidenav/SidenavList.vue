@@ -74,7 +74,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item">
+      <li class="nav-item" v-if="isAdmin">
         <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="user-management" navText="User Management">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">groups</span>
@@ -109,6 +109,21 @@ export default {
   },
   components: {
     SidenavCollapse
+  },
+  async mounted() {
+    if (localStorage.getItem("user_free") && !this.$store.getters["profile/getUserProfile"]) {
+      try {
+        await this.$store.dispatch("profile/getProfile");
+      } catch (error) {
+        void error;
+      }
+    }
+  },
+  computed: {
+    isAdmin() {
+      const profile = this.$store.getters["profile/getUserProfile"];
+      return profile?.role === "System Administrator";
+    }
   },
   methods: {
     getRoute() {
