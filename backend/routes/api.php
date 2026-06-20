@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\V2\Auth\RegisterController;
 use App\Http\Controllers\Api\V2\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V2\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\V2\MeController;
-use App\Http\Controllers\Api\V2\Admin\EngineeringPlanController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 
@@ -40,9 +39,6 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
         Route::delete('/users/{user}/reject',   [UserManagementController::class, 'reject']);
 
         Route::get('/roles',                    [UserManagementController::class, 'roles']);
-        
-        // Engineering plans
-        Route::post('/engineering-plans',       [EngineeringPlanController::class, 'store']);
     });
 });
 
