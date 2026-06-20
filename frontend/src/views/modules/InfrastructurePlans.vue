@@ -74,22 +74,6 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-if="loading">
-                      <td colspan="8" class="align-middle text-center py-4">
-                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                        Loading projects...
-                      </td>
-                    </tr>
-                    <tr v-else-if="error">
-                      <td colspan="8" class="align-middle text-center py-4 text-danger">
-                        {{ error }}
-                      </td>
-                    </tr>
-                    <tr v-else-if="filteredProjects.length === 0">
-                      <td colspan="8" class="align-middle text-center py-4 text-secondary">
-                        No projects found. Click "Add New Project" to create one.
-                      </td>
-                    </tr>
                     <tr v-for="project in filteredProjects" :key="project.id">
                       <td class="align-middle text-sm">
                         <span class="project-code">{{ project.code }}</span>
@@ -457,9 +441,9 @@
               </div>
               <div class="bfp-footer-actions">
                 <button class="bfp-btn-cancel" @click="closeModal">Cancel</button>
-                <button class="bfp-btn-save" @click="saveProject" :disabled="isSubmitting">
+                <button class="bfp-btn-save" @click="saveProject">
                   <i class="material-icons-round">save</i>
-                  {{ isSubmitting ? 'Saving...' : (form.id ? 'Update Project' : 'Register Project') }}
+                  Register Project
                 </button>
               </div>
             </div>
@@ -538,7 +522,6 @@
 <script>
 import bfpLogo from "@/assets/img/BFP 11.png";
 import BfpModal from "@/components/BfpModal.vue";
-import projectService from "@/services/project.service";
 
 export default {
   name: "InfrastructurePlans",
@@ -548,10 +531,6 @@ export default {
       bfpLogo,
       showModal: false,
       showFilterModal: false,
-      loading: false,
-      error: null,
-      isSubmitting: false,
-      projects: [],
       filters: { name: "", code: "", location: "", status: "", phase: "" },
       locations: ["Cagayan", "Isabela", "Nueva Vizcaya", "Quirino"],
       phases: ["Planning", "Foundation", "Construction", "Finishing", "Post-Eval"],
@@ -568,7 +547,6 @@ export default {
 
       /* ── New Project Form ── */
       form: {
-        id: null,
         code: "",
         name: "",
         location: "",
@@ -581,62 +559,46 @@ export default {
         progress: 0,
         notes: ""
       },
-      errors: {}
-    };
-  },
+      errors: {},
 
-  mounted() {
-    this.fetchProjects();
+      projects: [
+        { id: 1, code: "BFP-2024-C001", name: "Tuguegarao Central Fire Station - Phase II",     location: "Cagayan",       contractor: "V.G. Construction Services",   progress: 45,  phase: "Construction", status: "on_time"  },
+        { id: 2, code: "BFP-2024-1012", name: "Ilagan City Fire Sub-Station Annex",             location: "Isabela",       contractor: "BuildRight Partners Corp.",    progress: 12,  phase: "Foundation",   status: "delayed"  },
+        { id: 3, code: "BFP-2023-N005", name: "Bayombong Regional Logistics Hub",               location: "Nueva Vizcaya", contractor: "NorthEdge Engineering",        progress: 85,  phase: "Finishing",    status: "ongoing"  },
+        { id: 4, code: "BFP-2024-P002", name: "Region II Headquarters Renovation",              location: "Cagayan",       contractor: "PrimeBuilders Inc.",           progress: 5,   phase: "Planning",     status: "planning" },
+        { id: 5, code: "BFP-2023-Q008", name: "Quirino Provincial Fire Office - Solar Project", location: "Quirino",       contractor: "EcoPower Solutions",           progress: 100, phase: "Post-Eval",    status: "completed"}
+      ]
+    };
   },
 
   computed: {
     filteredProjects() {
-      return this.projects;
+      return this.projects.filter((p) => {
+        return (
+          (!this.filters.name     || p.name.toLowerCase().includes(this.filters.name.toLowerCase())) &&
+          (!this.filters.code     || p.code.toLowerCase().includes(this.filters.code.toLowerCase())) &&
+          (!this.filters.location || p.location === this.filters.location) &&
+          (!this.filters.status   || p.status   === this.filters.status)   &&
+          (!this.filters.phase    || p.phase     === this.filters.phase)
+        );
+      });
     }
   },
 
-  watch: {
-    filters: {
-      handler() {
-        this.fetchProjects();
-      },
-      deep: true,
-    },
-  },
-
   methods: {
-    async fetchProjects() {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await projectService.getProjects({
-          search: this.filters.name || undefined,
-          location: this.filters.location || undefined,
-          status: this.filters.status || undefined,
-          phase: this.filters.phase || undefined,
-        });
-        this.projects = response.data.data || [];
-      } catch (e) {
-        this.error = 'Failed to load projects. Please try again.';
-        console.error('Error fetching projects:', e);
-      } finally {
-        this.loading = false;
-      }
-    },
-
     resetFilters() {
       // filters are applied reactively via computed — this button is a no-op
       // kept for UX affordance; to clear filters, set all values to empty
     },
 
-    setFilterStatus(status) {
-      this.filters.status = status;
-    },
+      setFilterStatus(status) {
+        this.filters.status = status;
+      },
 
     closeModal() {
       this.showModal = false;
       this.errors = {};
-      this.form = { id: null, code: "", name: "", location: "", contractor: "", startDate: "", endDate: "", budget: "", phase: "", status: "", progress: 0, notes: "" };
+      this.form = { code: "", name: "", location: "", contractor: "", startDate: "", endDate: "", budget: "", phase: "", status: "", progress: 0, notes: "" };
     },
 
     validateForm() {
@@ -644,67 +606,26 @@ export default {
       if (!this.form.code.trim())       e.code       = "Project code is required.";
       if (!this.form.name.trim())       e.name       = "Project name is required.";
       if (!this.form.location)          e.location   = "Please select a province.";
+      if (!this.form.contractor.trim()) e.contractor = "Contractor name is required.";
       if (!this.form.phase)             e.phase      = "Please select a phase.";
       if (!this.form.status)            e.status     = "Please select a status.";
       this.errors = e;
       return Object.keys(e).length === 0;
     },
 
-    async saveProject() {
+    saveProject() {
       if (!this.validateForm()) return;
-      this.isSubmitting = true;
-      this.error = null;
-      try {
-        const payload = {
-          code: this.form.code.trim(),
-          name: this.form.name.trim(),
-          location: this.form.location,
-          contractor: this.form.contractor?.trim() || null,
-          startDate: this.form.startDate || null,
-          endDate: this.form.endDate || null,
-          budget: this.form.budget ? parseFloat(this.form.budget) : null,
-          phase: this.form.phase,
-          status: this.form.status,
-          progress: Math.min(100, Math.max(0, Number(this.form.progress) || 0)),
-          notes: this.form.notes || null,
-        };
-
-        if (this.form.id) {
-          const response = await projectService.updateProject(this.form.id, payload);
-          const idx = this.projects.findIndex(p => p.id === this.form.id);
-          if (idx !== -1) this.projects[idx] = response.data.data;
-        } else {
-          const response = await projectService.createProject(payload);
-          this.projects.unshift(response.data.data);
-        }
-        this.closeModal();
-      } catch (e) {
-        this.error = e.response?.data?.message || 'Failed to save project.';
-      } finally {
-        this.isSubmitting = false;
-      }
-    },
-
-    viewProject(project) {
-      alert(`View: ${project.name}`);
-    },
-
-    editProject(project) {
-      this.form = {
-        id: project.id,
-        code: project.code,
-        name: project.name,
-        location: project.location,
-        contractor: project.contractor,
-        startDate: project.start_date,
-        endDate: project.end_date,
-        budget: project.budget,
-        phase: project.phase,
-        status: project.status,
-        progress: project.progress,
-        notes: project.notes || "",
-      };
-      this.showModal = true;
+      this.projects.push({
+        id:         Date.now(),
+        code:       this.form.code.trim(),
+        name:       this.form.name.trim(),
+        location:   this.form.location,
+        contractor: this.form.contractor.trim(),
+        progress:   Math.min(100, Math.max(0, Number(this.form.progress) || 0)),
+        phase:      this.form.phase,
+        status:     this.form.status
+      });
+      this.closeModal();
     },
 
     statusLabel(status) {
@@ -738,15 +659,11 @@ export default {
       return `--slider-fill: ${color}; background: linear-gradient(to right, ${color} ${p}%, #e5e7eb ${p}%)`;
     },
 
-    async deleteProject(project) {
-      if (!confirm(`Archive "${project.name}"?`)) return;
-      this.error = null;
-      try {
-        await projectService.deleteProject(project.id);
+    viewProject(project)   { alert(`View: ${project.name}`);   },
+    editProject(project)   { alert(`Edit: ${project.name}`);   },
+    deleteProject(project) {
+      if (confirm(`Delete "${project.name}"?`)) {
         this.projects = this.projects.filter(p => p.id !== project.id);
-      } catch (e) {
-        this.error = 'Failed to archive project.';
-        console.error('Error archiving project:', e);
       }
     }
   }

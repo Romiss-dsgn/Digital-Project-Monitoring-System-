@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\V2\Auth\RegisterController;
 use App\Http\Controllers\Api\V2\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V2\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\V2\MeController;
-use App\Http\Controllers\Api\V2\ProjectController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 
@@ -40,11 +39,6 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
         Route::delete('/users/{user}/reject',   [UserManagementController::class, 'reject']);
 
         Route::get('/roles',                    [UserManagementController::class, 'roles']);
-
-        Route::get('/projects',                    [ProjectController::class, 'index']);
-        Route::post('/projects',                   [ProjectController::class, 'store']);
-        Route::patch('/projects/{project}',        [ProjectController::class, 'update']);
-        Route::delete('/projects/{project}',       [ProjectController::class, 'destroy']);
     });
 });
 
