@@ -35,14 +35,6 @@ class LoginController extends Controller
             ]);
         }
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return Error::fromArray([
-                'title' => Response::$statusTexts[Response::HTTP_INTERNAL_SERVER_ERROR],
-                'detail' => 'Passport password client is not configured. Run php artisan passport:client --password inside the backend container.',
-                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-            ]);
-        }
-
         // Pending — not yet accepted by admin
         if (!$user->is_active && is_null($user->accepted_at)) {
             return Error::fromArray([
