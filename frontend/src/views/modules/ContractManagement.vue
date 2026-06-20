@@ -1,6 +1,9 @@
 <template>
   <div class="module-page">
     <div class="container-fluid py-4">
+      <div v-if="apiError" class="alert alert-danger py-2 px-3 mb-3">
+        {{ apiError }}
+      </div>
 
       <!-- ── Top Info Card + Stats ── -->
       <div class="row mb-4">
@@ -16,7 +19,7 @@
                 </p>
               </div>
               <div class="d-flex gap-2">
-                <button class="btn btn-primary btn-sm" @click="showNewProjectModal = true">
+                <button class="btn btn-primary btn-sm" @click="openCreateContractModal">
                   <i class="material-icons-round" style="font-size:15px;vertical-align:-3px">add</i>
                   New Project
                 </button>
@@ -109,7 +112,13 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="contract in getFilteredContracts()" :key="contract.id">
+                    <tr v-if="isLoading">
+                      <td colspan="6" class="text-center py-4 text-secondary">Loading contract records...</td>
+                    </tr>
+                    <tr v-else-if="getFilteredContracts().length === 0">
+                      <td colspan="6" class="text-center py-4 text-secondary">No contract records found.</td>
+                    </tr>
+                    <tr v-for="contract in isLoading ? [] : getFilteredContracts()" :key="contract.id">
                       <td>
                         <strong class="contract-id-text">{{ contract.contract_id }}</strong>
                       </td>
@@ -169,7 +178,7 @@
 
               <!-- Pagination -->
               <div class="d-flex align-items-center justify-content-between px-4 py-3 border-top">
-                <span class="text-secondary small">Showing 1 to 10 of 42 contracts</span>
+                <span class="text-secondary small">Showing {{ getFilteredContracts().length }} contract records</span>
                 <div class="d-flex gap-1">
                   <button class="btn btn-sm btn-light border pagination-btn">
                     <i class="material-icons-round" style="font-size:16px;vertical-align:-3px">chevron_left</i>
@@ -228,7 +237,7 @@
             </div>
             <div>
               <p class="bfp-modal-agency">Bureau of Fire Protection</p>
-              <h5 class="bfp-modal-title">New Contract Project</h5>
+              <h5 class="bfp-modal-title">{{ contractForm.id ? "Edit Contract" : "New Contract Project" }}</h5>
             </div>
           </div>
           <button class="bfp-modal-close" @click="showNewProjectModal = false">
@@ -243,18 +252,30 @@
           <div class="bfp-section">
             <div class="bfp-section-label"><i class="material-icons-round">folder_open</i> Project Identification</div>
             <div class="bfp-form-grid">
-              <div class="bfp-field-half">
-                <label class="bfp-label">Project Name <span class="bfp-required">*</span></label>
+              <div class="bfp-field-full">
+                <label class="bfp-label">Project <span class="bfp-required">*</span></label>
                 <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">business</i>
-                  <input type="text" class="bfp-input" placeholder="Enter project name" />
+                  <i class="material-icons-round bfp-input-icon">folder_open</i>
+                  <select v-model="contractForm.project_id" class="bfp-input bfp-select">
+                    <option value="">Select project</option>
+                    <option v-for="project in projects" :key="project.id" :value="project.id">
+                      {{ project.project_code }} - {{ project.project_name }}
+                    </option>
+                  </select>
                 </div>
               </div>
               <div class="bfp-field-half">
-                <label class="bfp-label">Contract ID <span class="bfp-required">*</span></label>
+                <label class="bfp-label">Contract Title <span class="bfp-required">*</span></label>
+                <div class="bfp-input-wrap">
+                  <i class="material-icons-round bfp-input-icon">business</i>
+                  <input v-model="contractForm.contract_title" type="text" class="bfp-input" placeholder="Enter contract title" />
+                </div>
+              </div>
+              <div class="bfp-field-half">
+                <label class="bfp-label">Contract Number <span class="bfp-required">*</span></label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">tag</i>
-                  <input type="text" class="bfp-input" placeholder="e.g. REG-II-005" />
+                  <input v-model="contractForm.contract_number" type="text" class="bfp-input" placeholder="e.g. BFP-R2-CON-2024-011" />
                 </div>
               </div>
             </div>
@@ -266,14 +287,19 @@
                 <label class="bfp-label">Contractor / Firm <span class="bfp-required">*</span></label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">groups</i>
-                  <input type="text" class="bfp-input" placeholder="Accredited contractor or company name" />
+                  <select v-model="contractForm.contractor_id" class="bfp-input bfp-select">
+                    <option value="">Select contractor</option>
+                    <option v-for="contractor in contractors" :key="contractor.id" :value="contractor.id">
+                      {{ contractor.company_name }}
+                    </option>
+                  </select>
                 </div>
               </div>
               <div class="bfp-field-full">
                 <label class="bfp-label">Project Budget (₱)</label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">payments</i>
-                  <input type="text" class="bfp-input" placeholder="e.g. 15,500,000.00" />
+                  <input v-model="contractForm.original_contract_amount" type="number" min="0" class="bfp-input" placeholder="e.g. 15500000" />
                 </div>
               </div>
             </div>
@@ -285,14 +311,27 @@
                 <label class="bfp-label">Start Date</label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">event</i>
-                  <input type="date" class="bfp-input" />
+                  <input v-model="contractForm.start_date" type="date" class="bfp-input" />
                 </div>
               </div>
               <div class="bfp-field-half">
                 <label class="bfp-label">End Date</label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">event_available</i>
-                  <input type="date" class="bfp-input" />
+                  <input v-model="contractForm.end_date" type="date" class="bfp-input" />
+                </div>
+              </div>
+              <div class="bfp-field-full">
+                <label class="bfp-label">Status</label>
+                <div class="bfp-input-wrap">
+                  <i class="material-icons-round bfp-input-icon">fact_check</i>
+                  <select v-model="contractForm.status" class="bfp-input bfp-select">
+                    <option>Draft</option>
+                    <option>Pending Review</option>
+                    <option>Active</option>
+                    <option>Delayed</option>
+                    <option>Completed</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -302,7 +341,7 @@
             <div class="bfp-form-grid">
               <div class="bfp-field-full">
                 <div class="bfp-input-wrap">
-                  <textarea class="bfp-input bfp-textarea" rows="3" placeholder="Optional — observations, special conditions, remarks…"></textarea>
+                  <textarea v-model="contractForm.remarks" class="bfp-input bfp-textarea" rows="3" placeholder="Optional — observations, special conditions, remarks..."></textarea>
                 </div>
               </div>
             </div>
@@ -315,7 +354,10 @@
           </div>
           <div class="bfp-footer-actions">
             <button class="bfp-btn-cancel" @click="showNewProjectModal = false">Cancel</button>
-            <button class="bfp-btn-save"><i class="material-icons-round">save</i> Create Project</button>
+            <button class="bfp-btn-save" @click="saveContract" :disabled="isSaving">
+              <i class="material-icons-round">save</i>
+              {{ isSaving ? "Saving..." : contractForm.id ? "Update Contract" : "Create Contract" }}
+            </button>
           </div>
         </div>
       </div>
@@ -554,6 +596,21 @@
 
 <script>
 import bfpLogo from "@/assets/img/BFP 11.png";
+import contractService from "@/services/contract.service";
+
+const emptyContractForm = () => ({
+  id: null,
+  contract_number: "",
+  contract_title: "",
+  project_id: "",
+  contractor_id: "",
+  contract_type: "Infrastructure Works",
+  original_contract_amount: "",
+  start_date: "",
+  end_date: "",
+  status: "Draft",
+  remarks: "",
+});
 
 export default {
   name: "ContractManagement",
@@ -563,6 +620,12 @@ export default {
       showNewProjectModal: false,
       showUploadModal: false,
       showAdvancedFilterModal: false,
+      isLoading: false,
+      isSaving: false,
+      apiError: "",
+      projects: [],
+      contractors: [],
+      contractForm: emptyContractForm(),
       dragOver: false,
       uploadedFiles: [],
       maxUploadFileSizeMb: 25,
@@ -593,22 +656,159 @@ export default {
       timelineStatusOptions: ['Completed', 'Pending Start', 'In Progress', 'Delayed/At Risk'],
       contractStatusOptions: ['Active', 'Expired', 'Terminated', 'Archived'],
       complianceStatusOptions: ['Full Compliance', 'Minor Issues', 'Major Issues', 'Pending Review'],
-      contracts: [
-        { id: 1, contract_id: "BFP2-2024-001", contractor: "Vanguard Const.", initials: "VC", project: "Tuguegarao City Fire Station Ph-II", category: "INFRASTRUCTURE", amount: "₱18,450,000", payment_type: "Lump Sum", duration: "180d", timeline_status: "42d left", timeline_bar: 75, status: "Active", compliance: "Full Compliance" },
-        { id: 2, contract_id: "BFP2-2023-088", contractor: "SafeFirst Int'l", initials: "SF", project: "Rescue Gear Modernization Lot 3", category: "EQUIPMENT", amount: "₱4,200,000", payment_type: "Fixed Price", duration: "60d", timeline_status: "Completed", timeline_bar: 100, status: "Active", compliance: "Full Compliance" },
-        { id: 3, contract_id: "BFP2-2024-012", contractor: "Kone Elevators", initials: "KE", project: "Regional HQ Elevator Maintenance", category: "SERVICE", amount: "₱1,200,000", payment_type: "Annual", duration: "—", timeline_status: "Pending Start", timeline_bar: null, status: "Active", compliance: "Pending Review" },
-        { id: 4, contract_id: "REG-II-004", contractor: "Piar Civil Management Corp.", initials: "PC", project: "Piar Civil Management Corp.", category: "INFRASTRUCTURE", amount: "₱16,500,000", payment_type: "Lump Sum", duration: "90d", timeline_status: "15d left", timeline_bar: 85, status: "Active", compliance: "Minor Issues" }
-      ],
+      contracts: [],
       docFeed: [
         { icon: "cloud_done", iconBg: "#e8f5e9", iconColor: "#2e7d32", title: "Vanguard Const. uploaded \"Progress Report 4\"", meta: "2 minutes ago • BFP2-2024-001", action: "View", actionClass: "btn-outline-primary" },
         { icon: "warning_amber", iconBg: "#fff8e1", iconColor: "#f59e0b", title: "Automated Alert: Insurance Expiry Approaching", meta: "1 hour ago • SafeFirst Int'l", action: "Review", actionClass: "btn-outline-warning" }
       ]
     };
   },
+  async mounted() {
+    await this.loadContractManagement();
+  },
   methods: {
-    viewContract(contract)   { alert(`View contract ${contract.contract_id}`); },
-    editContract(contract)   { alert(`Edit contract ${contract.contract_id}`); },
-    deleteContract(contract) { alert(`Delete contract ${contract.contract_id}`); },
+    openCreateContractModal() {
+      this.apiError = "";
+      this.contractForm = emptyContractForm();
+      this.showNewProjectModal = true;
+    },
+    async loadContractManagement() {
+      this.isLoading = true;
+      this.apiError = "";
+
+      try {
+        const [contracts, options] = await Promise.all([
+          contractService.getContracts(),
+          contractService.getOptions(),
+        ]);
+
+        this.contracts = contracts.map(this.mapApiContractToTable);
+        this.projects = options.projects || [];
+        this.contractors = options.contractors || [];
+      } catch (error) {
+        this.apiError = error?.response?.data?.message || "Unable to load contract records.";
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async saveContract() {
+      this.isSaving = true;
+      this.apiError = "";
+
+      try {
+        if (this.contractForm.id) {
+          await contractService.updateContract(this.contractForm.id, this.contractForm);
+        } else {
+          await contractService.createContract(this.contractForm);
+        }
+
+        this.showNewProjectModal = false;
+        this.contractForm = emptyContractForm();
+        await this.loadContractManagement();
+      } catch (error) {
+        this.apiError = error?.response?.data?.message || "Unable to save contract.";
+      } finally {
+        this.isSaving = false;
+      }
+    },
+    viewContract(contract) {
+      const raw = contract.raw || contract;
+      alert(`${raw.contract_number}\n${raw.contract_title}\nContractor: ${raw.contractor_name}\nAmount: ${this.formatPeso(raw.original_contract_amount)}`);
+    },
+    editContract(contract) {
+      const raw = contract.raw || contract;
+      this.contractForm = {
+        id: raw.id,
+        contract_number: raw.contract_number,
+        contract_title: raw.contract_title,
+        project_id: raw.project_id,
+        contractor_id: raw.contractor_id,
+        contract_type: raw.contract_type || "Infrastructure Works",
+        original_contract_amount: raw.original_contract_amount,
+        start_date: raw.start_date,
+        end_date: raw.end_date,
+        status: raw.status || "Draft",
+        remarks: raw.remarks || "",
+      };
+      this.apiError = "";
+      this.showNewProjectModal = true;
+    },
+    async deleteContract(contract) {
+      if (!confirm(`Archive ${contract.contract_id}?`)) {
+        return;
+      }
+
+      try {
+        await contractService.archiveContract(contract.id);
+        await this.loadContractManagement();
+      } catch (error) {
+        this.apiError = error?.response?.data?.message || "Unable to archive contract.";
+      }
+    },
+    mapApiContractToTable(contract) {
+      return {
+        id: contract.id,
+        contract_id: contract.contract_number,
+        contractor: contract.contractor_name || "Unassigned",
+        initials: this.getInitials(contract.contractor_name),
+        project: contract.contract_title,
+        category: contract.project_type || "INFRASTRUCTURE",
+        amount: this.formatPeso(contract.original_contract_amount),
+        payment_type: contract.contract_type || "Contract",
+        duration: this.formatDuration(contract.start_date, contract.end_date),
+        timeline_status: contract.status || "Draft",
+        timeline_bar: this.getTimelineProgress(contract.start_date, contract.end_date),
+        status: contract.status || "Draft",
+        compliance: "Pending Review",
+        raw: contract,
+      };
+    },
+    getInitials(name) {
+      return String(name || "NA")
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+    },
+    formatPeso(value) {
+      return new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        maximumFractionDigits: 2,
+      }).format(Number(value || 0));
+    },
+    formatDuration(start, end) {
+      if (!start || !end) {
+        return "—";
+      }
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const days = Math.ceil((endDate - startDate) / 86400000);
+
+      return `${days}d`;
+    },
+    getTimelineProgress(start, end) {
+      if (!start || !end) {
+        return null;
+      }
+
+      const startDate = new Date(start).getTime();
+      const endDate = new Date(end).getTime();
+      const today = Date.now();
+
+      if (today <= startDate) {
+        return 0;
+      }
+
+      if (today >= endDate) {
+        return 100;
+      }
+
+      return Math.round(((today - startDate) / (endDate - startDate)) * 100);
+    },
     isValidFileType(file) {
       const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
       return this.allowedUploadTypes.includes(file.type) || this.allowedUploadExtensions.includes(fileExtension);
@@ -693,7 +893,7 @@ export default {
           return false;
         }
         // Budget range filter
-        const amount = parseInt(contract.amount.replace(/[₱,]/g, ''));
+        const amount = Number(String(contract.amount).replace(/[^\d.-]/g, ""));
         if (this.filters.budgetMin && amount < parseInt(this.filters.budgetMin)) {
           return false;
         }
@@ -733,14 +933,16 @@ export default {
              this.filters.budgetMax;
     },
     timelineClass(status) {
-      if (status === "Completed") return "timeline-completed";
-      if (status === "Pending Start") return "timeline-pending";
-      if (status.includes("left")) return "timeline-urgent";
+      const label = String(status || "");
+      if (label === "Completed") return "timeline-completed";
+      if (label === "Pending Start" || label === "Pending Review" || label === "Draft") return "timeline-pending";
+      if (label === "Delayed" || label.includes("left")) return "timeline-urgent";
       return "timeline-default";
     },
     timelineBarColor(status) {
-      if (status === "Completed") return "#22c55e";
-      if (status.includes("left")) return "#f97316";
+      const label = String(status || "");
+      if (label === "Completed") return "#22c55e";
+      if (label === "Delayed" || label.includes("left")) return "#f97316";
       return "#c0392b";
     }
   }

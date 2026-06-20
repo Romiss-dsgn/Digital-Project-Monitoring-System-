@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V2\Auth\LogoutController;
 use App\Http\Controllers\Api\V2\Auth\RegisterController;
 use App\Http\Controllers\Api\V2\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V2\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\V2\ContractManagementController;
 use App\Http\Controllers\Api\V2\MeController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
@@ -31,6 +32,11 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
     Route::post('/register', RegisterController::class);
     Route::post('/password-forgot', ForgotPasswordController::class);
     Route::post('/password-reset', ResetPasswordController::class)->name('password.reset');
+
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/contract-management/options', [ContractManagementController::class, 'options']);
+        Route::apiResource('contracts', ContractManagementController::class);
+    });
 
     Route::middleware('auth:api')->prefix('admin')->group(function () {
         Route::get('/access-requests', [UserAccessController::class, 'index']);
