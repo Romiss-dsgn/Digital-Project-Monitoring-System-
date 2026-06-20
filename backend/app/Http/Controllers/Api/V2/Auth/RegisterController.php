@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api\V2\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\Auth\RegisterRequest;
-use App\Models\AccessRequest;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 
 class RegisterController extends Controller
@@ -16,36 +16,36 @@ class RegisterController extends Controller
     {
         $requestedRoleId = $this->resolveRequestedRoleId($request);
 
-        if (! $requestedRoleId) {
+        if (!$requestedRoleId) {
             return response()->json([
-                'message' => 'The selected role is not available.',
+                'message' => 'Invalid role selected.',
                 'errors' => [
-                    'requested_role' => ['The selected role is not available.'],
+                    'requested_role' => ['Invalid role selected.'],
                 ],
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $accessRequest = AccessRequest::create([
-            'full_name' => $request->input('full_name'),
-            'email' => $request->input('email'),
-            'badge_number' => $request->input('badge_number'),
-            'contact_number' => $request->input('contact_number'),
-            'position' => $request->input('position'),
-            'office_unit' => $request->input('office_unit'),
-            'requested_role_id' => $requestedRoleId,
-            'reason' => $request->input('reason'),
-            'status' => 'Pending',
+        $user = User::create([
+            'name'            => $request->input('full_name'),
+            'username'        => null,
+            'email'           => $request->input('email'),
+            'badge_number'    => $request->input('badge_number'),
+            'contact_number'  => $request->input('contact_number'),
+            'position'        => $request->input('position'),
+            'office_unit'     => $request->input('office_unit'),
+            'role_id'         => $requestedRoleId,
+            'is_active'       => false,
+            'password'        => $request->input('password'),
         ]);
 
         return response()->json([
-            'message' => 'Access request submitted successfully. Please wait for administrator approval before logging in.',
-            'access_request' => [
-                'id' => $accessRequest->id,
-                'full_name' => $accessRequest->full_name,
-                'email' => $accessRequest->email,
-                'badge_number' => $accessRequest->badge_number,
-                'status' => $accessRequest->status,
-                'requested_role' => $accessRequest->requestedRole?->name,
+            'message' => 'Access request submitted successfully. Please wait for admin approval.',
+            'user' => [
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'email'    => $user->email,
+                'status'   => 'pending',
+                'role'     => $user->role?->name,
             ],
         ], Response::HTTP_CREATED);
     }
@@ -66,8 +66,12 @@ class RegisterController extends Controller
             'engineer-supervision' => 'Engineer - Supervision',
             'engineer-monitoring' => 'Engineer - Monitoring',
             'system-administrator' => 'System Administrator',
-            default => Str::of($roleSlug)->replace('-', ' ')->title()->toString(),
+            default => null,
         };
+
+        if (!$roleName) {
+            return null;
+        }
 
         return Role::where('name', $roleName)->value('id');
     }

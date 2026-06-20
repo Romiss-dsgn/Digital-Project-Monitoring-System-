@@ -77,7 +77,7 @@ The setup script:
 - clears Laravel config
 - runs fresh migrations and seeders
 - generates Passport keys
-- creates the Passport password client
+- creates the Passport personal access client
 
 The script runs `migrate:fresh --seed`, so it resets the Docker database.
 
@@ -117,7 +117,7 @@ docker compose exec backend php artisan key:generate --force --no-interaction
 docker compose exec backend php artisan config:clear
 docker compose exec backend php artisan migrate:fresh --seed
 docker compose exec backend php artisan passport:keys --force
-docker compose exec backend php artisan passport:client --password --name="ConTrackPro Password Client" --no-interaction
+docker compose exec backend php artisan passport:client --personal --name="ConTrackPro Personal Access Client" --no-interaction
 ```
 
 ## Daily Commands

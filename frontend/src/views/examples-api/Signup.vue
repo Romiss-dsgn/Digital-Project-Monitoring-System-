@@ -2,7 +2,10 @@
     <div class="access-page">
         <main class="access-center">
             <section class="access-card">
-                <aside class="access-panel">
+                <aside
+                      class="access-panel"
+                      :style="{ backgroundImage: panelBackgroundImage }"
+>
                     <div>
                         <div class="panel-brand">
                             <div class="panel-mark">
@@ -341,7 +344,6 @@ export default {
 }
 
 .access-panel {
-    background-image: v-bind(panelBackgroundImage);
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
