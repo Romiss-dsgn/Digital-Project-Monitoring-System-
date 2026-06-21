@@ -23,8 +23,10 @@ class ContractManagementSeeder extends Seeder
             ['company_name' => 'Valley Fire Facilities Contractor', 'contact_person' => 'Jose Ramirez', 'license_number' => 'PCAB-VFFC-2026-005'],
         ];
 
+        $contractorIds = collect();
+
         foreach ($contractors as $contractor) {
-            Contractor::updateOrCreate(
+            $record = Contractor::updateOrCreate(
                 ['license_number' => $contractor['license_number']],
                 $contractor + [
                     'contact_number' => '09170000000',
@@ -33,6 +35,8 @@ class ContractManagementSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
+
+            $contractorIds->push($record->id);
         }
 
         $projects = [
@@ -43,8 +47,10 @@ class ContractManagementSeeder extends Seeder
             ['project_code' => 'BFP-R2-PROJ-005', 'project_name' => 'Dormitory and Training Hall Improvement', 'location' => 'Quirino', 'approved_budget' => 6400000],
         ];
 
+        $projectIds = collect();
+
         foreach ($projects as $project) {
-            Project::updateOrCreate(
+            $record = Project::updateOrCreate(
                 ['project_code' => $project['project_code']],
                 $project + [
                     'description' => 'Seeded project record for Contract Management MVP.',
@@ -60,10 +66,9 @@ class ContractManagementSeeder extends Seeder
                     'is_archived' => false,
                 ]
             );
-        }
 
-        $contractorIds = Contractor::pluck('id')->values();
-        $projectIds = Project::pluck('id')->values();
+            $projectIds->push($record->id);
+        }
 
         $contracts = [
             ['BFP-R2-CON-2024-001', 'Construction Contract - Tuguegarao Fire Station', 18500000, 'Active'],

@@ -28,6 +28,7 @@ class User extends Authenticatable
         'contact_number',
         'position',
         'office_unit',
+        'profile_image',
         'role_id',
         'is_active',
         'email_verified_at',
@@ -85,6 +86,53 @@ class User extends Authenticatable
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Check one module permission from the normalized role_permissions table.
+     * System administrators retain full access even if a seed row is missing.
+     */
+    public function hasModulePermission(string $module, string $action = 'view'): bool
+    {
+        if ($this->role?->name === 'System Administrator') {
+            return true;
+        }
+
+        $column = 'can_' . $action;
+        $allowedColumns = [
+            'can_view',
+            'can_create',
+            'can_edit',
+            'can_delete',
+            'can_approve',
+            'can_export',
+        ];
+
+        if (! in_array($column, $allowedColumns, true)) {
+            return false;
+        }
+
+        return (bool) $this->role?->permissions()
+            ->where('module', $module)
+            ->value($column);
+    }
+
+    public function modulePermissions(string $module): array
+    {
+        $actions = ['view', 'create', 'edit', 'delete', 'approve', 'export'];
+
+        if ($this->role?->name === 'System Administrator') {
+            return collect($actions)->mapWithKeys(fn (string $action) => [$action => true])->all();
+        }
+
+        // Fetch one row once instead of issuing a query for every action.
+        $permission = $this->role?->permissions()->where('module', $module)->first();
+
+        return collect($actions)
+            ->mapWithKeys(fn (string $action) => [
+                $action => (bool) $permission?->{'can_' . $action},
+            ])
+            ->all();
     }
 
     public function createdProjects()

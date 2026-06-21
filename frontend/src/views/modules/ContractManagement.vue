@@ -19,9 +19,9 @@
                 </p>
               </div>
               <div class="d-flex gap-2">
-                <button class="btn btn-primary btn-sm" @click="openCreateContractModal">
+                <button v-if="permissions.create" class="btn btn-primary btn-sm" @click="openCreateContractModal">
                   <i class="material-icons-round" style="font-size:15px;vertical-align:-3px">add</i>
-                  New Project
+                  New Contract
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" @click="showAdvancedFilterModal = true">
                   <i class="material-icons-round" style="font-size:15px;vertical-align:-3px">tune</i>
@@ -39,7 +39,7 @@
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">ONGOING PROJECTS</p>
-                  <p class="stat-value">24</p>
+                  <p class="stat-value">{{ summary.ongoing_projects }}</p>
                 </div>
               </div>
             </div>
@@ -47,8 +47,8 @@
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">PENDING REVIEW</p>
-                  <p class="stat-value">08</p>
-                  <div class="pending-bar mt-1"><div class="pending-bar-fill"></div></div>
+                  <p class="stat-value">{{ summary.pending_review }}</p>
+                  <div class="pending-bar mt-1"><div class="pending-bar-fill" :style="{ width: pendingReviewWidth + '%' }"></div></div>
                 </div>
               </div>
             </div>
@@ -56,8 +56,8 @@
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">TOTAL VALUE</p>
-                  <p class="stat-value">₱142.5M</p>
-                  <p class="stat-sub">Fiscal Year 2024</p>
+                  <p class="stat-value">{{ formatCompactPeso(summary.total_value) }}</p>
+                  <p class="stat-sub">Fiscal Year {{ summary.fiscal_year }}</p>
                 </div>
               </div>
             </div>
@@ -65,8 +65,10 @@
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">DOCS COMPLIANCE</p>
-                  <p class="stat-value compliance-val">92%</p>
-                  <p class="stat-sub compliance-sub">+5% from last month</p>
+                  <p class="stat-value compliance-val">{{ summary.docs_compliance }}%</p>
+                  <p class="stat-sub compliance-sub">
+                    {{ summary.approved_documents }} of {{ summary.total_documents }} approved
+                  </p>
                 </div>
               </div>
             </div>
@@ -83,16 +85,23 @@
                 <div class="d-flex align-items-center gap-3">
                   <span class="fw-bold" style="font-size:0.875rem;color:#374151;">Contract Records</span>
                   <div class="d-flex gap-1">
-                    <span class="tab-pill active-tab">All</span>
-                    <span class="tab-pill">Active</span>
-                    <span class="tab-pill">Expired</span>
+                    <button
+                      v-for="tab in ['All', 'Active', 'Expired']"
+                      :key="tab"
+                      type="button"
+                      class="tab-pill border-0"
+                      :class="{ 'active-tab': activeStatusTab === tab }"
+                      @click="setStatusTab(tab)"
+                    >
+                      {{ tab }}
+                    </button>
                   </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                   <span class="text-secondary small">Show</span>
-                  <select class="form-select form-select-sm" style="width:100px;">
-                    <option>10 rows</option>
-                    <option>25 rows</option>
+                  <select v-model.number="rowsPerPage" class="form-select form-select-sm" style="width:100px;" @change="currentPage = 1">
+                    <option :value="10">10 rows</option>
+                    <option :value="25">25 rows</option>
                   </select>
                 </div>
               </div>
@@ -115,10 +124,10 @@
                     <tr v-if="isLoading">
                       <td colspan="6" class="text-center py-4 text-secondary">Loading contract records...</td>
                     </tr>
-                    <tr v-else-if="getFilteredContracts().length === 0">
+                    <tr v-else-if="filteredContracts.length === 0">
                       <td colspan="6" class="text-center py-4 text-secondary">No contract records found.</td>
                     </tr>
-                    <tr v-for="contract in isLoading ? [] : getFilteredContracts()" :key="contract.id">
+                    <tr v-for="contract in isLoading ? [] : displayedContracts" :key="contract.id">
                       <td>
                         <strong class="contract-id-text">{{ contract.contract_id }}</strong>
                       </td>
@@ -157,15 +166,15 @@
                                 <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i> View
                               </a>
                             </li>
-                            <li>
+                            <li v-if="permissions.edit">
                               <a class="dropdown-item" href="#" @click.prevent="editContract(contract)">
                                 <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i> Edit
                               </a>
                             </li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li>
+                            <li v-if="permissions.delete"><hr class="dropdown-divider" /></li>
+                            <li v-if="permissions.delete">
                               <a class="dropdown-item text-danger" href="#" @click.prevent="deleteContract(contract)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i> Delete
+                                <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i> Archive
                               </a>
                             </li>
                           </ul>
@@ -178,15 +187,21 @@
 
               <!-- Pagination -->
               <div class="d-flex align-items-center justify-content-between px-4 py-3 border-top">
-                <span class="text-secondary small">Showing {{ getFilteredContracts().length }} contract records</span>
+                <span class="text-secondary small">
+                  Showing {{ paginationFrom }}-{{ paginationTo }} of {{ filteredContracts.length }} contract records
+                </span>
                 <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-light border pagination-btn">
+                  <button class="btn btn-sm btn-light border pagination-btn" :disabled="currentPage === 1" @click="currentPage--">
                     <i class="material-icons-round" style="font-size:16px;vertical-align:-3px">chevron_left</i>
                   </button>
-                  <button class="btn btn-sm btn-primary pagination-btn">1</button>
-                  <button class="btn btn-sm btn-light border pagination-btn">2</button>
-                  <button class="btn btn-sm btn-light border pagination-btn">3</button>
-                  <button class="btn btn-sm btn-light border pagination-btn">
+                  <button
+                    v-for="page in totalPages"
+                    :key="page"
+                    class="btn btn-sm pagination-btn"
+                    :class="page === currentPage ? 'btn-primary' : 'btn-light border'"
+                    @click="currentPage = page"
+                  >{{ page }}</button>
+                  <button class="btn btn-sm btn-light border pagination-btn" :disabled="currentPage === totalPages" @click="currentPage++">
                     <i class="material-icons-round" style="font-size:16px;vertical-align:-3px">chevron_right</i>
                   </button>
                 </div>
@@ -197,7 +212,7 @@
       </div>
 
       <!-- ── Bottom: Quick Upload ── -->
-      <div class="row">
+      <div v-if="documentPermissions.create" class="row">
         <!-- Quick Upload → opens Upload Batch modal -->
         <div class="col-lg-12 mb-4">
           <div class="card h-100">
@@ -237,7 +252,7 @@
             </div>
             <div>
               <p class="bfp-modal-agency">Bureau of Fire Protection</p>
-              <h5 class="bfp-modal-title">{{ contractForm.id ? "Edit Contract" : "New Contract Project" }}</h5>
+              <h5 class="bfp-modal-title">{{ contractForm.id ? "Edit Contract" : "New Contract" }}</h5>
             </div>
           </div>
           <button class="bfp-modal-close" @click="showNewProjectModal = false">
@@ -326,11 +341,7 @@
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">fact_check</i>
                   <select v-model="contractForm.status" class="bfp-input bfp-select">
-                    <option>Draft</option>
-                    <option>Pending Review</option>
-                    <option>Active</option>
-                    <option>Delayed</option>
-                    <option>Completed</option>
+                    <option v-for="status in contractStatusOptions" :key="status" :value="status">{{ status }}</option>
                   </select>
                 </div>
               </div>
@@ -437,7 +448,7 @@
                 <label class="bfp-label">Document Type</label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">article</i>
-                  <select class="bfp-input bfp-select">
+                  <select v-model="uploadForm.document_category" class="bfp-input bfp-select">
                     <option value="">Select type</option>
                     <option>Contract Document</option>
                     <option>Procurement Record</option>
@@ -450,16 +461,16 @@
                 <label class="bfp-label">Related Contract</label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">tag</i>
-                  <select class="bfp-input bfp-select">
+                  <select v-model="uploadForm.contract_id" class="bfp-input bfp-select">
                     <option value="">Select contract</option>
-                    <option v-for="c in contracts" :key="c.id">{{ c.contract_id }}</option>
+                    <option v-for="c in contracts" :key="c.id" :value="c.id">{{ c.contract_id }}</option>
                   </select>
                 </div>
               </div>
               <div class="bfp-field-full">
                 <label class="bfp-label">Remarks</label>
                 <div class="bfp-input-wrap">
-                  <textarea class="bfp-input bfp-textarea" rows="2" placeholder="Optional — describe the batch contents…"></textarea>
+                  <textarea v-model="uploadForm.remarks" class="bfp-input bfp-textarea" rows="2" placeholder="Optional — describe the batch contents…"></textarea>
                 </div>
               </div>
             </div>
@@ -472,7 +483,10 @@
           </div>
           <div class="bfp-footer-actions">
             <button class="bfp-btn-cancel" @click="showUploadModal = false">Cancel</button>
-            <button class="bfp-btn-save"><i class="material-icons-round">upload</i> Upload Files</button>
+            <button class="bfp-btn-save" :disabled="isUploading" @click="uploadContractDocuments">
+              <i class="material-icons-round">upload</i>
+              {{ isUploading ? 'Uploading...' : 'Upload Files' }}
+            </button>
           </div>
         </div>
       </div>
@@ -584,8 +598,76 @@
             {{ hasActiveFilters() ? 'Filters applied' : 'No filters selected' }}
           </div>
           <div class="bfp-footer-actions">
-            <button class="bfp-btn-cancel" @click="clearFilters; showAdvancedFilterModal = false">Clear All</button>
+            <button class="bfp-btn-cancel" @click="clearFilters(); showAdvancedFilterModal = false">Clear All</button>
             <button class="bfp-btn-save" @click="applyFilters"><i class="material-icons-round">filter_list</i> Apply Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Database-backed contract details and document review. -->
+    <div v-if="showDetailsModal && selectedContract" class="modal-overlay" @click.self="showDetailsModal = false">
+      <div class="bfp-modal" style="width:760px;">
+        <div class="bfp-modal-header">
+          <div>
+            <p class="bfp-modal-agency">Contract Record</p>
+            <h5 class="bfp-modal-title">{{ selectedContract.contract_number }}</h5>
+          </div>
+          <button class="bfp-modal-close" @click="showDetailsModal = false">
+            <i class="material-icons-round">close</i>
+          </button>
+        </div>
+        <div class="bfp-modal-body">
+          <div class="bfp-form-grid mb-3">
+            <div class="bfp-field-half"><strong>Title</strong><div>{{ selectedContract.contract_title }}</div></div>
+            <div class="bfp-field-half"><strong>Status</strong><div>{{ selectedContract.status }}</div></div>
+            <div class="bfp-field-half"><strong>Project</strong><div>{{ selectedContract.project_name }}</div></div>
+            <div class="bfp-field-half"><strong>Contractor</strong><div>{{ selectedContract.contractor_name }}</div></div>
+            <div class="bfp-field-half"><strong>Value</strong><div>{{ formatPeso(selectedContract.revised_contract_amount) }}</div></div>
+            <div class="bfp-field-half"><strong>Schedule</strong><div>{{ selectedContract.start_date }} to {{ selectedContract.end_date }}</div></div>
+          </div>
+
+          <div class="bfp-section">
+            <div class="bfp-section-label"><i class="material-icons-round">folder</i> Contract Documents</div>
+            <p v-if="!selectedContract.documents?.length" class="text-secondary small mb-0">No documents uploaded.</p>
+            <div v-for="document in selectedContract.documents" :key="document.id" class="bfp-file-item mb-2">
+              <i class="material-icons-round bfp-file-icon">description</i>
+              <div class="flex-grow-1">
+                <div class="bfp-file-name">{{ document.file_name }}</div>
+                <small class="text-secondary">{{ document.document_category }} · {{ document.status }}</small>
+              </div>
+              <button class="btn btn-sm btn-light" title="Download" @click="downloadContractDocument(document)">
+                <i class="material-icons-round">download</i>
+              </button>
+              <button v-if="documentPermissions.approve" class="btn btn-sm btn-success" title="Approve" @click="reviewContractDocument(document, 'Approved')">
+                <i class="material-icons-round">check</i>
+              </button>
+              <button v-if="documentPermissions.approve" class="btn btn-sm btn-outline-danger" title="Reject" @click="reviewContractDocument(document, 'Rejected')">
+                <i class="material-icons-round">close</i>
+              </button>
+            </div>
+          </div>
+
+          <div class="bfp-section">
+            <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Contract Dates</div>
+            <div class="bfp-form-grid">
+              <div class="bfp-field-half">
+                <label class="bfp-label">Start Date From</label>
+                <input v-model="filters.startDateFrom" type="date" class="bfp-input" />
+              </div>
+              <div class="bfp-field-half">
+                <label class="bfp-label">Start Date To</label>
+                <input v-model="filters.startDateTo" type="date" class="bfp-input" />
+              </div>
+              <div class="bfp-field-half">
+                <label class="bfp-label">End Date From</label>
+                <input v-model="filters.endDateFrom" type="date" class="bfp-input" />
+              </div>
+              <div class="bfp-field-half">
+                <label class="bfp-label">End Date To</label>
+                <input v-model="filters.endDateTo" type="date" class="bfp-input" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -620,12 +702,50 @@ export default {
       showNewProjectModal: false,
       showUploadModal: false,
       showAdvancedFilterModal: false,
+      showDetailsModal: false,
       isLoading: false,
       isSaving: false,
+      isUploading: false,
       apiError: "",
       projects: [],
       contractors: [],
+      selectedContract: null,
+      activeStatusTab: "All",
+      currentPage: 1,
+      rowsPerPage: 10,
+      summary: {
+        ongoing_projects: 0,
+        active_contracts: 0,
+        pending_review: 0,
+        total_value: 0,
+        docs_compliance: 0,
+        approved_documents: 0,
+        total_documents: 0,
+        fiscal_year: new Date().getFullYear(),
+        recent_documents: [],
+      },
+      permissions: {
+        view: false,
+        create: false,
+        edit: false,
+        delete: false,
+        approve: false,
+        export: false,
+      },
+      documentPermissions: {
+        view: false,
+        create: false,
+        edit: false,
+        delete: false,
+        approve: false,
+        export: false,
+      },
       contractForm: emptyContractForm(),
+      uploadForm: {
+        contract_id: "",
+        document_category: "Contract Document",
+        remarks: "",
+      },
       dragOver: false,
       uploadedFiles: [],
       maxUploadFileSizeMb: 25,
@@ -651,17 +771,37 @@ export default {
         endDateTo: null
       },
       // Filter options
-      categoryOptions: ['INFRASTRUCTURE', 'EQUIPMENT', 'SERVICE', 'MAINTENANCE'],
-      paymentTypeOptions: ['Lump Sum', 'Fixed Price', 'Annual', 'Milestone-based'],
-      timelineStatusOptions: ['Completed', 'Pending Start', 'In Progress', 'Delayed/At Risk'],
-      contractStatusOptions: ['Active', 'Expired', 'Terminated', 'Archived'],
+      categoryOptions: [],
+      paymentTypeOptions: [],
+      timelineStatusOptions: ['Draft', 'Pending Review', 'Active', 'Delayed', 'Completed', 'Rejected', 'Terminated', 'Expired'],
+      contractStatusOptions: ['Draft', 'Pending Review', 'Active', 'Delayed', 'Completed', 'Rejected', 'Terminated', 'Expired'],
       complianceStatusOptions: ['Full Compliance', 'Minor Issues', 'Major Issues', 'Pending Review'],
       contracts: [],
-      docFeed: [
-        { icon: "cloud_done", iconBg: "#e8f5e9", iconColor: "#2e7d32", title: "Vanguard Const. uploaded \"Progress Report 4\"", meta: "2 minutes ago • BFP2-2024-001", action: "View", actionClass: "btn-outline-primary" },
-        { icon: "warning_amber", iconBg: "#fff8e1", iconColor: "#f59e0b", title: "Automated Alert: Insurance Expiry Approaching", meta: "1 hour ago • SafeFirst Int'l", action: "Review", actionClass: "btn-outline-warning" }
-      ]
     };
+  },
+  computed: {
+    filteredContracts() {
+      return this.getFilteredContracts();
+    },
+    totalPages() {
+      return Math.max(1, Math.ceil(this.filteredContracts.length / this.rowsPerPage));
+    },
+    displayedContracts() {
+      const start = (this.currentPage - 1) * this.rowsPerPage;
+      return this.filteredContracts.slice(start, start + this.rowsPerPage);
+    },
+    paginationFrom() {
+      return this.filteredContracts.length === 0
+        ? 0
+        : (this.currentPage - 1) * this.rowsPerPage + 1;
+    },
+    paginationTo() {
+      return Math.min(this.currentPage * this.rowsPerPage, this.filteredContracts.length);
+    },
+    pendingReviewWidth() {
+      if (!this.contracts.length) return 0;
+      return Math.min(100, Math.round((this.summary.pending_review / this.contracts.length) * 100));
+    },
   },
   async mounted() {
     await this.loadContractManagement();
@@ -677,16 +817,24 @@ export default {
       this.apiError = "";
 
       try {
-        const [contracts, options] = await Promise.all([
+        const [contractResponse, options, summary] = await Promise.all([
           contractService.getContracts(),
           contractService.getOptions(),
+          contractService.getSummary(),
         ]);
 
-        this.contracts = contracts.map(this.mapApiContractToTable);
+        this.contracts = (contractResponse.data || []).map(this.mapApiContractToTable);
         this.projects = options.projects || [];
         this.contractors = options.contractors || [];
+        this.contractStatusOptions = options.statuses || this.contractStatusOptions;
+        this.permissions = options.permissions || summary.permissions || this.permissions;
+        this.documentPermissions = options.document_permissions || this.documentPermissions;
+        this.summary = summary;
+        this.categoryOptions = [...new Set(this.contracts.map((contract) => contract.category).filter(Boolean))];
+        this.paymentTypeOptions = [...new Set(this.contracts.map((contract) => contract.payment_type).filter(Boolean))];
+        this.currentPage = 1;
       } catch (error) {
-        this.apiError = error?.response?.data?.message || "Unable to load contract records.";
+        this.apiError = this.errorMessage(error, "Unable to load contract records.");
       } finally {
         this.isLoading = false;
       }
@@ -706,14 +854,20 @@ export default {
         this.contractForm = emptyContractForm();
         await this.loadContractManagement();
       } catch (error) {
-        this.apiError = error?.response?.data?.message || "Unable to save contract.";
+        this.apiError = this.errorMessage(error, "Unable to save contract.");
       } finally {
         this.isSaving = false;
       }
     },
-    viewContract(contract) {
-      const raw = contract.raw || contract;
-      alert(`${raw.contract_number}\n${raw.contract_title}\nContractor: ${raw.contractor_name}\nAmount: ${this.formatPeso(raw.original_contract_amount)}`);
+    async viewContract(contract) {
+      this.apiError = "";
+
+      try {
+        this.selectedContract = await contractService.getContract(contract.id);
+        this.showDetailsModal = true;
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to load contract details.");
+      }
     },
     editContract(contract) {
       const raw = contract.raw || contract;
@@ -742,7 +896,7 @@ export default {
         await contractService.archiveContract(contract.id);
         await this.loadContractManagement();
       } catch (error) {
-        this.apiError = error?.response?.data?.message || "Unable to archive contract.";
+        this.apiError = this.errorMessage(error, "Unable to archive contract.");
       }
     },
     mapApiContractToTable(contract) {
@@ -753,13 +907,13 @@ export default {
         initials: this.getInitials(contract.contractor_name),
         project: contract.contract_title,
         category: contract.project_type || "INFRASTRUCTURE",
-        amount: this.formatPeso(contract.original_contract_amount),
+        amount: this.formatPeso(contract.revised_contract_amount),
         payment_type: contract.contract_type || "Contract",
         duration: this.formatDuration(contract.start_date, contract.end_date),
         timeline_status: contract.status || "Draft",
         timeline_bar: this.getTimelineProgress(contract.start_date, contract.end_date),
         status: contract.status || "Draft",
-        compliance: "Pending Review",
+        compliance: this.complianceLabel(contract.document_count, contract.document_compliance),
         raw: contract,
       };
     },
@@ -778,6 +932,29 @@ export default {
         currency: "PHP",
         maximumFractionDigits: 2,
       }).format(Number(value || 0));
+    },
+    formatCompactPeso(value) {
+      const amount = Number(value || 0);
+      if (amount >= 1000000000) return `₱${(amount / 1000000000).toFixed(1)}B`;
+      if (amount >= 1000000) return `₱${(amount / 1000000).toFixed(1)}M`;
+      return this.formatPeso(amount);
+    },
+    complianceLabel(documentCount, percentage) {
+      if (!documentCount) return "Pending Review";
+      if (Number(percentage) === 100) return "Full Compliance";
+      if (Number(percentage) >= 50) return "Minor Issues";
+      return "Major Issues";
+    },
+    errorMessage(error, fallback) {
+      const errors = error?.response?.data?.errors;
+      if (errors && typeof errors === "object" && !Array.isArray(errors)) {
+        return Object.values(errors).flat().join(" ");
+      }
+      return error?.response?.data?.message || fallback;
+    },
+    setStatusTab(tab) {
+      this.activeStatusTab = tab;
+      this.currentPage = 1;
     },
     formatDuration(start, end) {
       if (!start || !end) {
@@ -843,31 +1020,69 @@ export default {
     handleFileDrop(event) {
       this.dragOver = false;
       const files = Array.from(event.dataTransfer.files);
-      const validFiles = files.filter(file => this.isValidFileType(file) && this.isValidFileSize(file));
-      const invalidFiles = files.filter(file => !this.isValidFileType(file));
-      if (invalidFiles.length > 0) {
-        alert(`⚠️ Invalid file type(s) detected.\n\nOnly PDF, DOCX, and XLSX files are allowed.\n\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);
-      }
-      if (validFiles.length > 0) {
-        this.uploadedFiles = [...this.uploadedFiles, ...validFiles];
+      const groups = this.splitUploadFiles(files);
+      this.showUploadRestrictionAlert(groups.invalidType, groups.invalidSize);
+      if (groups.valid.length > 0) {
+        this.uploadedFiles = [...this.uploadedFiles, ...groups.valid];
         this.showUploadModal = true;
       }
     },
     handleFileSelect(event) {
       const files = Array.from(event.target.files);
-      const validFiles = files.filter(file => this.isValidFileType(file) && this.isValidFileSize(file));
-      const invalidFiles = files.filter(file => !this.isValidFileType(file));
-      if (invalidFiles.length > 0) {
-        alert(`⚠️ Invalid file type(s) detected.\n\nOnly PDF, DOCX, and XLSX files are allowed.\n\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);
-      }
-      if (validFiles.length > 0) {
-        this.uploadedFiles = [...this.uploadedFiles, ...validFiles];
+      const groups = this.splitUploadFiles(files);
+      this.showUploadRestrictionAlert(groups.invalidType, groups.invalidSize);
+      if (groups.valid.length > 0) {
+        this.uploadedFiles = [...this.uploadedFiles, ...groups.valid];
       }
     },
     removeFile(index) { this.uploadedFiles.splice(index, 1); },
+    async uploadContractDocuments() {
+      if (!this.uploadForm.contract_id || this.uploadedFiles.length === 0) {
+        this.apiError = "Select a contract and at least one valid file.";
+        return;
+      }
+
+      this.isUploading = true;
+      this.apiError = "";
+
+      try {
+        await contractService.uploadDocuments(
+          this.uploadForm.contract_id,
+          this.uploadedFiles,
+          this.uploadForm
+        );
+        this.uploadedFiles = [];
+        this.uploadForm = { contract_id: "", document_category: "Contract Document", remarks: "" };
+        this.showUploadModal = false;
+        await this.loadContractManagement();
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to upload contract documents.");
+      } finally {
+        this.isUploading = false;
+      }
+    },
+    async reviewContractDocument(document, status) {
+      try {
+        await contractService.updateDocumentStatus(document.id, status);
+        this.selectedContract = await contractService.getContract(this.selectedContract.id);
+        await this.loadContractManagement();
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to review document.");
+      }
+    },
+    async downloadContractDocument(document) {
+      try {
+        await contractService.downloadDocument(document);
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to download document.");
+      }
+    },
     // Filter methods
     getFilteredContracts() {
       return this.contracts.filter(contract => {
+        if (this.activeStatusTab !== "All" && contract.status !== this.activeStatusTab) {
+          return false;
+        }
         // Category filter
         if (this.filters.categories.length > 0 && !this.filters.categories.includes(contract.category)) {
           return false;
@@ -900,10 +1115,17 @@ export default {
         if (this.filters.budgetMax && amount > parseInt(this.filters.budgetMax)) {
           return false;
         }
+        const startDate = contract.raw?.start_date;
+        const endDate = contract.raw?.end_date;
+        if (this.filters.startDateFrom && startDate < this.filters.startDateFrom) return false;
+        if (this.filters.startDateTo && startDate > this.filters.startDateTo) return false;
+        if (this.filters.endDateFrom && endDate < this.filters.endDateFrom) return false;
+        if (this.filters.endDateTo && endDate > this.filters.endDateTo) return false;
         return true;
       });
     },
     applyFilters() {
+      this.currentPage = 1;
       this.showAdvancedFilterModal = false;
     },
     clearFilters() {
@@ -921,6 +1143,7 @@ export default {
         endDateFrom: null,
         endDateTo: null
       };
+      this.currentPage = 1;
     },
     hasActiveFilters() {
       return this.filters.categories.length > 0 || 
@@ -930,7 +1153,11 @@ export default {
              this.filters.contractors.length > 0 || 
              this.filters.complianceStatus.length > 0 || 
              this.filters.budgetMin || 
-             this.filters.budgetMax;
+             this.filters.budgetMax ||
+             this.filters.startDateFrom ||
+             this.filters.startDateTo ||
+             this.filters.endDateFrom ||
+             this.filters.endDateTo;
     },
     timelineClass(status) {
       const label = String(status || "");
