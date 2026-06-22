@@ -12,12 +12,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProjectController extends Controller
 {
+    private const MODULE = 'projects';
+
     public function index(Request $request): JsonResponse
     {
-        $this->authorizeAdmin($request);
+        $user = $this->authorizeModule($request, 'view');
 
-        $projects = Project::query()
-            ->with('contracts.contractor')
+        $baseQuery = Project::query()
             ->when($request->query('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('project_name', 'like', "%{$search}%")
@@ -25,6 +26,9 @@ class ProjectController extends Controller
                         ->orWhere('location', 'like', "%{$search}%");
                 });
             })
+            ->when($request->query('code'), fn ($q, $code) =>
+                $q->where('project_code', 'like', "%{$code}%")
+            )
             ->when($request->query('location'), fn($q, $location) =>
                 $q->where('location', $location)
             )
@@ -34,19 +38,65 @@ class ProjectController extends Controller
             ->when($request->query('phase'), fn($q, $phase) =>
                 $q->where('phase', $phase)
             )
-            ->where('is_archived', false)
+            ->where('is_archived', false);
+
+        $listQuery = (clone $baseQuery)
+            ->with('contracts.contractor')
             ->orderBy('created_at', 'desc')
-            ->paginate($request->integer('per_page', 15));
+            ->orderByDesc('id');
+
+        $projects = $listQuery->paginate($request->integer('per_page', 15));
 
         $projects->getCollection()->transform(fn($p) => $this->formatProject($p));
 
+        $totalProjects = (clone $baseQuery)->count();
+        $delayedWorks = (clone $baseQuery)->where('status', 'delayed')->count();
+        $onTimeProjects = (clone $baseQuery)->where('status', 'on_time')->count();
+        $completedProjects = (clone $baseQuery)->where('status', 'completed')->count();
+        $totalBudget = (clone $baseQuery)->sum('approved_budget');
+        $lastUpdatedAt = (clone $baseQuery)->max('updated_at');
+        $distribution = (clone $baseQuery)
+            ->selectRaw('location, COUNT(*) as total')
+            ->groupBy('location')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($row) => [
+                'location' => $row->location,
+                'total' => (int) $row->total,
+            ])
+            ->values()
+            ->all();
+
+        $recentUpdates = (clone $baseQuery)
+            ->with('contracts.contractor')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get()
+            ->map(fn ($project) => $this->formatProject($project))
+            ->values()
+            ->all();
+
+        $efficiencyBase = max($totalProjects, 1);
+        $regionalEfficiency = round((($onTimeProjects + $completedProjects) / $efficiencyBase) * 100, 1);
+
         return response()->json([
             'data' => $projects->items(),
+            'stats' => [
+                'total_projects' => $totalProjects,
+                'delayed_works' => $delayedWorks,
+                'regional_efficiency' => $regionalEfficiency,
+                'total_budget' => $totalBudget,
+                'last_updated_at' => $lastUpdatedAt,
+                'regional_distribution' => $distribution,
+                'recent_updates' => $recentUpdates,
+            ],
             'meta' => [
                 'current_page' => $projects->currentPage(),
                 'last_page' => $projects->lastPage(),
                 'per_page' => $projects->perPage(),
                 'total' => $projects->total(),
+                'permissions' => $this->projectPermissionsFor($user),
             ],
         ]);
     }
@@ -60,7 +110,7 @@ class ProjectController extends Controller
             'code' => $project->project_code,
             'name' => $project->project_name,
             'location' => $project->location,
-            'contractor' => $contractorName ?? $project->implementing_office ?? '—',
+            'contractor' => $contractorName ?? $project->implementing_office ?? '-',
             'budget' => $project->approved_budget,
             'progress' => (int) $project->progress_percent,
             'phase' => $project->phase,
@@ -68,19 +118,32 @@ class ProjectController extends Controller
             'start_date' => $project->target_start_date?->format('Y-m-d'),
             'end_date' => $project->target_end_date?->format('Y-m-d'),
             'notes' => $project->description,
+            'created_at' => $project->created_at?->toIso8601String(),
+            'updated_at' => $project->updated_at?->toIso8601String(),
         ];
     }
 
-    private function authorizeAdmin(Request $request): \App\Models\User
+    private function authorizeModule(Request $request, string $ability): User
     {
-        $admin = $request->user();
+        $user = $request->user();
 
+        abort_unless($user, Response::HTTP_UNAUTHORIZED, 'Authentication required.');
         abort_unless(
-            $admin?->role?->name === 'System Administrator',
-            Response::HTTP_FORBIDDEN
+            $user->canModule(self::MODULE, $ability),
+            Response::HTTP_FORBIDDEN,
+            'You do not have permission to perform this action on projects.'
         );
 
-        return $admin;
+        return $user;
+    }
+
+    private function projectPermissionsFor(User $user): array
+    {
+        return [
+            'can_create' => $user->canModule(self::MODULE, 'create'),
+            'can_edit' => $user->canModule(self::MODULE, 'edit'),
+            'can_delete' => $user->canModule(self::MODULE, 'delete'),
+        ];
     }
 
     private function logAction(User $user, string $action, string $module, ?int $recordId, ?string $recordCode, ?array $oldValues = null, ?array $newValues = null): void
@@ -100,7 +163,7 @@ class ProjectController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $admin = $this->authorizeAdmin($request);
+        $user = $this->authorizeModule($request, 'create');
 
         $data = $request->validate([
             'code' => ['required', 'string', 'max:255', 'unique:projects,project_code'],
@@ -114,6 +177,8 @@ class ProjectController extends Controller
             'status' => ['required', 'string', 'max:255'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
+        ], [
+            'code.unique' => 'A project with this code already exists. Please use a different project code.',
         ]);
 
         $project = Project::create([
@@ -128,10 +193,10 @@ class ProjectController extends Controller
             'status' => $data['status'],
             'progress_percent' => $data['progress'] ?? 0,
             'description' => $data['notes'] ?? null,
-            'created_by' => $admin->id,
+            'created_by' => $user->id,
         ]);
 
-        $this->logAction($admin, 'created', 'projects', $project->id, $project->project_code, null, [
+        $this->logAction($user, 'created', self::MODULE, $project->id, $project->project_code, null, [
             'code' => $data['code'],
             'name' => $data['name'],
             'location' => $data['location'],
@@ -145,7 +210,7 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project): JsonResponse
     {
-        $admin = $this->authorizeAdmin($request);
+        $user = $this->authorizeModule($request, 'edit');
 
         $data = $request->validate([
             'code' => ['sometimes', 'required', 'string', 'max:255', 'unique:projects,project_code,' . $project->id],
@@ -159,6 +224,8 @@ class ProjectController extends Controller
             'status' => ['sometimes', 'required', 'string', 'max:255'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
+        ], [
+            'code.unique' => 'A project with this code already exists. Please use a different project code.',
         ]);
 
         $oldValues = [
@@ -181,7 +248,7 @@ class ProjectController extends Controller
             'description' => $data['notes'] ?? $project->description,
         ]);
 
-        $this->logAction($admin, 'updated', 'projects', $project->id, $project->project_code, $oldValues, [
+        $this->logAction($user, 'updated', self::MODULE, $project->id, $project->project_code, $oldValues, [
             'project_code' => $data['code'] ?? $project->project_code,
             'project_name' => $data['name'] ?? $project->project_name,
             'location' => $data['location'] ?? $project->location,
@@ -195,9 +262,9 @@ class ProjectController extends Controller
 
     public function destroy(Request $request, Project $project): JsonResponse
     {
-        $admin = $this->authorizeAdmin($request);
+        $user = $this->authorizeModule($request, 'delete');
 
-        $this->logAction($admin, 'archived', 'projects', $project->id, $project->project_code, [
+        $this->logAction($user, 'archived', self::MODULE, $project->id, $project->project_code, [
             'project_code' => $project->project_code,
             'project_name' => $project->project_name,
         ]);
