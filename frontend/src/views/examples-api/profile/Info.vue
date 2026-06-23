@@ -20,15 +20,36 @@
       </div>
 
       <div class="info-grid">
-        <!-- Full Name -->
+        <!-- Surname -->
         <div class="info-field">
-          <label class="info-field__label">Full Name</label>
+          <label class="info-field__label">Surname</label>
           <div class="info-field__input-wrap" :class="{ 'is-readonly': !isEditing }">
             <span class="material-symbols-rounded info-field__icon">badge</span>
-            <input type="text" class="info-field__input" placeholder="Enter full name"
-              v-model="user.name" :disabled="!isEditing" />
+            <input type="text" class="info-field__input" placeholder="Enter surname"
+              v-model="user.surname" :disabled="!isEditing" />
           </div>
-          <validation-error :errors="apiValidationErrors.name" />
+          <validation-error :errors="apiValidationErrors.surname" />
+        </div>
+
+        <!-- First Name -->
+        <div class="info-field">
+          <label class="info-field__label">First Name</label>
+          <div class="info-field__input-wrap" :class="{ 'is-readonly': !isEditing }">
+            <span class="material-symbols-rounded info-field__icon">person</span>
+            <input type="text" class="info-field__input" placeholder="Enter first name"
+              v-model="user.first_name" :disabled="!isEditing" />
+          </div>
+          <validation-error :errors="apiValidationErrors.first_name" />
+        </div>
+
+        <!-- Middle Initial -->
+        <div class="info-field">
+          <label class="info-field__label">Middle Initial</label>
+          <div class="info-field__input-wrap" :class="{ 'is-readonly': !isEditing }">
+            <span class="material-symbols-rounded info-field__icon">sort_by_alpha</span>
+            <input type="text" class="info-field__input" placeholder="e.g. A."
+              v-model="user.middle_initial" :disabled="!isEditing" maxlength="3" />
+          </div>
         </div>
 
         <!-- Email -->
@@ -187,11 +208,13 @@ import showSwal from "@/mixins/showSwal.js";
 import _ from "lodash";
 
 const BFP_POSITIONS = [
-  "Fire Chief Inspector", "Senior Fire Officer IV", "Senior Fire Officer III",
-  "Senior Fire Officer II", "Senior Fire Officer I", "Fire Officer III",
-  "Fire Officer II", "Fire Officer I", "Fire Officer Cadet",
-  "Administrative Officer", "Administrative Assistant", "Records Officer",
-  "Accountant", "Engineer", "Nurse", "Driver", "Utility Worker",
+  "Administrative Staff - Contract Documentation",
+  "Records Management Personnel",
+  "Contract Monitoring Personnel",
+  "Engineer - Planning",
+  "Engineer - Supervision",
+  "Engineer - Monitoring",
+  "System Administrator",
 ];
 
 export default {
