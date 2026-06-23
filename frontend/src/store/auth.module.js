@@ -20,8 +20,11 @@ export const auth = {
       try {
         await AuthService.logout();
         commit('isLoggedIn', false);
-      }catch(error){
+      } catch(error) {
         commit('isLoggedIn', true);
+      } finally {
+        const { default: router } = await import('@/router/index.js');
+        router.push('/login');
       }
     },
     async register({ commit }, user) {

@@ -12,7 +12,7 @@
         aria-hidden="true"
         id="iconSidenav"
       >close</i>
-      <a class="m-0 navbar-brand d-flex align-items-center justify-content-center" href="/">
+      <a class="m-0 navbar-brand d-flex align-items-center justify-content-center" href="/dashboard">
         <div class="logo-wrapper">
           <img
             :src="logo"
