@@ -42,6 +42,7 @@ class MeController extends Controller
                     'role'          => $user->role?->name,
                     'is_active'     => $user->is_active,
                     'profile_image' => $user->profile_image ?? null,
+                    'module_permissions' => $user->modulePermissionsMap(),
                 ],
             ],
         ], 200);
@@ -105,6 +106,7 @@ class MeController extends Controller
                     'role'          => $user->role?->name,
                     'is_active'     => $user->is_active,
                     'profile_image' => $user->profile_image ?? null,
+                    'module_permissions' => $user->modulePermissionsMap(),
                 ],
             ],
         ], 200);

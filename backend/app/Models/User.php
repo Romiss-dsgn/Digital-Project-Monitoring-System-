@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\RolePermission;
 use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -148,5 +149,65 @@ class User extends Authenticatable
     public function reviewedAccessRequests()
     {
         return $this->hasMany(AccessRequest::class, 'reviewed_by');
+    }
+
+    public function canModule(string $module, string $ability): bool
+    {
+        if ($this->role?->name === 'System Administrator') {
+            return true;
+        }
+
+        if (!$this->role_id) {
+            return false;
+        }
+
+        $permission = $this->modulePermissionRecord($module);
+
+        if (!$permission) {
+            return false;
+        }
+
+        return match ($ability) {
+            'view' => (bool) $permission->can_view,
+            'create' => (bool) $permission->can_create,
+            'edit' => (bool) $permission->can_edit,
+            'delete' => (bool) $permission->can_delete,
+            'approve' => (bool) $permission->can_approve,
+            'export' => (bool) $permission->can_export,
+            default => false,
+        };
+    }
+
+    public function modulePermissionsMap(): array
+    {
+        if (!$this->role_id) {
+            return [];
+        }
+
+        return RolePermission::query()
+            ->where('role_id', $this->role_id)
+            ->get()
+            ->mapWithKeys(fn (RolePermission $permission) => [
+                $permission->module => [
+                    'can_view' => (bool) $permission->can_view,
+                    'can_create' => (bool) $permission->can_create,
+                    'can_edit' => (bool) $permission->can_edit,
+                    'can_delete' => (bool) $permission->can_delete,
+                    'can_approve' => (bool) $permission->can_approve,
+                    'can_export' => (bool) $permission->can_export,
+                ],
+            ])
+            ->all();
+    }
+
+    private function modulePermissionRecord(string $module): ?RolePermission
+    {
+        if (!$this->relationLoaded('role')) {
+            $this->load('role.permissions');
+        } elseif ($this->role && !$this->role->relationLoaded('permissions')) {
+            $this->role->load('permissions');
+        }
+
+        return $this->role?->permissions?->firstWhere('module', $module);
     }
 }

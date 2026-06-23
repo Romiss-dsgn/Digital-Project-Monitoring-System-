@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UsersSeeder::class,
             ContractManagementSeeder::class,
             ProjectAccomplishmentsSeeder::class,
+            ProjectsSeeder::class,
         ]);
     }
 }
