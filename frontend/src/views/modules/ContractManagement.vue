@@ -311,7 +311,7 @@
                 </div>
               </div>
               <div class="bfp-field-full">
-                <label class="bfp-label">Project Budget (₱)</label>
+                <label class="bfp-label">Project Budget (₱) <span class="bfp-required">*</span></label>
                 <div class="bfp-input-wrap">
                   <i class="material-icons-round bfp-input-icon">payments</i>
                   <input v-model="contractForm.original_contract_amount" type="number" min="0" class="bfp-input" placeholder="e.g. 15500000" />
@@ -840,14 +840,22 @@ export default {
       }
     },
     async saveContract() {
-      this.isSaving = true;
       this.apiError = "";
+
+      const validationError = this.validateContractForm();
+      if (validationError) {
+        this.apiError = validationError;
+        return;
+      }
+
+      this.isSaving = true;
+      const payload = this.contractPayload();
 
       try {
         if (this.contractForm.id) {
-          await contractService.updateContract(this.contractForm.id, this.contractForm);
+          await contractService.updateContract(this.contractForm.id, payload);
         } else {
-          await contractService.createContract(this.contractForm);
+          await contractService.createContract(payload);
         }
 
         this.showNewProjectModal = false;
@@ -886,6 +894,53 @@ export default {
       };
       this.apiError = "";
       this.showNewProjectModal = true;
+    },
+    contractPayload() {
+      // Send only API fields, normalized to the data types expected by Laravel validation.
+      return {
+        contract_number: this.normalizeContractNumber(this.contractForm.contract_number),
+        contract_title: String(this.contractForm.contract_title || "").trim(),
+        project_id: Number(this.contractForm.project_id),
+        contractor_id: Number(this.contractForm.contractor_id),
+        contract_type: String(this.contractForm.contract_type || "Infrastructure Works").trim(),
+        original_contract_amount: Number(this.contractForm.original_contract_amount),
+        start_date: this.contractForm.start_date || null,
+        end_date: this.contractForm.end_date || null,
+        status: this.contractForm.status || "Draft",
+        remarks: String(this.contractForm.remarks || "").trim() || null,
+      };
+    },
+    normalizeContractNumber(value) {
+      return String(value || "").trim().toUpperCase();
+    },
+    validateContractForm() {
+      const contractNumber = this.normalizeContractNumber(this.contractForm.contract_number);
+      const amount = Number(this.contractForm.original_contract_amount);
+
+      if (!this.contractForm.project_id) {
+        return "Select a project before saving the contract.";
+      }
+      if (!this.contractForm.contractor_id) {
+        return "Select a contractor before saving the contract.";
+      }
+      if (!String(this.contractForm.contract_title || "").trim()) {
+        return "Enter a contract title before saving.";
+      }
+      if (!/^BFP-R2-CON-\d{4}-\d{3,}$/i.test(contractNumber)) {
+        return "Use a valid contract number format: BFP-R2-CON-YYYY-NNN.";
+      }
+      if (this.contractForm.original_contract_amount === "" || Number.isNaN(amount) || amount < 0) {
+        return "Enter a valid project budget amount.";
+      }
+      if (
+        this.contractForm.start_date &&
+        this.contractForm.end_date &&
+        new Date(this.contractForm.end_date) < new Date(this.contractForm.start_date)
+      ) {
+        return "End date must be the same as or later than the start date.";
+      }
+
+      return "";
     },
     async deleteContract(contract) {
       if (!confirm(`Archive ${contract.contract_id}?`)) {

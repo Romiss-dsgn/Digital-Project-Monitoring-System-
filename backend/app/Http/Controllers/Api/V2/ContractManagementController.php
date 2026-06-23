@@ -365,7 +365,7 @@ class ContractManagementController extends Controller
 
     private function validatedContract(Request $request, ?int $contractId = null): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'contract_number' => [
                 'required',
                 'string',
@@ -382,16 +382,26 @@ class ContractManagementController extends Controller
                 'required',
                 Rule::exists('contractors', 'id')->where(fn ($query) => $query->where('is_active', true)),
             ],
-            'contract_type' => ['required', 'string', 'max:100'],
-            'original_contract_amount' => ['required', 'numeric', 'min:0', 'max:9999999999999.99'],
+            // These fields are nullable in the schema, so the API accepts drafts with partial details.
+            'contract_type' => ['nullable', 'string', 'max:100'],
+            'original_contract_amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'revised_contract_amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'status' => ['required', Rule::in(self::STATUSES)],
             'remarks' => ['nullable', 'string', 'max:5000'],
         ], [
             'contract_number.regex' => 'Use the format BFP-R2-CON-YYYY-NNN.',
         ]);
+
+        // Keep stored records consistent even when the frontend is saving an early draft.
+        $validated['contract_number'] = strtoupper($validated['contract_number']);
+        $validated['contract_type'] = $validated['contract_type'] ?: 'Infrastructure Works';
+        $validated['original_contract_amount'] = $validated['original_contract_amount'] ?? 0;
+        $validated['revised_contract_amount'] = $validated['revised_contract_amount']
+            ?? $validated['original_contract_amount'];
+
+        return $validated;
     }
 
     private function formatContract(Contract $contract): array
