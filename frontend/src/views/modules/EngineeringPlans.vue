@@ -83,7 +83,6 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header pb-0">
-              <!-- Tabs -->
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <ul class="nav nav-tabs border-0 mb-0" style="gap:0.25rem;">
                   <li class="nav-item" v-for="tab in tabs" :key="tab">
@@ -113,13 +112,13 @@
                     <tr>
                       <th>Document Name</th>
                       <th>Project</th>
-                          <th>Type</th>
-                          <th>File Type</th>
-                          <th>Uploaded By / Date</th>
-                          <th>Version</th>
-                          <th>Review Status</th>
-                          <th style="max-width:220px;">Remarks</th>
-                          <th>Actions</th>
+                      <th>Type</th>
+                      <th>File Type</th>
+                      <th>Uploaded By / Date</th>
+                      <th>Version</th>
+                      <th>Review Status</th>
+                      <th style="max-width:220px;">Remarks</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -208,10 +207,10 @@
       :show="showUploadPlanModal"
       title="Upload New Engineering Plan"
       stripe="PLAN DOCUMENT UPLOAD"
-      confirm-text="Upload Plan"
+      :confirm-text="isSavingPlan ? 'Uploading...' : 'Upload Plan'"
       confirm-icon="cloud_upload"
-      @close="showUploadPlanModal = false"
-      @confirm="showUploadPlanModal = false"
+      @close="closeUploadModal"
+      @confirm="submitEngineeringPlan"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Plan File</div>
@@ -242,23 +241,46 @@
               <i class="material-icons-round">close</i>
             </button>
           </div>
+          <p v-if="selectedPlanFiles.length > 1" class="text-secondary" style="font-size:0.75rem;margin-top:4px;">
+            Only the first file ({{ selectedPlanFiles[0].name }}) will be attached to this plan record.
+          </p>
         </div>
       </div>
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">assignment</i> Document Details</div>
         <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Project <span class="bfp-required">*</span></label>
+          <div class="bfp-field-full">
+            <!-- REMOVED * from label — not required for testing -->
+            <label class="bfp-label">Plan Title</label>
             <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">business</i>
-              <input class="bfp-input" type="text" placeholder="Linked project name" />
+              <i class="material-icons-round bfp-input-icon">title</i>
+              <input
+                class="bfp-input"
+                type="text"
+                v-model="engineeringPlanForm.plan_title"
+                placeholder="e.g. Main Building Structural Plan"
+              />
             </div>
           </div>
           <div class="bfp-field-half">
-            <label class="bfp-label">Plan Type <span class="bfp-required">*</span></label>
+            <!-- REMOVED * from label — not required for testing -->
+            <label class="bfp-label">Project</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">business</i>
+              <select class="bfp-input bfp-select" v-model="engineeringPlanForm.project_id">
+                <option value="">
+                  {{ isLoadingProjects ? 'Loading projects...' : 'Select a project (optional)' }}
+                </option>
+                <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.project_name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <!-- REMOVED * from label — not required for testing -->
+            <label class="bfp-label">Plan Type</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">category</i>
-              <select class="bfp-input bfp-select">
+              <select class="bfp-input bfp-select" v-model="engineeringPlanForm.plan_type">
                 <option>Architectural</option>
                 <option>Structural</option>
                 <option>Electrical</option>
@@ -271,18 +293,35 @@
             <label class="bfp-label">Version</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">history</i>
-              <input class="bfp-input" type="text" placeholder="e.g. v2.1" />
+              <input
+                class="bfp-input"
+                type="text"
+                v-model="engineeringPlanForm.version"
+                placeholder="e.g. v2.1"
+              />
             </div>
           </div>
           <div class="bfp-field-half">
             <label class="bfp-label">Review Status</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">fact_check</i>
-              <select class="bfp-input bfp-select">
-                <option>For Review</option>
-                <option>Approved</option>
-                <option>Revision Required</option>
+              <select class="bfp-input bfp-select" v-model="engineeringPlanForm.status">
+                <option value="for_review">For Review</option>
+                <option value="approved">Approved</option>
+                <option value="revision">Revision Required</option>
               </select>
+            </div>
+          </div>
+          <div class="bfp-field-full">
+            <label class="bfp-label">Remarks</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">notes</i>
+              <input
+                class="bfp-input"
+                type="text"
+                v-model="engineeringPlanForm.remarks"
+                placeholder="Optional notes"
+              />
             </div>
           </div>
         </div>
@@ -307,7 +346,7 @@
               <i class="material-icons-round bfp-input-icon">description</i>
               <select class="bfp-input bfp-select">
                 <option>All Documents</option>
-                <option v-for="tab in tabs" :key="tab">{{ tab }}</option>
+                <option v-for="tab in tabs.slice(1)" :key="tab">{{ tab }}</option>
               </select>
             </div>
           </div>
@@ -316,10 +355,10 @@
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">flag</i>
               <select class="bfp-input bfp-select">
-                <option>Any Status</option>
-                <option>Approved</option>
-                <option>For Review</option>
-                <option>Revision Required</option>
+                <option value="">Any Status</option>
+                <option value="approved">Approved</option>
+                <option value="for_review">For Review</option>
+                <option value="revision">Revision Required</option>
               </select>
             </div>
           </div>
@@ -397,13 +436,24 @@
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
 import BfpModal from "@/components/BfpModal.vue";
+import EngineeringPlanService from "@/services/engineering-plan.service";
+
+const FILE_TYPE_ICON = {
+  PDF:  { icon: "picture_as_pdf", color: "#2563eb" },
+  DWG:  { icon: "description",    color: "#ea580c" },
+  PNG:  { icon: "image",          color: "#dc2626" },
+  DOCX: { icon: "article",        color: "#2563eb" },
+};
+const DEFAULT_FILE_ICON = { icon: "description", color: "#6b7280" };
+
+function normalisePlanType(raw) {
+  return (raw ?? "").trim();
+}
 
 export default {
   name: "EngineeringPlans",
-  components: {
-    StatusBadge,
-    BfpModal
-  },
+  components: { StatusBadge, BfpModal },
+
   data() {
     return {
       activeTab: "All Documents",
@@ -422,8 +472,21 @@ export default {
         "application/acad",
         "application/autocad_dwg",
         "application/dwg",
-        "image/vnd.dwg"
+        "application/x-autocad",
+        "image/vnd.dwg",
+        "image/x-dwg",
       ],
+      projects: [],
+      isLoadingProjects: false,
+      engineeringPlanForm: {
+        project_id: "",
+        plan_title: "",
+        plan_type:  "Architectural",
+        version:    "",
+        status:     "for_review",
+        remarks:    "",
+      },
+      isSavingPlan: false,
       tabs: ["All Documents", "Architectural", "Structural", "Electrical", "Mechanical", "Plumbing & Sanitary"],
       documents: [
         {
@@ -453,7 +516,7 @@ export default {
           uploaded_by: "Arch. Rafael Cruz",
           date_uploaded: "Oct 14, 2023 · 02:15 PM",
           version: "v1.1",
-          status: "review",
+          status: "for_review",
           remarks: "Awaiting electrical compliance check"
         },
         {
@@ -489,24 +552,129 @@ export default {
       ]
     };
   },
+
   computed: {
     filteredDocuments() {
       if (this.activeTab === "All Documents") return this.documents;
-      return this.documents.filter(d => d.type === this.activeTab);
+      return this.documents.filter(
+        d => normalisePlanType(d.type) === normalisePlanType(this.activeTab)
+      );
     }
   },
+
+  mounted() {
+    this.fetchProjects();
+  },
+
   methods: {
+    async fetchProjects() {
+      this.isLoadingProjects = true;
+      try {
+        const { data } = await EngineeringPlanService.getProjects();
+        this.projects = data.data ?? [];
+      } catch (error) {
+        console.error("Failed to load projects", error);
+      } finally {
+        this.isLoadingProjects = false;
+      }
+    },
+
+    async submitEngineeringPlan() {
+      // TEST MODE: all fields optional — just submit whatever is filled in
+      if (this.isSavingPlan) return;
+
+      // ── REMOVED: required field checks (for testing purposes) ──
+      // if (!this.engineeringPlanForm.project_id || !this.engineeringPlanForm.plan_title) {
+      //   alert("Project and Plan Title are required.");
+      //   return;
+      // }
+      // if (this.selectedPlanFiles.length === 0) {
+      //   alert("Please attach a plan file.");
+      //   return;
+      // }
+
+      this.isSavingPlan = true;
+
+      try {
+        const formData = new FormData();
+        Object.entries(this.engineeringPlanForm).forEach(([key, val]) => {
+          formData.append(key, val ?? "");
+        });
+        // Only attach file if one was selected
+        if (this.selectedPlanFiles.length > 0) {
+          formData.append("file", this.selectedPlanFiles[0]);
+        }
+
+        const { data } = await EngineeringPlanService.create(formData);
+        const plan = data.data;
+
+        const display = FILE_TYPE_ICON[(plan.file_type || "").toUpperCase()] ?? DEFAULT_FILE_ICON;
+        const matchedProject = this.projects.find(p => p.id === plan.project_id);
+
+        this.documents.unshift({
+          id:            plan.id,
+          filename:      plan.file_name ?? "—",
+          filesize:      this.selectedPlanFiles.length > 0
+                           ? this.formatFileSize(this.selectedPlanFiles[0].size)
+                           : "—",
+          icon:          display.icon,
+          iconColor:     display.color,
+          type:          normalisePlanType(plan.plan_type),
+          file_type:     plan.file_type ?? "—",
+          project:       matchedProject?.project_name ?? "—",
+          uploaded_by:   "You",
+          date_uploaded: new Date().toLocaleString(),
+          version:       plan.version ?? "—",
+          status:        plan.status,
+          remarks:       plan.remarks ?? "",
+        });
+
+        this.closeUploadModal();
+      } catch (error) {
+        if (error.response?.status === 422) {
+          const errors = error.response.data.errors ?? {};
+          alert(Object.values(errors).flat().join("\n") || "Validation failed.");
+        } else {
+          console.error("Upload failed:", error);
+          alert("Failed to upload engineering plan. Please try again.");
+        }
+      } finally {
+        this.isSavingPlan = false;
+      }
+    },
+
+    closeUploadModal() {
+      if (this.isSavingPlan) return;
+      this.showUploadPlanModal = false;
+      this.resetEngineeringPlanForm();
+    },
+
+    resetEngineeringPlanForm() {
+      this.engineeringPlanForm = {
+        project_id: "",
+        plan_title: "",
+        plan_type:  "Architectural",
+        version:    "",
+        status:     "for_review",
+        remarks:    "",
+      };
+      this.selectedPlanFiles = [];
+    },
+
     getFileExtension(file) {
       const dotIndex = file.name.lastIndexOf(".");
       return dotIndex >= 0 ? file.name.slice(dotIndex).toLowerCase() : "";
     },
+
     isAllowedPlanFile(file) {
       const extension = this.getFileExtension(file);
       return this.allowedPlanExtensions.includes(extension) || this.allowedPlanTypes.includes(file.type);
     },
+
     isAllowedPlanFileSize(file) {
       return file.size <= this.maxPlanFileSizeMb * 1024 * 1024;
     },
+
     splitPlanFiles(files) {
       return files.reduce((groups, file) => {
         if (!this.isAllowedPlanFile(file)) {
@@ -519,174 +687,71 @@ export default {
         return groups;
       }, { valid: [], invalidType: [], invalidSize: [] });
     },
+
     addPlanFiles(files) {
       const { valid, invalidType, invalidSize } = this.splitPlanFiles(Array.from(files));
       const messages = [];
-
       if (invalidType.length > 0) {
-        messages.push(`Only PDF, DWG, PNG, and DOCX files are allowed.\nRejected type: ${invalidType.map(file => file.name).join(", ")}`);
+        messages.push(`Only PDF, DWG, PNG, and DOCX files are allowed.\nRejected: ${invalidType.map(f => f.name).join(", ")}`);
       }
-
       if (invalidSize.length > 0) {
-        messages.push(`Maximum file size is ${this.maxPlanFileSizeMb}MB.\nToo large: ${invalidSize.map(file => file.name).join(", ")}`);
+        messages.push(`Maximum file size is ${this.maxPlanFileSizeMb}MB.\nToo large: ${invalidSize.map(f => f.name).join(", ")}`);
       }
-
-      if (messages.length > 0) {
-        alert(messages.join("\n\n"));
-      }
-
+      if (messages.length > 0) alert(messages.join("\n\n"));
       if (valid.length > 0) {
         this.selectedPlanFiles = [...this.selectedPlanFiles, ...valid];
       }
     },
+
     handlePlanFileDrop(event) {
       this.planUploadDragOver = false;
       this.addPlanFiles(event.dataTransfer.files);
     },
+
     handlePlanFileSelect(event) {
       this.addPlanFiles(event.target.files);
       event.target.value = "";
     },
+
     removePlanFile(index) {
       this.selectedPlanFiles.splice(index, 1);
     },
+
     formatFileSize(size) {
       if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
       return `${(size / 1024).toFixed(1)} KB`;
     },
-    viewDocument(doc) {
-      alert(`View document ${doc.filename}`);
-    },
-    editDocument(doc) {
-      alert(`Edit document ${doc.filename}`);
-    },
-    deleteDocument(doc) {
-      alert(`Delete document ${doc.filename}`);
-    }
+
+    viewDocument(doc)   { alert(`View document ${doc.filename}`); },
+    editDocument(doc)   { alert(`Edit document ${doc.filename}`); },
+    deleteDocument(doc) { alert(`Delete document ${doc.filename}`); }
   }
 };
 </script>
 
 <style scoped>
-/* ── No changes to existing styles ── */
-.module-page {
-  background: #f7fafc;
-  min-height: 100vh;
-}
-
-.dropdown-menu {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
-}
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
-  display: flex;
-  align-items: center;
-}
+.module-page { background: #f7fafc; min-height: 100vh; }
+.dropdown-menu { border: 1px solid rgba(0,0,0,.08); border-radius: .75rem; font-size: .85rem; min-width: 140px; padding: .3rem; }
+.dropdown-item { border-radius: .5rem; padding: .45rem .75rem; display: flex; align-items: center; }
 .dropdown-item:hover { background: #f3f4f6; }
 .dropdown-item.text-danger:hover { background: #fef2f2; }
-
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
 .edit-icon { color: #d97706; }
-
-.card {
-  border: none;
-  border-radius: 1rem;
-  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.1);
-}
-
-.card-header {
-  background: transparent;
-  border-bottom: 1px solid #e0e5ee;
-  padding: 1.5rem;
-}
-
-.card-header h6 {
-  color: #1f2633;
-  font-weight: 700;
-  margin: 0;
-}
-
-.table {
-  font-size: 0.875rem;
-}
-
-.table th,
-.table td {
-  vertical-align: middle;
-}
-
-.table .material-icons-round {
-  vertical-align: middle;
-}
-
-.form-control {
-  border-radius: 0.75rem;
-  border: 1px solid #dfe4ed;
-}
-
-.bfp-upload-panel.drag-over {
-  border-color: #c0392b;
-  background: rgba(192, 57, 43, 0.04);
-}
-
-.selected-plan-files {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.selected-plan-file {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-}
-
-.selected-plan-file .material-icons-round {
-  color: #9ca3af;
-  font-size: 20px;
-}
-
-.selected-plan-file-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #374151;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.selected-plan-file-size {
-  color: #9ca3af;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.selected-plan-file-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #9ca3af;
-  cursor: pointer;
-}
-
+.card { border: none; border-radius: 1rem; box-shadow: 0 15px 35px rgba(15,23,42,.1); }
+.card-header { background: transparent; border-bottom: 1px solid #e0e5ee; padding: 1.5rem; }
+.card-header h6 { color: #1f2633; font-weight: 700; margin: 0; }
+.table { font-size: .875rem; }
+.table th, .table td { vertical-align: middle; }
+.table .material-icons-round { vertical-align: middle; }
+.form-control { border-radius: .75rem; border: 1px solid #dfe4ed; }
+.bfp-upload-panel.drag-over { border-color: #c0392b; background: rgba(192,57,43,.04); }
+.selected-plan-files { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.selected-plan-file { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; }
+.selected-plan-file .material-icons-round { color: #9ca3af; font-size: 20px; }
+.selected-plan-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #374151; font-size: 13px; font-weight: 500; }
+.selected-plan-file-size { color: #9ca3af; font-size: 11px; white-space: nowrap; }
+.selected-plan-file-remove { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; color: #9ca3af; cursor: pointer; }
 .selected-plan-file-remove:hover,
-.selected-plan-file-remove:hover .material-icons-round {
-  color: #c0392b;
-}
+.selected-plan-file-remove:hover .material-icons-round { color: #c0392b; }
 </style>

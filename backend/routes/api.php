@@ -43,6 +43,8 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
         
         // Engineering plans
         Route::post('/engineering-plans',       [EngineeringPlanController::class, 'store']);
+        // Projects
+        Route::get('projects', [\App\Http\Controllers\Api\V2\Admin\ProjectController::class, 'index']);
     });
 });
 
