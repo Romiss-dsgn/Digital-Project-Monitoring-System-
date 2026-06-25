@@ -32,10 +32,10 @@
               <slot name="note">{{ note }}</slot>
             </div>
             <div class="bfp-footer-actions">
-              <button class="bfp-btn-cancel" type="button" @click="$emit('close')">{{ cancelText }}</button>
-              <button class="bfp-btn-save" type="button" @click="$emit('confirm')">
+              <button class="bfp-btn-cancel" type="button" :disabled="loading" @click="$emit('close')">{{ cancelText }}</button>
+              <button class="bfp-btn-save" type="button" :disabled="loading" @click="$emit('confirm')">
                 <i class="material-icons-round">{{ confirmIcon }}</i>
-                {{ confirmText }}
+                {{ loading ? 'Saving...' : confirmText }}
               </button>
             </div>
           </div>
@@ -61,7 +61,9 @@ export default {
     confirmText: { type: String, default: "Save" },
     confirmIcon: { type: String, default: "save" },
     showFooter: { type: Boolean, default: true },
-    width: { type: String, default: "620px" }
+    width: { type: String, default: "620px" },
+    loading: { type: Boolean, default: false },
+    confirmVariant: { type: String, default: "primary" }
   },
   emits: ["close", "confirm"],
   data() {

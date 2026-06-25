@@ -1,66 +1,327 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ConTrackPro Backend
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This folder contains the Laravel backend for ConTrackPro. It exposes the JSON/API endpoints used by the Vue frontend and owns database persistence, authentication, authorization, file storage, validation, and audit logging.
 
-## About Laravel
+## Runtime
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Recommended local runtime:
 
--   [Simple, fast routing engine](https://laravel.com/docs/routing).
--   [Powerful dependency injection container](https://laravel.com/docs/container).
--   Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
--   Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
--   Database agnostic [schema migrations](https://laravel.com/docs/migrations).
--   [Robust background job processing](https://laravel.com/docs/queues).
--   [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Docker backend container
+- PHP 8.2
+- MySQL 8
+- Laravel Passport
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Avoid mixing Docker backend work with XAMPP backend work unless you intentionally maintain two separate databases.
 
-## Learning Laravel
+## Important Files
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```text
+backend/
+|-- app/
+|   |-- Http/Controllers/Api/V2/
+|   |-- Http/Middleware/EnsureModulePermission.php
+|   |-- Models/
+|   |-- Policies/
+|   `-- Services/
+|-- database/
+|   |-- migrations/
+|   |-- seeders/
+|   `-- factories/
+|-- routes/
+|   `-- api.php
+|-- docker/
+|   `-- entrypoint.sh
+|-- Dockerfile
+|-- .env.docker.example
+`-- README.md
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Current Backend Progress
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Domain | Current backend state |
+| --- | --- |
+| Auth | Login, logout, request-access registration, forgot/reset password, Passport token flow. |
+| Profile | `/api/v2/me` read/update profile endpoints. |
+| Roles and permissions | `roles` and `role_permissions` seeders; module permission middleware. |
+| User management | Admin user CRUD/status/accept/reject endpoints. |
+| Access requests | Admin approve/reject request-access workflow. |
+| Projects / Infrastructure Plans | Project model, seeder, policy, controller, and admin routes are present. |
+| Contract Management | Contracts CRUD/archive, document upload/download/status/archive, summary/options endpoints, audit logging, tests. |
+| Project Accomplishments | Accomplishment CRUD/archive/validation, document upload/download, project progress sync, summary/options endpoints, tests. |
+| Engineering Plans | Model, request validation, file service, and upload/store endpoint exist. Full listing/review API still pending. |
+| Cashflows | Tables/models exist. Controller/API work pending. |
+| Variation Orders | Tables/models exist. Controller/API work pending. |
+| Reports | Tables/models foundation exists through source modules. Report controller/API pending. |
+| Audit Logs | Audit table/model/service exists. Dedicated read-only audit module API pending. |
+| Notifications | Tables/models exist. Notification generation/API pending. |
+| Contractor Performance | Table/model exists. Controller/API pending. |
 
-## Laravel Sponsors
+## API Routes
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Main route file:
 
-### Premium Partners
+```text
+backend/routes/api.php
+```
 
--   **[Vehikl](https://vehikl.com/)**
--   **[Tighten Co.](https://tighten.co)**
--   **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
--   **[64 Robots](https://64robots.com)**
--   **[Cubet Techno Labs](https://cubettech.com)**
--   **[Cyber-Duck](https://cyber-duck.co.uk)**
--   **[Many](https://www.many.co.uk)**
--   **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
--   **[DevSquad](https://devsquad.com)**
--   **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
--   **[OP.GG](https://op.gg)**
--   **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
--   **[Lendio](https://lendio.com)**
+Full current and planned API documentation is maintained in [../API.md](../API.md).
 
-## Contributing
+Authentication:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```text
+POST   /api/v2/login
+POST   /api/v2/logout
+POST   /api/v2/register
+POST   /api/v2/password-forgot
+POST   /api/v2/password-reset
+GET    /api/v2/me
+PATCH  /api/v2/me
+```
 
-## Code of Conduct
+Contract Management:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```text
+GET    /api/v2/contract-management/summary
+GET    /api/v2/contract-management/options
+GET    /api/v2/contracts
+POST   /api/v2/contracts
+GET    /api/v2/contracts/{contract}
+PATCH  /api/v2/contracts/{contract}
+DELETE /api/v2/contracts/{contract}
+POST   /api/v2/contracts/{contract}/documents
+GET    /api/v2/contract-documents/{document}/download
+PATCH  /api/v2/contract-documents/{document}/status
+DELETE /api/v2/contract-documents/{document}
+```
 
-## Security Vulnerabilities
+Project Accomplishments:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```text
+GET    /api/v2/project-accomplishments/summary
+GET    /api/v2/project-accomplishments/options
+GET    /api/v2/project-accomplishments
+POST   /api/v2/project-accomplishments
+GET    /api/v2/project-accomplishments/{accomplishment}
+PATCH  /api/v2/project-accomplishments/{accomplishment}
+PATCH  /api/v2/project-accomplishments/{accomplishment}/validate
+DELETE /api/v2/project-accomplishments/{accomplishment}
+POST   /api/v2/project-accomplishments/{accomplishment}/documents
+GET    /api/v2/accomplishment-documents/{document}/download
+```
 
-## License
+Admin:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```text
+GET    /api/v2/admin/access-requests
+PATCH  /api/v2/admin/access-requests/{accessRequest}/approve
+PATCH  /api/v2/admin/access-requests/{accessRequest}/reject
+GET    /api/v2/admin/users/stats
+GET    /api/v2/admin/users
+POST   /api/v2/admin/users
+GET    /api/v2/admin/users/{user}
+PUT    /api/v2/admin/users/{user}
+PATCH  /api/v2/admin/users/{user}/status
+DELETE /api/v2/admin/users/{user}
+POST   /api/v2/admin/users/{user}/accept
+DELETE /api/v2/admin/users/{user}/reject
+GET    /api/v2/admin/roles
+POST   /api/v2/admin/engineering-plans
+GET    /api/v2/admin/projects
+POST   /api/v2/admin/projects
+PATCH  /api/v2/admin/projects/{project}
+DELETE /api/v2/admin/projects/{project}
+```
+
+Check routes:
+
+```powershell
+docker compose exec backend php artisan route:list --path=api/v2
+```
+
+## Database Tables
+
+The schema foundation includes:
+
+```text
+roles
+role_permissions
+users
+access_requests
+contractors
+projects
+project_documents
+contracts
+contract_documents
+engineering_plans
+cashflow_periods
+invoices
+invoice_documents
+payments
+variation_orders
+variation_order_documents
+contract_time_extensions
+work_suspensions
+project_accomplishments
+accomplishment_documents
+contractor_performance_ratings
+notifications
+notification_recipients
+audit_logs
+```
+
+Current data-heavy MVP tables:
+
+- `projects`
+- `contractors`
+- `contracts`
+- `contract_documents`
+- `project_accomplishments`
+- `accomplishment_documents`
+- `audit_logs`
+- `users`
+- `roles`
+- `role_permissions`
+
+## Seeders
+
+Seeders are registered in:
+
+```text
+backend/database/seeders/DatabaseSeeder.php
+```
+
+Current seeders:
+
+```text
+RolesSeeder
+RolePermissionsSeeder
+UsersSeeder
+ContractManagementSeeder
+ProjectAccomplishmentsSeeder
+ProjectsSeeder
+```
+
+Run all seeders:
+
+```powershell
+docker compose exec backend php artisan db:seed --force
+```
+
+Reset and reseed:
+
+```powershell
+docker compose exec backend php artisan migrate:fresh --seed --force
+```
+
+Seeded admin account:
+
+```text
+admin@contrackpro.test
+password
+```
+
+## Permissions
+
+Module APIs use `EnsureModulePermission`:
+
+```text
+backend/app/Http/Middleware/EnsureModulePermission.php
+```
+
+Typical route middleware:
+
+```php
+->middleware('permission:contracts,view')
+->middleware('permission:contracts,create')
+->middleware('permission:contract_documents,approve')
+```
+
+Supported permission columns:
+
+```text
+can_view
+can_create
+can_edit
+can_delete
+can_approve
+can_export
+```
+
+## Audit Logging
+
+Server-side audit logs are written through:
+
+```text
+backend/app/Services/AuditLogger.php
+```
+
+Use audit logs for create/update/archive/upload/review events where accountability matters. Do not rely on frontend-only logs.
+
+## File Storage
+
+Current private file workflows:
+
+- Contract documents are stored under Laravel local storage.
+- Project accomplishment documents are stored under Laravel local storage.
+- Engineering plan upload uses `EngineeringPlanFileService`.
+
+Files are not intended to be public assets. Use authenticated download endpoints.
+
+## Docker Commands
+
+Start services:
+
+```powershell
+docker compose up -d
+```
+
+Run migrations:
+
+```powershell
+docker compose exec backend php artisan migrate
+```
+
+Clear cache:
+
+```powershell
+docker compose exec backend php artisan optimize:clear
+```
+
+Regenerate Passport keys:
+
+```powershell
+docker compose exec backend php artisan passport:keys --force
+```
+
+Run tests:
+
+```powershell
+docker compose exec backend php artisan test
+```
+
+Run selected tests:
+
+```powershell
+docker compose exec backend php artisan test --filter=ContractManagementTest
+docker compose exec backend php artisan test --filter=ProjectAccomplishmentTest
+```
+
+## Local XAMPP Notes
+
+Docker is preferred. If using XAMPP:
+
+- Use PHP 8.2 or 8.3.
+- Enable `sodium`.
+- Enable `zip`.
+- Configure `.env` for your XAMPP MySQL host and port.
+- Do not use `DB_HOST=mysql` outside Docker.
+
+## Backend Development Rules
+
+- Validate all module writes in request/controller layer.
+- Use policies/middleware for module access.
+- Use soft archive fields where project history matters.
+- Keep file uploads private and authenticated.
+- Add or update seeders for module MVP data.
+- Add feature tests for each new API workflow.
+- Keep route names and frontend service methods stable once connected.

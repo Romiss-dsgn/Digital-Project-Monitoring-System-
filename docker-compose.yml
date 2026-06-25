@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: contrackpro_backend
     ports:
-      - "8000:8000"
+      - "8000:80"
     volumes:
       - ./backend:/var/www/html
       - backend_vendor:/var/www/html/vendor
@@ -22,7 +22,6 @@ services:
       DB_PASSWORD: contrackpro
       COMPOSER_PROCESS_TIMEOUT: 1200
     working_dir: /var/www/html
-    command: php artisan serve --host=0.0.0.0 --port=8000
     restart: unless-stopped
 
   mysql:

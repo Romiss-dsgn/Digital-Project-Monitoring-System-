@@ -57,9 +57,9 @@ Write-Host "Resetting and seeding Docker database..."
 Invoke-Compose exec -T backend php artisan migrate:fresh --seed --force
 
 Write-Host ""
-Write-Host "Preparing Passport OAuth keys and password client..."
+Write-Host "Preparing Passport OAuth keys and personal access client..."
 Invoke-Compose exec -T backend php artisan passport:keys --force
-Invoke-Compose exec -T backend php artisan passport:client --password --name="ConTrackPro Password Client" --no-interaction
+Invoke-Compose exec -T backend php artisan passport:client --personal --name="ConTrackPro Personal Access Client" --no-interaction
 
 Write-Host ""
 Write-Host "Verifying seed data..."

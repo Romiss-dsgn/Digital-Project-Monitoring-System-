@@ -3,7 +3,7 @@
     <ul class="navbar-nav">
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="dashboard" navText="Dashboard">
+        <sidenav-collapse :collapse="false" collapseRef="dashboard" navText="Dashboard">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">dashboard</span>
           </template>
@@ -11,7 +11,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="infrastructure-plans" navText="Infrastructure Plans">
+        <sidenav-collapse :collapse="false" collapseRef="infrastructure-plans" navText="Infrastructure Plans">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">architecture</span>
           </template>
@@ -19,7 +19,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="contract-management" navText="Contract Management">
+        <sidenav-collapse :collapse="false" collapseRef="contract-management" navText="Contract Management">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">contract</span>
           </template>
@@ -27,7 +27,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="cashflow" navText="Cashflows Management">
+        <sidenav-collapse :collapse="false" collapseRef="cashflow" navText="Cashflows Management">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">payments</span>
           </template>
@@ -35,7 +35,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="engineering-plans" navText="Engineering Plans">
+        <sidenav-collapse :collapse="false" collapseRef="engineering-plans" navText="Engineering Plans">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">engineering</span>
           </template>
@@ -43,7 +43,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="variation-orders" navText="Variation Orders">
+        <sidenav-collapse :collapse="false" collapseRef="variation-orders" navText="Variation Orders">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">pending_actions</span>
           </template>
@@ -51,7 +51,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="accomplishments" navText="Project Accomplishments">
+        <sidenav-collapse :collapse="false" collapseRef="accomplishments" navText="Project Accomplishments">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">check_circle</span>
           </template>
@@ -59,7 +59,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="reports" navText="Reports">
+        <sidenav-collapse :collapse="false" collapseRef="reports" navText="Reports">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">analytics</span>
           </template>
@@ -67,15 +67,15 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="audit-trail" navText="Audit Logs">
+        <sidenav-collapse :collapse="false" collapseRef="audit-trail" navText="Audit Logs">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">manage_search</span>
           </template>
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="user-management" navText="User Management">
+      <li class="nav-item" v-if="isAdmin">
+        <sidenav-collapse :collapse="false" collapseRef="user-management" navText="User Management">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">groups</span>
           </template>
@@ -83,7 +83,7 @@
       </li>
 
       <li class="nav-item">
-        <sidenav-collapse url="#" :aria-controls="''" v-bind:collapse="false" collapseRef="settings" navText="Settings">
+        <sidenav-collapse :collapse="false" collapseRef="settings" navText="Settings">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">settings</span>
           </template>
@@ -109,6 +109,21 @@ export default {
   },
   components: {
     SidenavCollapse
+  },
+  async mounted() {
+    if (localStorage.getItem("user_free") && !this.$store.getters["profile/getUserProfile"]) {
+      try {
+        await this.$store.dispatch("profile/getProfile");
+      } catch (error) {
+        void error;
+      }
+    }
+  },
+  computed: {
+    isAdmin() {
+      const profile = this.$store.getters["profile/getUserProfile"];
+      return profile?.role === "System Administrator";
+    }
   },
   methods: {
     getRoute() {

@@ -9,7 +9,7 @@ class Role extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['name', 'description'];
 
     public function users()
     {
@@ -19,10 +19,5 @@ class Role extends Model
     public function permissions()
     {
         return $this->hasMany(RolePermission::class);
-    }
-
-    public function accessRequests()
-    {
-        return $this->hasMany(AccessRequest::class, 'requested_role_id');
     }
 }

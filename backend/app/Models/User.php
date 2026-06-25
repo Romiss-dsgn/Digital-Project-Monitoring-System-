@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\RolePermission;
 use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -28,10 +29,13 @@ class User extends Authenticatable
         'contact_number',
         'position',
         'office_unit',
+        'profile_image',
         'role_id',
         'is_active',
         'email_verified_at',
         'last_login_at',
+        'accepted_at',
+        'rejected_at',
         'password',
     ];
 
@@ -54,6 +58,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean',
         'last_login_at' => 'datetime',
+        'accepted_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     /**
@@ -83,6 +89,53 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    /**
+     * Check one module permission from the normalized role_permissions table.
+     * System administrators retain full access even if a seed row is missing.
+     */
+    public function hasModulePermission(string $module, string $action = 'view'): bool
+    {
+        if ($this->role?->name === 'System Administrator') {
+            return true;
+        }
+
+        $column = 'can_' . $action;
+        $allowedColumns = [
+            'can_view',
+            'can_create',
+            'can_edit',
+            'can_delete',
+            'can_approve',
+            'can_export',
+        ];
+
+        if (! in_array($column, $allowedColumns, true)) {
+            return false;
+        }
+
+        return (bool) $this->role?->permissions()
+            ->where('module', $module)
+            ->value($column);
+    }
+
+    public function modulePermissions(string $module): array
+    {
+        $actions = ['view', 'create', 'edit', 'delete', 'approve', 'export'];
+
+        if ($this->role?->name === 'System Administrator') {
+            return collect($actions)->mapWithKeys(fn (string $action) => [$action => true])->all();
+        }
+
+        // Fetch one row once instead of issuing a query for every action.
+        $permission = $this->role?->permissions()->where('module', $module)->first();
+
+        return collect($actions)
+            ->mapWithKeys(fn (string $action) => [
+                $action => (bool) $permission?->{'can_' . $action},
+            ])
+            ->all();
+    }
+
     public function createdProjects()
     {
         return $this->hasMany(Project::class, 'created_by');
@@ -96,5 +149,65 @@ class User extends Authenticatable
     public function reviewedAccessRequests()
     {
         return $this->hasMany(AccessRequest::class, 'reviewed_by');
+    }
+
+    public function canModule(string $module, string $ability): bool
+    {
+        if ($this->role?->name === 'System Administrator') {
+            return true;
+        }
+
+        if (!$this->role_id) {
+            return false;
+        }
+
+        $permission = $this->modulePermissionRecord($module);
+
+        if (!$permission) {
+            return false;
+        }
+
+        return match ($ability) {
+            'view' => (bool) $permission->can_view,
+            'create' => (bool) $permission->can_create,
+            'edit' => (bool) $permission->can_edit,
+            'delete' => (bool) $permission->can_delete,
+            'approve' => (bool) $permission->can_approve,
+            'export' => (bool) $permission->can_export,
+            default => false,
+        };
+    }
+
+    public function modulePermissionsMap(): array
+    {
+        if (!$this->role_id) {
+            return [];
+        }
+
+        return RolePermission::query()
+            ->where('role_id', $this->role_id)
+            ->get()
+            ->mapWithKeys(fn (RolePermission $permission) => [
+                $permission->module => [
+                    'can_view' => (bool) $permission->can_view,
+                    'can_create' => (bool) $permission->can_create,
+                    'can_edit' => (bool) $permission->can_edit,
+                    'can_delete' => (bool) $permission->can_delete,
+                    'can_approve' => (bool) $permission->can_approve,
+                    'can_export' => (bool) $permission->can_export,
+                ],
+            ])
+            ->all();
+    }
+
+    private function modulePermissionRecord(string $module): ?RolePermission
+    {
+        if (!$this->relationLoaded('role')) {
+            $this->load('role.permissions');
+        } elseif ($this->role && !$this->role->relationLoaded('permissions')) {
+            $this->role->load('permissions');
+        }
+
+        return $this->role?->permissions?->firstWhere('module', $module);
     }
 }

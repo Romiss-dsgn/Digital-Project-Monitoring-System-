@@ -1,6 +1,48 @@
-# ConTrackPro Docker Development Setup
+# ConTrackPro Docker Guide
 
-This Docker setup is for local development. It containerizes the Laravel backend, MySQL, and phpMyAdmin. The Vue frontend can still run locally with `npm run serve`.
+This Docker setup is for local backend development. It runs Laravel, MySQL, and phpMyAdmin in containers. The Vue frontend normally runs on the host machine with `npm run serve`.
+
+## Services
+
+```text
+backend     Laravel API
+mysql       MySQL 8 database
+phpmyadmin  browser database viewer
+```
+
+## Ports
+
+```text
+Backend API: http://localhost:8000/api/v2
+Laravel root: http://localhost:8000
+phpMyAdmin:  http://localhost:8081
+MySQL host:  127.0.0.1:3307
+```
+
+Inside Docker, Laravel connects to MySQL with:
+
+```env
+DB_HOST=mysql
+DB_PORT=3306
+```
+
+From your host machine or MySQL Workbench:
+
+```text
+Host: 127.0.0.1
+Port: 3307
+User: contrackpro
+Password: contrackpro
+Database: contrackpro
+```
+
+phpMyAdmin:
+
+```text
+Server: mysql
+Username: contrackpro
+Password: contrackpro
+```
 
 ## File Layout
 
@@ -21,141 +63,140 @@ This Docker setup is for local development. It containerizes the Laravel backend
     `-- ...
 ```
 
-## Services
-
-```text
-backend     Laravel API container
-mysql       MySQL 8 database container
-phpmyadmin  browser database viewer
-```
-
-## Ports
-
-```text
-Backend API: http://localhost:8000
-phpMyAdmin: http://localhost:8081
-MySQL:       127.0.0.1:3307
-```
-
-Inside Docker, Laravel connects to MySQL with:
-
-```env
-DB_HOST=mysql
-DB_PORT=3306
-```
-
-From your host machine, external tools connect with:
-
-```text
-Host: 127.0.0.1
-Port: 3307
-User: contrackpro
-Password: contrackpro
-Database: contrackpro
-```
-
 ## First-Time Setup
 
-Run this from the repository root:
+Run from the repository root:
 
 ```powershell
-.\scripts\docker-setup.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\docker-setup.ps1
 ```
 
-If you previously used XAMPP/local MySQL and already have a `backend\.env`, reset it to Docker values:
+If you already have a `backend/.env` from XAMPP or a previous local setup:
 
 ```powershell
-.\scripts\docker-setup.ps1 -ResetEnv
+powershell -ExecutionPolicy Bypass -File .\scripts\docker-setup.ps1 -ResetEnv
 ```
 
-The setup script:
+The script does the following:
 
-- copies `backend\.env.docker.example` to `backend\.env` if `.env` is missing
-- builds and starts containers
-- installs Composer dependencies
-- generates the Laravel app key
-- clears Laravel config
-- runs fresh migrations and seeders
-- generates Passport keys
-- creates the Passport password client
+1. Copies `backend/.env.docker.example` to `backend/.env` when needed.
+2. Builds and starts containers.
+3. Installs Composer dependencies in the backend container.
+4. Generates the Laravel app key.
+5. Clears Laravel caches.
+6. Runs `migrate:fresh --seed --force`.
+7. Generates Passport keys.
+8. Creates the Passport personal access client.
+9. Verifies seed data.
 
-The script runs `migrate:fresh --seed`, so it resets the Docker database.
-
-## Verify Database Setup
-
-After running the setup script, confirm the containers are healthy:
-
-```powershell
-docker compose ps
-```
-
-Confirm the Docker database has tables:
-
-```powershell
-docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro -e "SHOW TABLES;"
-```
-
-Confirm the seed data exists:
-
-```powershell
-docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro --batch --execute="SELECT 'users' AS item, COUNT(*) AS count FROM users UNION ALL SELECT 'roles', COUNT(*) FROM roles UNION ALL SELECT 'admin_exists', COUNT(*) FROM users WHERE email = 'admin@contrackpro.test';"
-```
-
-If phpMyAdmin opens but shows no tables, make sure you selected the `contrackpro` database in the left sidebar. Also check that the backend container is not restarting:
-
-```powershell
-docker compose logs backend --tail=100
-```
-
-## Manual Setup
-
-```powershell
-Copy-Item backend\.env.docker.example backend\.env -Force
-docker compose up -d --build
-docker compose exec backend composer install --no-interaction --prefer-dist --optimize-autoloader
-docker compose exec backend php artisan key:generate --force --no-interaction
-docker compose exec backend php artisan config:clear
-docker compose exec backend php artisan migrate:fresh --seed
-docker compose exec backend php artisan passport:keys --force
-docker compose exec backend php artisan passport:client --password --name="ConTrackPro Password Client" --no-interaction
-```
+Important: the script resets the Docker database.
 
 ## Daily Commands
 
-Start containers:
+Start:
 
 ```powershell
 docker compose up -d
 ```
 
-Stop containers:
+Stop without deleting data:
 
 ```powershell
 docker compose down
 ```
 
-View backend logs:
+Stop and rebuild backend:
+
+```powershell
+docker compose up -d --build backend
+```
+
+Force recreate backend after Dockerfile changes:
+
+```powershell
+docker compose up -d --build --force-recreate backend
+```
+
+Logs:
 
 ```powershell
 docker compose logs backend --tail=100
+docker compose logs mysql --tail=100
 ```
 
-Run Artisan inside Docker:
+Container status:
+
+```powershell
+docker compose ps
+```
+
+## Migration and Seeder Commands
+
+Run pending migrations:
 
 ```powershell
 docker compose exec backend php artisan migrate
-docker compose exec backend php artisan route:list
 ```
 
-Run Composer inside Docker:
+Reset and seed:
 
 ```powershell
-docker compose exec backend composer install
+docker compose exec backend php artisan migrate:fresh --seed --force
 ```
 
-## Login Test
+Run all seeders:
 
-Use Postman or Thunder Client:
+```powershell
+docker compose exec backend php artisan db:seed --force
+```
+
+Run selected seeders:
+
+```powershell
+docker compose exec backend php artisan db:seed --class=RolesSeeder --force
+docker compose exec backend php artisan db:seed --class=RolePermissionsSeeder --force
+docker compose exec backend php artisan db:seed --class=UsersSeeder --force
+docker compose exec backend php artisan db:seed --class=ContractManagementSeeder --force
+docker compose exec backend php artisan db:seed --class=ProjectAccomplishmentsSeeder --force
+docker compose exec backend php artisan db:seed --class=ProjectsSeeder --force
+```
+
+Clear Laravel caches:
+
+```powershell
+docker compose exec backend php artisan optimize:clear
+```
+
+Passport keys:
+
+```powershell
+docker compose exec backend php artisan passport:keys --force
+docker compose exec backend php artisan passport:client --personal --name="ConTrackPro Personal Access Client" --no-interaction
+```
+
+## Database Verification
+
+Show tables:
+
+```powershell
+docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro -e "SHOW TABLES;"
+```
+
+Check seed counts:
+
+```powershell
+docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro --batch --execute="SELECT 'users' AS item, COUNT(*) AS count FROM users UNION ALL SELECT 'roles', COUNT(*) FROM roles UNION ALL SELECT 'contracts', COUNT(*) FROM contracts UNION ALL SELECT 'projects', COUNT(*) FROM projects UNION ALL SELECT 'accomplishments', COUNT(*) FROM project_accomplishments;"
+```
+
+Check admin account:
+
+```powershell
+docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro --batch --execute="SELECT id, email, name, is_active FROM users WHERE email='admin@contrackpro.test';"
+```
+
+## API Smoke Test
+
+Login:
 
 ```text
 POST http://localhost:8000/api/v2/login
@@ -170,21 +211,125 @@ Body:
 }
 ```
 
-Expected result: an OAuth access token.
+Use the returned token:
 
-## DevOps Notes
+```text
+Authorization: Bearer <token>
+```
 
-- Keep secrets out of Git. Commit `.env.docker.example`, never `backend/.env`.
-- Run Laravel commands inside the backend container when using Docker.
-- Do not mix local XAMPP Artisan commands with Docker database testing unless you intentionally maintain two environments.
-- The MySQL data lives in the named Docker volume `contrackpro_mysql_data`.
-- Composer dependencies live in the named Docker volume `backend_vendor`.
-  This avoids slow or failed installs when the project is stored in OneDrive or another synced Windows folder.
-- The backend source is bind-mounted into the container for fast development feedback.
-- The Docker image defines the runtime dependencies; the compose file defines the local service topology.
-- The entrypoint bootstraps fresh clones by installing Composer dependencies and generating an app key if needed.
+Then test:
 
-If the backend keeps restarting with Composer timeout errors, rebuild the backend and recreate the vendor volume:
+```text
+GET http://localhost:8000/api/v2/me
+GET http://localhost:8000/api/v2/contracts
+GET http://localhost:8000/api/v2/project-accomplishments
+```
+
+## Frontend Connection
+
+The frontend should run separately:
+
+```powershell
+cd frontend
+npm run serve
+```
+
+Set `frontend/.env`:
+
+```env
+VUE_APP_API_BASE_URL=http://127.0.0.1:8000/api/v2
+```
+
+Restart the frontend after changing `.env`.
+
+## What `docker compose down` Deletes
+
+This stops and removes containers and the default network:
+
+```powershell
+docker compose down
+```
+
+It does not delete named volumes, so MySQL data remains.
+
+This deletes database/vendor volumes:
+
+```powershell
+docker compose down -v
+```
+
+Use `-v` only when you intentionally want a clean Docker database and clean dependency volumes.
+
+## Troubleshooting
+
+### phpMyAdmin opens but no tables show
+
+Select the `contrackpro` database in the left sidebar.
+
+If it is empty, reseed:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\docker-setup.ps1 -ResetEnv
+```
+
+Or:
+
+```powershell
+docker compose exec backend php artisan migrate:fresh --seed --force
+```
+
+### Backend says `Could not open input file: artisan`
+
+The backend container is not running from `/var/www/html` or the bind mount is wrong. Recreate it:
+
+```powershell
+docker compose up -d --build --force-recreate backend
+docker compose logs backend --tail=100
+```
+
+### Backend shows `Invalid key supplied`
+
+Regenerate Passport keys:
+
+```powershell
+docker compose exec backend php artisan passport:keys --force
+docker compose exec backend php artisan optimize:clear
+```
+
+### Frontend gets 404 on login
+
+Check the frontend API URL. It should include `/api/v2`:
+
+```env
+VUE_APP_API_BASE_URL=http://127.0.0.1:8000/api/v2
+```
+
+Restart:
+
+```powershell
+cd frontend
+npm run serve
+```
+
+### Backend cannot resolve MySQL host
+
+Inside Docker:
+
+```env
+DB_HOST=mysql
+DB_PORT=3306
+```
+
+Outside Docker:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3307
+```
+
+### Composer install is slow or times out
+
+The project is inside OneDrive, so dependency installs can be slower. The Docker setup uses a named vendor volume. If the volume becomes bad:
 
 ```powershell
 docker compose down
@@ -192,3 +337,21 @@ docker volume rm digital-project-monitoring-system-_backend_vendor
 docker compose up -d --build
 docker compose exec -T backend composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
 ```
+
+### Backend works in Postman but frontend still fails
+
+Most likely frontend `.env` is stale.
+
+1. Confirm Postman uses `http://localhost:8000/api/v2/login`.
+2. Confirm frontend uses `VUE_APP_API_BASE_URL=http://127.0.0.1:8000/api/v2`.
+3. Restart `npm run serve`.
+4. Hard refresh browser.
+
+## DevOps Rules
+
+- Commit `.env.docker.example`, never commit `backend/.env`.
+- Run Laravel commands inside the backend container when using Docker.
+- Keep migrations idempotent and seeders repeatable.
+- Use named volumes for MySQL and Composer vendor dependencies.
+- Prefer `migrate:fresh --seed` only for local development, not production.
+- Document any new service, port, volume, or setup script change in this file.

@@ -24,7 +24,6 @@ class UsersSeeder extends Seeder
                 'office_unit' => 'BFP Region II - System Administration',
                 'role_id' => $adminRole?->id,
                 'is_active' => true,
-                'email_verified_at' => now(),
                 'password' => 'password',
             ]
         );
@@ -64,7 +63,7 @@ class UsersSeeder extends Seeder
                     'office_unit' => "BFP Region II - {$officeUnit}",
                     'role_id' => $roles[$roleName] ?? $adminRole?->id,
                     'is_active' => true,
-                    'email_verified_at' => now(),
+                    'last_active_at' => now(),
                     'password' => 'password',
                 ]
             );

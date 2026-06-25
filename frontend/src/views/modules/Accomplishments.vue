@@ -1,6 +1,7 @@
 <template>
   <div class="module-page">
     <div class="container-fluid py-4">
+      <div v-if="apiError" class="alert alert-danger py-2 px-3 mb-3">{{ apiError }}</div>
       <!-- Header -->
       <div class="row mb-4 align-items-center">
         <div class="col-lg-8">
@@ -11,7 +12,7 @@
           <button class="btn btn-light btn-sm me-2" @click="showFilterModal = true">
             <i class="material-icons-round">filter_list</i> Filters
           </button>
-          <button class="btn btn-primary btn-sm" @click="showUploadReportModal = true">
+          <button v-if="permissions.create" class="btn btn-primary btn-sm" @click="openCreateModal">
             <i class="material-icons-round">upload</i> Upload Report
           </button>
         </div>
@@ -27,11 +28,11 @@
                 <span class="summary-label">OVERALL PROGRESS</span>
                 <i class="material-icons-round ms-2 summary-icon-chart">insert_chart</i>
               </div>
-              <div class="summary-value">78.4%</div>
+              <div class="summary-value">{{ summary.overall_progress }}%</div>
               <div class="progress summary-progress mt-2">
-                <div class="progress-fill" style="width: 78.4%"></div>
+                <div class="progress-fill" :style="{ width: summary.overall_progress + '%' }"></div>
               </div>
-              <div class="summary-sub mt-1">+4.2% from last month</div>
+              <div class="summary-sub mt-1">Average of all recorded milestones</div>
             </div>
           </div>
         </div>
@@ -44,8 +45,8 @@
                 <span class="summary-label">MILESTONES MET</span>
                 <i class="material-icons-round ms-2 summary-icon-check">check_circle</i>
               </div>
-              <div class="summary-value">12 / 16</div>
-              <div class="summary-sub mt-1">4 milestones currently active</div>
+              <div class="summary-value">{{ summary.milestones_completed }} / {{ summary.milestones_total }}</div>
+              <div class="summary-sub mt-1">{{ summary.active_milestones }} milestones currently active</div>
             </div>
           </div>
         </div>
@@ -58,7 +59,7 @@
                 <span class="summary-label">DELAYED TASKS</span>
                 <i class="material-icons-round ms-2 summary-icon-warn">warning</i>
               </div>
-              <div class="summary-value text-danger">02</div>
+              <div class="summary-value text-danger">{{ summary.delayed_tasks }}</div>
               <div class="summary-sub mt-1">Requires immediate attention</div>
             </div>
           </div>
@@ -68,19 +69,22 @@
         <div class="col-md-3 mb-3">
           <div class="card featured-project-card h-100">
             <div class="card-body d-flex flex-column justify-content-center py-3">
-              <div class="featured-project-title">Region II HQ Retrofitting</div>
-              <div class="featured-project-sub mb-2">Contract ID: BFP-R2-2023-08</div>
+              <template v-if="summary.featured">
+              <div class="featured-project-title">{{ summary.featured.project_name }}</div>
+              <div class="featured-project-sub mb-2">Contract ID: {{ summary.featured.contract_number || 'Not assigned' }}</div>
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="featured-phase">Phase 3: Structural Integrity</span>
-                <span class="featured-pct">92%</span>
+                <span class="featured-phase">{{ summary.featured.milestone_title }}</span>
+                <span class="featured-pct">{{ summary.featured.percent_complete }}%</span>
               </div>
               <div class="progress featured-progress">
-                <div class="featured-progress-fill" style="width: 92%"></div>
+                <div class="featured-progress-fill" :style="{ width: summary.featured.percent_complete + '%' }"></div>
               </div>
               <div class="featured-next mt-2">
                 <i class="material-icons-round" style="font-size:0.85rem;vertical-align:middle;">schedule</i>
-                Next Milestone: Oct 24, 2024
+                Target: {{ formatDate(summary.featured.target_date) }}
               </div>
+              </template>
+              <div v-else class="featured-project-title">No active milestone</div>
             </div>
           </div>
         </div>
@@ -93,14 +97,11 @@
             <div class="card-header pb-0 d-flex align-items-center justify-content-between">
               <h6>Project Milestones &amp; Accomplishments</h6>
               <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-icon btn-light text-secondary" @click="showExportModal = true">
+                <button v-if="permissions.export" class="btn btn-sm btn-icon btn-light text-secondary" @click="showExportModal = true">
                   <i class="material-icons-round">download</i>
                 </button>
                 <button class="btn btn-sm btn-icon btn-light text-secondary" @click="showPrintModal = true">
                   <i class="material-icons-round">print</i>
-                </button>
-                <button class="btn btn-sm btn-icon btn-light text-secondary">
-                  <i class="material-icons-round">more_vert</i>
                 </button>
               </div>
             </div>
@@ -115,49 +116,53 @@
                       <th>Progress %</th>
                       <th>Status</th>
                       <th>Reports</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="milestone in accomplishments" :key="milestone.id">
+                    <tr v-if="isLoading"><td colspan="7" class="text-center py-4">Loading accomplishments...</td></tr>
+                    <tr v-else-if="filteredAccomplishments.length === 0"><td colspan="7" class="text-center py-4 text-secondary">No milestone records found.</td></tr>
+                    <tr v-for="milestone in displayedAccomplishments" :key="milestone.id">
                       <td>
-                        <div class="fw-semibold">{{ milestone.project }}</div>
-                        <div class="text-secondary small">{{ milestone.location }}</div>
+                        <div class="fw-semibold">{{ milestone.project_name }}</div>
+                        <div class="text-secondary small">{{ milestone.project_location }}</div>
                       </td>
-                      <td>{{ milestone.milestone }}</td>
-                      <td>{{ milestone.target_date }}</td>
+                      <td>{{ milestone.milestone_title }}</td>
+                      <td>{{ formatDate(milestone.target_date) }}</td>
                       <td>
                         <div class="d-flex align-items-center gap-2">
                           <div class="progress-bar-wrapper">
                             <div
                               class="progress-bar"
                               :class="getProgressClass(milestone.status)"
-                              :style="{ width: milestone.completion + '%' }"
+                              :style="{ width: milestone.percent_complete + '%' }"
                             ></div>
                           </div>
-                          <span class="progress-text-outside">{{ milestone.completion }}%</span>
+                          <span class="progress-text-outside">{{ milestone.percent_complete }}%</span>
                         </div>
                       </td>
                       <td><status-badge :status="milestone.status" /></td>
                       <td>
-                        <span v-if="milestone.report_type === 'pdf'">
-                          <a href="#" class="report-link">
+                        <span v-if="milestone.documents?.length">
+                          <a href="#" class="report-link" @click.prevent="downloadReport(milestone.documents[0])">
                             <i class="material-icons-round report-icon-pdf">picture_as_pdf</i>
-                            {{ milestone.report_label }}
+                            {{ milestone.documents[0].file_name }}
                           </a>
                         </span>
-                        <span v-else-if="milestone.report_type === 'update'">
-                          <a href="#" class="report-link">
-                            <i class="material-icons-round report-icon-upload">upload</i>
-                            {{ milestone.report_label }}
-                          </a>
-                        </span>
-                        <span v-else-if="milestone.report_type === 'issue'">
-                          <a href="#" class="report-link text-warning">
-                            <i class="material-icons-round report-icon-warn">warning</i>
-                            {{ milestone.report_label }}
-                          </a>
-                        </span>
-                        <span v-else class="text-secondary small">{{ milestone.report_label }}</span>
+                        <span v-else class="text-secondary small">No report</span>
+                      </td>
+                      <td>
+                        <div class="d-flex gap-1">
+                          <button v-if="permissions.edit" class="btn btn-sm btn-light" title="Edit" @click="editAccomplishment(milestone)">
+                            <i class="material-icons-round">edit</i>
+                          </button>
+                          <button v-if="permissions.approve && !milestone.validated_at" class="btn btn-sm btn-light" title="Validate" @click="validateAccomplishment(milestone)">
+                            <i class="material-icons-round">verified</i>
+                          </button>
+                          <button v-if="permissions.delete" class="btn btn-sm btn-light text-danger" title="Archive" @click="archiveAccomplishment(milestone)">
+                            <i class="material-icons-round">archive</i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -165,15 +170,19 @@
               </div>
               <!-- Pagination -->
               <div class="d-flex justify-content-between align-items-center mt-3 px-1">
-                <span class="text-secondary small">Showing 1 to 4 of 24 projects</span>
+                <span class="text-secondary small">Showing {{ paginationFrom }} to {{ paginationTo }} of {{ filteredAccomplishments.length }} milestones</span>
                 <div class="d-flex align-items-center gap-1">
-                  <button class="btn btn-sm btn-icon btn-light text-secondary">
+                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === 1" @click="currentPage--">
                     <i class="material-icons-round">chevron_left</i>
                   </button>
-                  <button class="btn btn-sm btn-pagination active">1</button>
-                  <button class="btn btn-sm btn-pagination">2</button>
-                  <button class="btn btn-sm btn-pagination">3</button>
-                  <button class="btn btn-sm btn-icon btn-light text-secondary">
+                  <button
+                    v-for="page in totalPages"
+                    :key="page"
+                    class="btn btn-sm btn-pagination"
+                    :class="{ active: page === currentPage }"
+                    @click="currentPage = page"
+                  >{{ page }}</button>
+                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === totalPages" @click="currentPage++">
                     <i class="material-icons-round">chevron_right</i>
                   </button>
                 </div>
@@ -192,59 +201,23 @@
             </div>
             <div class="card-body">
               <div class="timeline">
-                <!-- Timeline Item 1 -->
-                <div class="timeline-item">
-                  <div class="timeline-icon timeline-icon-blue">
-                    <i class="material-icons-round">description</i>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="d-flex justify-content-between align-items-start">
-                      <div>
-                        <div class="timeline-title">Weekly Accomplishment Report Submitted</div>
-                        <div class="timeline-sub">Project: HQ Retrofitting Phase II</div>
-                        <a href="#" class="timeline-link mt-1 d-inline-flex align-items-center gap-1">
-                          <i class="material-icons-round" style="font-size:0.85rem;">picture_as_pdf</i>
-                          View PDF Report
-                        </a>
-                      </div>
-                      <span class="timeline-time">2 hours ago</span>
-                    </div>
-                  </div>
-                </div>
-                <!-- Timeline Item 2 -->
-                <div class="timeline-item">
-                  <div class="timeline-icon timeline-icon-olive">
+                <p v-if="!summary.recent_activity.length" class="text-secondary small mb-0">No recent milestone activity.</p>
+                <div
+                  v-for="(activity, index) in summary.recent_activity"
+                  :key="activity.id"
+                  class="timeline-item"
+                  :class="{ 'timeline-item-last': index === summary.recent_activity.length - 1 }"
+                >
+                  <div class="timeline-icon" :class="activity.status === 'Delayed' ? 'timeline-icon-red' : 'timeline-icon-blue'">
                     <i class="material-icons-round">flag</i>
                   </div>
                   <div class="timeline-content">
                     <div class="d-flex justify-content-between align-items-start">
                       <div>
-                        <div class="timeline-title">Milestone Reached: 100% Electrical Wiring</div>
-                        <div class="timeline-sub">Project: Region II HQ Retrofitting</div>
-                        <div class="d-flex align-items-center gap-2 mt-2">
-                          <div class="timeline-thumb">
-                            <img src="https://via.placeholder.com/60x45/555/999?text=📷" alt="milestone photo" />
-                          </div>
-                          <span class="text-secondary small">Verified by Engr. Santos</span>
-                        </div>
+                        <div class="timeline-title">{{ activity.title }} · {{ activity.percent_complete }}%</div>
+                        <div class="timeline-sub">Project: {{ activity.project_name }} · {{ activity.status }}</div>
                       </div>
-                      <span class="timeline-time">Yesterday</span>
-                    </div>
-                  </div>
-                </div>
-                <!-- Timeline Item 3 -->
-                <div class="timeline-item timeline-item-last">
-                  <div class="timeline-icon timeline-icon-red">
-                    <i class="material-icons-round">access_time</i>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="d-flex justify-content-between align-items-start">
-                      <div>
-                        <div class="timeline-title">Delay Alert Logged</div>
-                        <div class="timeline-sub">Project: Dormitory Construction</div>
-                        <div class="timeline-quote mt-1">"Supply chain disruption for roofing materials causing 2-week delay in finishing phase."</div>
-                      </div>
-                      <span class="timeline-time">Oct 20, 2023</span>
+                      <span class="timeline-time">{{ formatDateTime(activity.updated_at) }}</span>
                     </div>
                   </div>
                 </div>
@@ -257,12 +230,12 @@
 
     <BfpModal
       :show="showUploadReportModal"
-      title="Upload Accomplishment Report"
+      :title="accomplishmentForm.id ? 'Edit Accomplishment' : 'Add Accomplishment Report'"
       stripe="MILESTONE REPORT UPLOAD"
-      confirm-text="Upload Report"
+      :confirm-text="isSaving ? 'Saving...' : accomplishmentForm.id ? 'Update Record' : 'Save Report'"
       confirm-icon="upload"
       @close="showUploadReportModal = false"
-      @confirm="showUploadReportModal = false"
+      @confirm="saveAccomplishment"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Report Attachment</div>
@@ -270,7 +243,7 @@
           <i class="material-icons-round">upload_file</i>
           <p class="bfp-upload-title">Attach accomplishment report</p>
           <p class="bfp-upload-sub">Accepted formats: PDF, DOCX, JPG, PNG.</p>
-          <input type="file" class="form-control form-control-sm" />
+          <input type="file" class="form-control form-control-sm" accept=".pdf,.docx,.jpg,.jpeg,.png" @change="handleReportFile" />
         </div>
       </div>
       <div class="bfp-section">
@@ -280,34 +253,54 @@
             <label class="bfp-label">Project <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">business</i>
-              <input class="bfp-input" type="text" placeholder="Project name" />
+              <select v-model="accomplishmentForm.project_id" class="bfp-input bfp-select">
+                <option value="">Select project</option>
+                <option v-for="project in projects" :key="project.id" :value="project.id">
+                  {{ project.project_code }} · {{ project.project_name }}
+                </option>
+              </select>
             </div>
           </div>
           <div class="bfp-field-half">
             <label class="bfp-label">Milestone Phase</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">flag</i>
-              <input class="bfp-input" type="text" placeholder="e.g. Electrical Installation" />
+              <input v-model="accomplishmentForm.milestone_title" class="bfp-input" type="text" placeholder="e.g. Electrical Installation" />
             </div>
           </div>
           <div class="bfp-field-half">
             <label class="bfp-label">Completion %</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">percent</i>
-              <input class="bfp-input" type="number" min="0" max="100" placeholder="0" />
+              <input v-model.number="accomplishmentForm.percent_complete" class="bfp-input" type="number" min="0" max="100" placeholder="0" />
             </div>
           </div>
           <div class="bfp-field-half">
             <label class="bfp-label">Status</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">fact_check</i>
-              <select class="bfp-input bfp-select">
-                <option>In Progress</option>
-                <option>Completed</option>
-                <option>Delayed</option>
-                <option>Not Started</option>
+              <select v-model="accomplishmentForm.status" class="bfp-input bfp-select">
+                <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
               </select>
             </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Target Date <span class="bfp-required">*</span></label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">event</i>
+              <input v-model="accomplishmentForm.target_date" class="bfp-input" type="date" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Completion Date</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">event_available</i>
+              <input v-model="accomplishmentForm.completion_date" class="bfp-input" type="date" />
+            </div>
+          </div>
+          <div class="bfp-field-full">
+            <label class="bfp-label">Description</label>
+            <textarea v-model="accomplishmentForm.description" class="bfp-input" rows="2" placeholder="Milestone scope and work completed"></textarea>
           </div>
         </div>
       </div>
@@ -320,15 +313,14 @@
       confirm-text="Apply Filters"
       confirm-icon="filter_list"
       @close="showFilterModal = false"
-      @confirm="showFilterModal = false"
+      @confirm="applyFilters"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">tune</i> Filter Criteria</div>
         <div class="bfp-filter-grid">
-          <label class="bfp-check-option"><input type="checkbox" /> Completed</label>
-          <label class="bfp-check-option"><input type="checkbox" /> In Progress</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Delayed</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Not Started</label>
+          <label v-for="status in statusOptions" :key="status" class="bfp-check-option">
+            <input v-model="filters.statuses" type="checkbox" :value="status" /> {{ status }}
+          </label>
         </div>
       </div>
       <div class="bfp-section">
@@ -338,14 +330,14 @@
             <label class="bfp-label">From</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" />
+              <input v-model="filters.target_from" class="bfp-input" type="date" />
             </div>
           </div>
           <div class="bfp-field-half">
             <label class="bfp-label">To</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">event_available</i>
-              <input class="bfp-input" type="date" />
+              <input v-model="filters.target_to" class="bfp-input" type="date" />
             </div>
           </div>
         </div>
@@ -359,16 +351,11 @@
       confirm-text="Print"
       confirm-icon="print"
       @close="showPrintModal = false"
-      @confirm="showPrintModal = false"
+      @confirm="printSummary"
     >
       <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">print</i> Print Scope</div>
-        <div class="bfp-filter-grid">
-          <label class="bfp-check-option"><input type="checkbox" checked /> Summary cards</label>
-          <label class="bfp-check-option"><input type="checkbox" checked /> Milestone table</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Recent timeline</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Photo references</label>
-        </div>
+        <div class="bfp-section-label"><i class="material-icons-round">print</i> Print Summary</div>
+        <p class="text-secondary small mb-0">The browser print dialog will print the current database-backed summary, filters, and milestone table.</p>
       </div>
     </BfpModal>
 
@@ -379,7 +366,7 @@
       confirm-text="Export"
       confirm-icon="download"
       @close="showExportModal = false"
-      @confirm="showExportModal = false"
+      @confirm="exportCsv"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
@@ -389,13 +376,11 @@
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">file_download</i>
               <select class="bfp-input bfp-select">
-                <option>PDF</option>
-                <option>Excel</option>
                 <option>CSV</option>
               </select>
             </div>
           </div>
-          <label class="bfp-check-option bfp-field-full"><input type="checkbox" checked /> Include accomplishment report links</label>
+          <p class="text-secondary small bfp-field-full mb-0">CSV exports include the currently filtered milestone records.</p>
         </div>
       </div>
     </BfpModal>
@@ -405,6 +390,20 @@
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
 import BfpModal from "@/components/BfpModal.vue";
+import accomplishmentService from "@/services/accomplishment.service";
+
+const emptyAccomplishmentForm = () => ({
+  id: null,
+  project_id: "",
+  milestone_title: "",
+  description: "",
+  target_date: "",
+  completion_date: "",
+  percent_complete: 0,
+  status: "Not Started",
+  remarks: "",
+  attachment: null,
+});
 
 export default {
   name: "Accomplishments",
@@ -418,65 +417,207 @@ export default {
       showFilterModal: false,
       showPrintModal: false,
       showExportModal: false,
-      accomplishments: [
-        {
-          id: 1,
-          project: "HQ Retrofitting Phase II",
-          location: "Isabela Province",
-          milestone: "Electrical Installation",
-          completion: 100,
-          target_date: "Oct 15, 2023",
-          actual_date: "Oct 15, 2023",
-          status: "completed",
-          report_type: "pdf",
-          report_label: "final_report.pdf"
-        },
-        {
-          id: 2,
-          project: "New Tuguegarao Fire Station",
-          location: "Tuguegarao City",
-          milestone: "Foundation Piling",
-          completion: 65,
-          target_date: "Nov 20, 2023",
-          actual_date: "-",
-          status: "in_progress",
-          report_type: "update",
-          report_label: "Update"
-        },
-        {
-          id: 3,
-          project: "Dormitory Construction",
-          location: "Cagayan Field Office",
-          milestone: "Roofing & Finishing",
-          completion: 82,
-          target_date: "Oct 01, 2023",
-          actual_date: "-",
-          status: "delayed",
-          report_type: "issue",
-          report_label: "Issue Log"
-        },
-        {
-          id: 4,
-          project: "Regional Training Center",
-          location: "Santiago City",
-          milestone: "Internal Partitioning",
-          completion: 0,
-          target_date: "Dec 12, 2023",
-          actual_date: "-",
-          status: "not_started",
-          report_type: "pending",
-          report_label: "Pending"
-        }
-      ]
+      isLoading: false,
+      isSaving: false,
+      apiError: "",
+      currentPage: 1,
+      rowsPerPage: 10,
+      accomplishments: [],
+      projects: [],
+      statusOptions: ["Not Started", "In Progress", "Delayed", "Completed"],
+      accomplishmentForm: emptyAccomplishmentForm(),
+      filters: {
+        statuses: [],
+        target_from: "",
+        target_to: "",
+      },
+      summary: {
+        overall_progress: 0,
+        milestones_completed: 0,
+        milestones_total: 0,
+        active_milestones: 0,
+        delayed_tasks: 0,
+        featured: null,
+        recent_activity: [],
+      },
+      permissions: {
+        view: false,
+        create: false,
+        edit: false,
+        delete: false,
+        approve: false,
+        export: false,
+      },
     };
   },
+  computed: {
+    filteredAccomplishments() {
+      return this.accomplishments.filter((item) => {
+        if (this.filters.statuses.length && !this.filters.statuses.includes(item.status)) return false;
+        if (this.filters.target_from && item.target_date < this.filters.target_from) return false;
+        if (this.filters.target_to && item.target_date > this.filters.target_to) return false;
+        return true;
+      });
+    },
+    totalPages() {
+      return Math.max(1, Math.ceil(this.filteredAccomplishments.length / this.rowsPerPage));
+    },
+    displayedAccomplishments() {
+      const start = (this.currentPage - 1) * this.rowsPerPage;
+      return this.filteredAccomplishments.slice(start, start + this.rowsPerPage);
+    },
+    paginationFrom() {
+      return this.filteredAccomplishments.length ? (this.currentPage - 1) * this.rowsPerPage + 1 : 0;
+    },
+    paginationTo() {
+      return Math.min(this.currentPage * this.rowsPerPage, this.filteredAccomplishments.length);
+    },
+  },
+  async mounted() {
+    await this.loadAccomplishments();
+  },
   methods: {
+    openCreateModal() {
+      this.accomplishmentForm = emptyAccomplishmentForm();
+      this.showUploadReportModal = true;
+    },
+    async loadAccomplishments() {
+      this.isLoading = true;
+      this.apiError = "";
+
+      try {
+        const [records, summary, options] = await Promise.all([
+          accomplishmentService.getAccomplishments(),
+          accomplishmentService.getSummary(),
+          accomplishmentService.getOptions(),
+        ]);
+
+        this.accomplishments = records.data || [];
+        this.summary = summary;
+        this.projects = options.projects || [];
+        this.statusOptions = options.statuses || this.statusOptions;
+        this.permissions = options.permissions || summary.permissions || this.permissions;
+        this.currentPage = 1;
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to load accomplishment records.");
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async saveAccomplishment() {
+      if (this.isSaving) return;
+      this.isSaving = true;
+      this.apiError = "";
+
+      try {
+        if (this.accomplishmentForm.id) {
+          const { attachment, ...payload } = this.accomplishmentForm;
+          await accomplishmentService.updateAccomplishment(payload.id, payload);
+          if (attachment) await accomplishmentService.uploadDocument(payload.id, attachment);
+        } else {
+          await accomplishmentService.createAccomplishment(this.accomplishmentForm);
+        }
+
+        this.showUploadReportModal = false;
+        this.accomplishmentForm = emptyAccomplishmentForm();
+        await this.loadAccomplishments();
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to save accomplishment.");
+      } finally {
+        this.isSaving = false;
+      }
+    },
+    editAccomplishment(item) {
+      this.accomplishmentForm = {
+        id: item.id,
+        project_id: item.project_id,
+        milestone_title: item.milestone_title,
+        description: item.description || "",
+        target_date: item.target_date || "",
+        completion_date: item.completion_date || "",
+        percent_complete: item.percent_complete,
+        status: item.status,
+        remarks: item.remarks || "",
+        attachment: null,
+      };
+      this.showUploadReportModal = true;
+    },
+    async validateAccomplishment(item) {
+      try {
+        await accomplishmentService.validateAccomplishment(item.id);
+        await this.loadAccomplishments();
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to validate accomplishment.");
+      }
+    },
+    async archiveAccomplishment(item) {
+      if (!confirm(`Archive ${item.milestone_title}?`)) return;
+
+      try {
+        await accomplishmentService.archiveAccomplishment(item.id);
+        await this.loadAccomplishments();
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to archive accomplishment.");
+      }
+    },
+    handleReportFile(event) {
+      this.accomplishmentForm.attachment = event.target.files?.[0] || null;
+    },
+    applyFilters() {
+      this.currentPage = 1;
+      this.showFilterModal = false;
+    },
     getProgressClass(status) {
-      if (status === "completed") return "progress-bar-completed";
-      if (status === "delayed") return "progress-bar-delayed";
-      if (status === "not_started") return "progress-bar-empty";
+      if (status === "Completed") return "progress-bar-completed";
+      if (status === "Delayed") return "progress-bar-delayed";
+      if (status === "Not Started") return "progress-bar-empty";
       return "";
-    }
+    },
+    formatDate(value) {
+      if (!value) return "-";
+      return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(new Date(`${value}T00:00:00`));
+    },
+    formatDateTime(value) {
+      if (!value) return "-";
+      return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+    },
+    async downloadReport(document) {
+      try {
+        await accomplishmentService.downloadDocument(document);
+      } catch (error) {
+        this.apiError = this.errorMessage(error, "Unable to download report.");
+      }
+    },
+    printSummary() {
+      this.showPrintModal = false;
+      window.print();
+    },
+    exportCsv() {
+      const headers = ["Project", "Milestone", "Target Date", "Progress", "Status"];
+      const rows = this.filteredAccomplishments.map((item) => [
+        item.project_name,
+        item.milestone_title,
+        item.target_date,
+        item.percent_complete,
+        item.status,
+      ]);
+      const escape = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+      const csv = [headers, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.download = "project-accomplishments.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+      this.showExportModal = false;
+    },
+    errorMessage(error, fallback) {
+      const errors = error?.response?.data?.errors;
+      if (errors && typeof errors === "object" && !Array.isArray(errors)) {
+        return Object.values(errors).flat().join(" ");
+      }
+      return error?.response?.data?.message || fallback;
+    },
   }
 };
 </script>

@@ -7,25 +7,28 @@
 - [ ] UI revision
 - [ ] Backend/API work
 - [ ] Database/schema work
+- [ ] Docker/setup issue
 - [ ] Documentation
 
-## Area
+## Module
 
-- [ ] Vue frontend
-- [ ] Laravel backend
-- [ ] Database
-- [ ] Authentication/users
-- [ ] Infrastructure plans
-- [ ] Contract management
-- [ ] Cashflow management
-- [ ] Engineering plans
-- [ ] Variation orders
-- [ ] Accomplishments
-- [ ] Contractor performance
-- [ ] Audit trail
-- [ ] Notifications
+- [ ] Auth / Login / Logout
+- [ ] Request Access / Registration
+- [ ] Dashboard
+- [ ] User Management
+- [ ] Project Plans
+- [ ] Infrastructure Plans
+- [ ] Engineering Plans
+- [ ] Contract Management
+- [ ] Project Accomplishments
+- [ ] Financial Management
+- [ ] Cashflows
+- [ ] Variation Orders
 - [ ] Reports
-- [ ] Deployment
+- [ ] Audit Logs
+- [ ] Notifications
+- [ ] Contractor Performance
+- [ ] Settings
 
 ## Summary
 
@@ -45,18 +48,30 @@ Describe what should happen instead.
 2. Click or enter:
 3. Observe:
 
-## Screenshots or Files
+## Technical Context
 
-Attach screenshots, sample documents, console logs, request payloads, or related files when useful.
-
-## Environment
-
-- Browser:
-- Device or screen size:
+- Branch:
 - Frontend URL:
 - Backend URL:
-- Branch:
+- API route, if applicable:
+- Database table, if applicable:
+- Seeder/migration, if applicable:
+- Browser:
+- Docker or XAMPP:
+
+## Screenshots / Logs
+
+Attach screenshots, browser console logs, Laravel logs, Postman response, request payload, or SQL result when useful.
+
+## Testing Done
+
+- [ ] Not tested yet
+- [ ] Browser tested
+- [ ] Postman/Thunder Client tested
+- [ ] `npm run build`
+- [ ] `php artisan test`
+- [ ] Docker setup tested
 
 ## Notes
 
-Add any thesis adviser comments, panel recommendations, client feedback, or implementation constraints related to this issue.
+Add adviser/client comments, implementation constraints, or related PR links.

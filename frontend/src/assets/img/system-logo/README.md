@@ -1,15 +1,27 @@
-# System Logo Files
+# ConTrackPro System Logo Assets
 
-Place your logo files here:
+Place app logo assets here when the sidebar/header logo needs to be replaced.
 
-- **logo.png** - Light version (used on dark backgrounds)
-- **logo-dark.png** - Dark version (used on light backgrounds)
+Recommended files:
 
-**Recommended specifications:**
-- Format: PNG with transparency
-- Size: 40x40px or larger (will be scaled to 40x40px)
-- Color: Match your brand colors
+- `logo.png` - light logo for dark or maroon backgrounds.
+- `logo-dark.png` - dark logo for white or light backgrounds.
 
-These logos are automatically used in:
-- Sidebar/Navigation header
-- All pages where the system branding is needed
+Recommended specs:
+
+- PNG with transparent background.
+- Square source image when possible.
+- At least `128x128` so it scales cleanly.
+- Keep enough padding so the BFP seal does not become clipped or oval.
+
+Current UI usage:
+
+- Sidebar brand header.
+- Main dashboard shell.
+- Login and request access pages may use separate BFP image assets from `frontend/src/assets/img/`.
+
+When replacing the logo:
+
+1. Keep file names stable if the component already imports them.
+2. Test at desktop and narrow widths.
+3. Confirm the image remains circular and centered.
