@@ -1,18 +1,84 @@
 # ConTrackPro - Digital Project Monitoring System
 
-ConTrackPro is a web-based contract and infrastructure project monitoring system. It is intended to help track project records, contract documents, engineering plans, cashflows, variation orders, project accomplishments, contractor performance, notifications, and audit history in one portal.
+ConTrackPro is a web-based contract and infrastructure project monitoring system for BFP Region II. The app is intended to help authorized personnel track projects, contracts, engineering records, project accomplishments, financial movements, approvals, documents, and audit history in one internal portal.
 
-This repository contains a Vue frontend and a Laravel JSON:API backend. The backend now includes the finalized ConTrackPro schema foundation, role seeders, admin user seeding, request-access registration, and administrator access approval endpoints.
+This repository contains:
 
-## Current Status
+- `frontend/` - Vue 3 dashboard application.
+- `backend/` - Laravel JSON:API backend.
+- `docker-compose.yml` - local backend, MySQL, and phpMyAdmin stack.
+- `scripts/docker-setup.ps1` - repeatable Docker setup script.
 
-| Area | Status |
+## Current Progress
+
+| Area | Current state |
 | --- | --- |
-| Vue frontend | Updated with ConTrackPro auth and module page foundations. |
-| Laravel backend | Auth, users, roles, access requests, admin approval flow, models, and seeders are in progress. |
-| Database | Finalized ConTrackPro schema foundation is represented in Laravel migrations. |
-| API integration | Auth and admin access approval endpoints are working; module CRUD endpoints are still pending. |
-| Docker | Development containers are available for backend, MySQL, and phpMyAdmin. |
+| Authentication | Login, logout, registration/request access, password reset, Passport tokens, profile update. |
+| Roles and permissions | Role and permission seeders exist. Backend has module permission middleware for protected module APIs. |
+| User management | Admin access request approval and user management endpoints exist. Frontend module is active work. |
+| Database schema | Core ConTrackPro schema exists in Laravel migrations. Models exist for major domain tables. |
+| Docker | Backend, MySQL 8, and phpMyAdmin are containerized for local development. |
+| Contract Management | DB-backed MVP with contracts CRUD/archive, document upload/download/review/archive, summary cards, seed data, audit logging, and tests. |
+| Project Accomplishments | DB-backed MVP with accomplishments CRUD/archive/validation, document upload/download, project progress sync, summary cards, seed data, and tests. |
+| Infrastructure Plans | Project CRUD backend and project service are present. Frontend work is in progress. |
+| Engineering Plans | Upload/store endpoint and frontend upload flow exist. Listing/review workflow still needs full DB-backed implementation. |
+| Cashflows | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
+| Variation Orders | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
+| Reports and Audit Logs | Frontend modules exist. Audit log table/service exists. Full reporting module is still pending. |
+| Notifications | Frontend module exists. Backend tables/models exist. Full notification workflow is still pending. |
+| Contractor Performance | Frontend module exists. Backend table/model exists. Full API workflow is still pending. |
+
+## Intended Use
+
+ConTrackPro is not a public-facing app. It is designed as an internal project monitoring portal for authorized Bureau of Fire Protection personnel.
+
+Primary users:
+
+- System Administrator
+- Regional Commander / management reviewer
+- Contract Monitoring personnel
+- Engineering personnel
+- Finance / cashflow personnel
+- Records personnel
+
+Primary workflows:
+
+- Register/request access and wait for admin approval.
+- Maintain project and contract records.
+- Upload and review supporting contract and engineering documents.
+- Track accomplishment milestones and progress.
+- Monitor financial changes caused by cashflows and variation orders.
+- Generate reports and preserve audit trails for accountability.
+
+## Recommended MVP Module Structure
+
+For the current MVP, keep the system focused and avoid building too many independent modules at once.
+
+```text
+Dashboard
+Project Plans
+  - Infrastructure Plans
+  - Engineering Plans
+Contract Management
+Financial Management
+  - Cashflows
+  - Variation Orders
+Project Accomplishments
+Records & Reports
+  - Reports
+  - Audit Logs
+User Management
+Settings
+```
+
+Implementation rule:
+
+- Keep `Contract Management`, `Project Accomplishments`, and `User Management` as standalone workflows.
+- Merge `Infrastructure Plans` and `Engineering Plans` conceptually as `Project Plans`, but keep separate tabs/screens if needed.
+- Merge `Cashflows` and `Variation Orders` conceptually as `Financial Management`, because approved variation orders change contract value and cashflow planning.
+- Keep `Reports` and `Audit Logs` separate if role-based access differs.
+
+See [PLAN.md](PLAN.md) for the detailed sequence of next modules.
 
 ## Project Structure
 
@@ -22,9 +88,10 @@ This repository contains a Vue frontend and a Laravel JSON:API backend. The back
 |   |-- app/
 |   |-- database/
 |   |-- routes/
+|   |-- docker/
 |   |-- Dockerfile
 |   |-- .env.docker.example
-|   `-- composer.json
+|   `-- README.md
 |-- frontend/
 |   |-- public/
 |   |-- src/
@@ -32,64 +99,17 @@ This repository contains a Vue frontend and a Laravel JSON:API backend. The back
 |   |   |-- services/
 |   |   |-- store/
 |   |   `-- views/
-|   `-- package.json
-|-- docker-compose.yml
-|-- DOCKER.md
+|   `-- README.md
 |-- scripts/
 |   `-- docker-setup.ps1
+|-- docker-compose.yml
+|-- API.md
+|-- DOCKER.md
+|-- PLAN.md
 |-- CHANGELOG.md
 |-- ISSUE_TEMPLATE.md
 `-- README.md
 ```
-
-## Implemented Frontend Modules
-
-The current Vue application includes routes and screens for:
-
-- Dashboard
-- Infrastructure Plans Management
-- Contract Management
-- Cashflow Management
-- Engineering Plans Management
-- Variation Orders Monitoring
-- Project Accomplishments Monitoring
-- Reports
-- Contractor Performance Rating
-- Audit Trail
-- Notifications Inbox
-- User Management
-- Settings
-- Login, registration, password reset, profile, and user list screens inherited from the starter project
-
-Main frontend route definitions are in:
-
-```text
-frontend/src/router/index.js
-```
-
-ConTrackPro module screens are in:
-
-```text
-frontend/src/views/modules/
-```
-
-## Intended System Scope
-
-The planned full system covers the following modules:
-
-- Infrastructure plans and project phase tracking
-- Contract records and contractor information management
-- Contract document upload, viewing, and download
-- Cashflow, invoice, payment, budget, and variance tracking
-- Engineering document repository
-- Variation order amount, approval, status, and supporting document tracking
-- Milestone and project accomplishment monitoring
-- Role-based user access for administrative staff, records personnel, contract monitoring personnel, and engineers
-- In-system notifications for status changes, approvals, and deadlines
-- Non-editable audit trail entries with timestamps and responsible users
-- Contractor performance rating based on defined project indicators
-
-These features are partly represented in the Vue UI. Backend persistence, validation, file storage, permissions, reporting logic, and audit trail enforcement still need to be implemented in Laravel and the database.
 
 ## Technology Stack
 
@@ -99,167 +119,350 @@ Frontend:
 - Vue Router 4
 - Vuex 4
 - Bootstrap 5
-- Material Dashboard UI components
+- Material Dashboard base components
+- Google Material Symbols / Material Icons
 - Axios
 - Vee Validate and Yup
 - Chart.js
 - SweetAlert2
 - Sass
 
-Backend scaffold:
+Backend:
 
-- PHP 8.2 or 8.3 for the current lockfile
-- Laravel 11
+- PHP 8.2 in Docker
+- Laravel
 - Laravel JSON:API
 - Laravel Passport
-- Laravel Sanctum
+- MySQL 8
 - Composer
-- PHP sodium extension
-- PHP zip extension or a system `7z`/`unzip` command for Composer package downloads
-- MySQL or MariaDB
 
-## Docker Development Setup
+Local tooling:
 
-Use Docker when you want the backend, database, and phpMyAdmin to run in a reproducible containerized environment.
+- Docker Desktop
+- phpMyAdmin
+- Postman or Thunder Client
+- Node.js and npm for the Vue app
 
-```powershell
-.\scripts\docker-setup.ps1
-```
+## Software Architecture
 
-Docker services:
+ConTrackPro uses a simple client-server architecture for the MVP:
 
 ```text
-Backend API: http://localhost:8000
-phpMyAdmin: http://localhost:8081
-MySQL: 127.0.0.1:3307
+Vue frontend -> Laravel API -> MySQL database
+                  |
+                  `-> private local file storage
 ```
 
-See [DOCKER.md](DOCKER.md) for the full setup, daily commands, environment rules, and troubleshooting notes.
+Frontend layer:
+
+- Vue screens live in `frontend/src/views/`.
+- API calls should go through `frontend/src/services/`.
+- Auth state and shared user context should remain in the frontend store.
+- The frontend should not hardcode production data once a backend endpoint exists.
+
+Backend layer:
+
+- API routes are versioned under `/api/v2`.
+- Controllers live under `backend/app/Http/Controllers/Api/V2/`.
+- Request validation belongs in request classes or controller validation before records are saved.
+- Eloquent models own relationships between users, roles, projects, contractors, contracts, documents, and accomplishments.
+- Seeders provide MVP demo data that every developer can reproduce.
+
+Security and accountability:
+
+- Laravel Passport issues bearer tokens.
+- Module permission checks are based on `roles` and `role_permissions`.
+- Private files are downloaded through authenticated endpoints.
+- Important create/update/review/archive actions should be written to `audit_logs`.
+
+Docker architecture for local development:
+
+- `backend` container runs Laravel on port `8000`.
+- `mysql` container runs MySQL 8 and stores data in a Docker volume.
+- `phpmyadmin` container exposes the database UI on port `8081`.
+- Vue still runs outside Docker through `npm run serve` during active frontend development.
+
+## Deployment Plan
+
+The current Docker setup is for local development and team onboarding. Treat it as the foundation for staging, not as a final production deployment.
+
+Recommended MVP deployment sequence:
+
+1. Stabilize the `staging` branch with the DB-backed MVP modules.
+2. Provision a staging server with PHP 8.2/8.3, MySQL 8, Composer, Node.js, and HTTPS.
+3. Configure backend environment variables with production-style values:
+
+```env
+APP_ENV=staging
+APP_DEBUG=false
+APP_URL=https://staging-domain.example
+DB_HOST=<staging-db-host>
+DB_DATABASE=contrackpro
+DB_USERNAME=<db-user>
+DB_PASSWORD=<db-password>
+```
+
+4. Build and deploy the frontend as static assets or serve it through a web server.
+5. Point the frontend API base URL to the deployed backend `/api/v2`.
+6. Run backend deployment commands:
+
+```powershell
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan passport:keys --force
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+```
+
+7. Verify login, role permissions, contract records, project accomplishments, uploads, downloads, and admin approval.
+
+Production hardening before real use:
+
+- Use real secrets, not sample `.env` credentials.
+- Keep `APP_DEBUG=false`.
+- Enable HTTPS.
+- Configure backups for MySQL and uploaded files.
+- Set storage permissions correctly.
+- Keep uploaded documents outside public web access.
+- Add queue/scheduler configuration if notifications, reports, or background jobs are implemented.
+
+## Fast Setup With Docker
+
+Use this for the backend, database, and phpMyAdmin:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\docker-setup.ps1
+```
+
+If your `.env` has old XAMPP settings or the database has no tables:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\docker-setup.ps1 -ResetEnv
+```
+
+Docker URLs:
+
+```text
+Backend API: http://localhost:8000/api/v2
+Laravel root: http://localhost:8000
+phpMyAdmin:  http://localhost:8081
+MySQL host:  127.0.0.1:3307
+```
+
+phpMyAdmin credentials:
+
+```text
+Server: mysql
+Username: contrackpro
+Password: contrackpro
+Database: contrackpro
+```
+
+Admin account:
+
+```text
+Email: admin@contrackpro.test
+Password: password
+```
+
+More Docker details are in [DOCKER.md](DOCKER.md).
 
 ## Frontend Setup
 
-```bash
-cd frontend
-npm install
-```
-
-Create the frontend environment file:
-
-```bash
-cp .env.example .env
-```
-
-On Windows PowerShell:
+Run the Vue app outside Docker:
 
 ```powershell
-Copy-Item .env.example .env
-```
-
-Typical local values:
-
-```env
-VUE_APP_BASE_URL=http://localhost:8080/
-VUE_APP_API_BASE_URL=http://localhost:8000/api/v2
-VUE_APP_API_KEY=""
-VUE_APP_IS_DEMO=1
-```
-
-Run the frontend:
-
-```bash
+cd frontend
+npm install
+Copy-Item .env.example .env -Force
 npm run serve
 ```
 
-Build for production:
+Expected frontend URL:
 
-```bash
+```text
+http://localhost:8080
+```
+
+Expected `frontend/.env` API value:
+
+```env
+VUE_APP_API_BASE_URL=http://127.0.0.1:8000/api/v2
+```
+
+After changing `.env`, restart `npm run serve`.
+
+## Backend Commands
+
+When using Docker, run backend commands inside the backend container:
+
+```powershell
+docker compose exec backend php artisan route:list --path=api/v2
+docker compose exec backend php artisan migrate
+docker compose exec backend php artisan db:seed --force
+docker compose exec backend php artisan optimize:clear
+docker compose exec backend php artisan test
+```
+
+Reset and reseed the Docker database:
+
+```powershell
+docker compose exec backend php artisan migrate:fresh --seed --force
+docker compose exec backend php artisan passport:keys --force
+docker compose exec backend php artisan passport:client --personal --name="ConTrackPro Personal Access Client" --no-interaction
+```
+
+## API Smoke Test
+
+Login:
+
+```http
+POST http://localhost:8000/api/v2/login
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "admin@contrackpro.test",
+  "password": "password"
+}
+```
+
+Use the returned access token as:
+
+```text
+Authorization: Bearer <token>
+```
+
+Useful checks:
+
+```http
+GET http://localhost:8000/api/v2/me
+GET http://localhost:8000/api/v2/contracts
+GET http://localhost:8000/api/v2/contract-management/summary
+GET http://localhost:8000/api/v2/project-accomplishments
+GET http://localhost:8000/api/v2/project-accomplishments/summary
+```
+
+## Git Branching Rules
+
+Recommended branch flow:
+
+```text
+main       production-like stable branch
+staging    integration branch for finished module work
+feature/*  short-lived module branches
+```
+
+Current module branch examples:
+
+```text
+contract-management
+engineering-plans
+user-management
+logout
+```
+
+Rules:
+
+- Branch from latest `staging`, not from old feature branches.
+- Keep one module or fix per branch.
+- Before opening a PR, merge latest `staging` into your branch locally and fix conflicts.
+- Do not push directly to `main` unless the team agreed.
+- Use clear commit messages such as `add contract document upload` or `fix engineering plan merge conflict`.
+
+Common commands:
+
+```powershell
+git fetch origin
+git switch staging
+git pull origin staging
+git switch -c feature/my-module
+```
+
+Update a feature branch with staging:
+
+```powershell
+git fetch origin
+git switch feature/my-module
+git merge origin/staging
+```
+
+After resolving conflicts:
+
+```powershell
+git status
+git add -A
+git commit -m "merge staging into my module"
+git push origin feature/my-module
+```
+
+Delete a remote branch after merge:
+
+```powershell
+git push origin --delete feature/my-module
+git fetch --prune
+```
+
+## Pull Request Rules
+
+Before creating a PR into `staging`:
+
+1. Run backend tests if backend code changed.
+2. Run frontend build if frontend code changed.
+3. Confirm Docker setup still works if Docker files changed.
+4. Confirm migrations and seeders run.
+5. Add screenshots for UI changes.
+6. Mention affected routes, tables, and seeders in the PR description.
+
+Useful checks:
+
+```powershell
+docker compose exec backend php artisan test
+cd frontend
 npm run build
 ```
 
-Run linting:
+## Troubleshooting
 
-```bash
-npm run lint
+Frontend calls `/api/login` or returns 404:
+
+- Check `frontend/.env`.
+- Use `VUE_APP_API_BASE_URL=http://127.0.0.1:8000/api/v2`.
+- Restart `npm run serve`.
+
+phpMyAdmin works but no tables show:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\docker-setup.ps1 -ResetEnv
 ```
 
-## Backend Setup
+Backend says `Invalid key supplied`:
 
-Use Docker for the most consistent backend setup. If you work without Docker, use XAMPP PHP 8.2 and XAMPP MySQL.
-
-The checked-in `composer.lock` currently expects PHP 8.2 or 8.3. PHP 8.4 will fail on locked packages such as `lcobucci/clock`, `nette/schema`, and `nette/utils` unless the backend dependencies are updated. The Laravel Passport/JWT stack also requires the PHP `sodium` extension to be enabled. Composer also needs the PHP `zip` extension or a system `7z`/`unzip` command to install packages from downloaded archives.
-
-On Windows with XAMPP, make sure Composer uses XAMPP PHP instead of Herd Lite PHP:
-
-```cmd
-set PATH=C:\xampp\php;%PATH%
-where php
-php -v
-php --ini
-php -m | findstr /i "sodium zip"
+```powershell
+docker compose exec backend php artisan passport:keys --force
+docker compose exec backend php artisan optimize:clear
 ```
 
-Expected checks:
+Backend cannot connect to MySQL:
 
-- `where php` should list `C:\xampp\php\php.exe` first.
-- `php -v` should show PHP 8.2.x or 8.3.x.
-- `php --ini` should load `C:\xampp\php\php.ini`.
-- The module check should print both `sodium` and `zip`.
+- In Docker, `DB_HOST=mysql`.
+- From host tools, use `127.0.0.1:3307`.
+- Do not use `DB_HOST=mysql` from XAMPP/local PHP.
 
-```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-```
+Composer/PHP version problems outside Docker:
 
-Configure database values in `.env`, then run:
+- Use PHP 8.2 or 8.3 for this lockfile.
+- Enable `sodium` and `zip`.
+- Docker is preferred for backend work.
 
-```bash
-php artisan migrate
-php artisan passport:install
-```
+## Documentation Map
 
-Current API routes are focused on:
-
-- Login
-- Logout
-- Request-access registration
-- Forgot password
-- Reset password
-- Current user profile
-- Users resource
-
-The route file is:
-
-```text
-backend/routes/api.php
-```
-
-The first-pass ConTrackPro schema migration is:
-
-```text
-backend/database/migrations/2026_06_03_000001_create_contrackpro_final_schema.php
-```
-
-It adds the core tables for roles, permissions, access requests, contractors, projects, contracts, documents, engineering plans, cashflow periods, invoices, payments, variation orders, time extensions, work suspensions, accomplishments, contractor ratings, notifications, and audit logs.
-
-## Development Notes
-
-- Treat the Vue module pages as the current active implementation area.
-- Do not assume the Laravel backend already exposes ConTrackPro module records through API endpoints.
-- Before connecting module screens to real data, create the Laravel models, JSON:API schemas, controllers, policies, seeders, and tests for each module.
-- Replace any static frontend data with API-backed services only after the matching backend endpoint exists.
-- File upload features will need storage configuration, validation, access rules, and download/view endpoints.
-- Audit logs should be generated server-side so users cannot edit or bypass activity history.
-
-## Suggested Next Work
-
-1. Review and finalize the draft ConTrackPro schema migration.
-2. Add Laravel models for projects, contracts, contractors, cashflows, documents, variation orders, accomplishments, notifications, audit logs, and ratings.
-3. Define roles and permissions for each user type.
-4. Implement JSON:API resources and request validation.
-5. Connect Vue module screens to backend services.
-6. Add file upload, viewing, and download workflows.
-7. Add dashboard/report calculations.
-8. Add backend and frontend tests for the core workflows.
-9. Prepare deployment and user turnover notes.
+- [API.md](API.md) - current API routes, planned endpoints, request examples, and API testing rules.
+- [DOCKER.md](DOCKER.md) - Docker setup and troubleshooting.
+- [backend/README.md](backend/README.md) - Laravel backend routes, tables, seeders, and tests.
+- [frontend/README.md](frontend/README.md) - Vue frontend setup and module integration rules.
+- [PLAN.md](PLAN.md) - recommended module implementation order.
+- [CHANGELOG.md](CHANGELOG.md) - notable project changes.
+- [ISSUE_TEMPLATE.md](ISSUE_TEMPLATE.md) - issue report format.
