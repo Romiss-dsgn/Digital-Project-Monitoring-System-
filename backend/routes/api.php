@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V2\ContractManagementController;
 use App\Http\Controllers\Api\V2\ProjectAccomplishmentController;
 use App\Http\Controllers\Api\V2\MeController;
 use App\Http\Controllers\Api\V2\ProjectController;
+use App\Http\Controllers\Api\V2\Admin\EngineeringPlanController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 
@@ -89,6 +90,10 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
 
         Route::get('/roles',                    [UserManagementController::class, 'roles']);
 
+        // Engineering plans
+        Route::post('/engineering-plans',       [EngineeringPlanController::class, 'store']);
+
+        // Projects
         Route::get('/projects',                    [ProjectController::class, 'index']);
         Route::post('/projects',                   [ProjectController::class, 'store']);
         Route::patch('/projects/{project}',        [ProjectController::class, 'update']);
