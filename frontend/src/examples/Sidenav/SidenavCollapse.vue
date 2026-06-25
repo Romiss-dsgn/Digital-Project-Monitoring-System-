@@ -1,12 +1,12 @@
 <template>
-  <router-link
+  <button
+    type="button"
     :data-bs-toggle="collapse ? 'collapse' : ''"
-    :to="routePath"
     :aria-controls="collapseRef"
     :aria-expanded="isExpanded"
-    class="nav-link"
+    :class="['nav-link', 'nav-link-button', { active: isActiveRoute }]"
     v-bind="$attrs"
-    @click="isExpanded = !isExpanded"
+    @click="handleClick"
   >
     <div
       class="text-center d-flex align-items-center justify-content-center"
@@ -17,7 +17,7 @@
     <span class="nav-link-text" :class="isRTL ? ' me-1' : 'ms-1'">{{
       navText
     }}</span>
-  </router-link>
+  </button>
   <div :class="isExpanded ? 'collapse show' : 'collapse'">
     <slot name="list"></slot>
   </div>
@@ -53,7 +53,35 @@ export default {
         return `#${this.collapseRef}`;
       }
       return this.collapseRef.startsWith("/") ? this.collapseRef : `/${this.collapseRef}`;
+    },
+    isActiveRoute() {
+      return this.$route.path === this.routePath;
+    }
+  },
+  methods: {
+    handleClick() {
+      if (this.collapse) {
+        this.isExpanded = !this.isExpanded;
+        return;
+      }
+
+      if (this.$route.path !== this.routePath) {
+        this.$router.push(this.routePath).catch(() => {});
+      }
     }
   }
 };
 </script>
+
+<style scoped>
+.nav-link-button {
+  width: calc(100% - 2rem);
+  margin: 0 1rem 0.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+</style>

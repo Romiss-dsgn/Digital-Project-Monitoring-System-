@@ -12,7 +12,7 @@
           <h4 class="mb-0">Engineering Plans</h4>
           <p class="text-secondary small">Centralized repository for all technical engineering documentation.</p>
         </div>
-        <div class="col-lg-4 text-end d-flex gap-2 justify-content-end align-items-center">
+        <div class="col-lg-4 text-end d-flex gap-2 justify-content-end">
           <button class="btn btn-outline-secondary btn-sm" @click="showExportModal = true">
             <i class="material-icons-round">cloud_download</i> Export All
           </button>
@@ -136,14 +136,14 @@
                       <td>
                         <span class="badge" style="background:#f1f5f9;color:#475569;font-weight:500;font-size:0.78rem;">{{ doc.type }}</span>
                       </td>
-                      <td style="font-size:0.875rem;color:#475569;">{{ doc.file_type }}</td>
+                      <td style="font-size:0.875rem;">{{ doc.file_type || "—" }}</td>
                       <td>
                         <div class="fw-semibold" style="font-size:0.82rem;">{{ doc.uploaded_by }}</div>
                         <div class="text-secondary" style="font-size:0.75rem;">{{ doc.date_uploaded }}</div>
                       </td>
                       <td style="font-size:0.875rem;">{{ doc.version }}</td>
                       <td><status-badge :status="doc.status" /></td>
-                      <td style="font-size:0.875rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ doc.remarks }}</td>
+                      <td style="font-size:0.8rem;color:#64748b;max-width:220px;">{{ doc.remarks || "—" }}</td>
                       <td class="align-middle text-end">
                         <div class="dropdown">
                           <button
@@ -496,13 +496,11 @@ export default {
           icon: "picture_as_pdf",
           iconColor: "#2563eb",
           type: "Structural",
-          file_type: "PDF",
           project: "City Hall Extension - Phase 2",
           uploaded_by: "Engr. Maria Santos",
           date_uploaded: "Oct 12, 2023 · 09:45 AM",
           version: "v2.4",
-          status: "approved",
-          remarks: "Final as-built drawings"
+          status: "approved"
         },
         {
           id: 2,
@@ -511,7 +509,6 @@ export default {
           icon: "description",
           iconColor: "#ea580c",
           type: "Electrical",
-          file_type: "DWG",
           project: "Cagayan Valley Regional Hub",
           uploaded_by: "Arch. Rafael Cruz",
           date_uploaded: "Oct 14, 2023 · 02:15 PM",
@@ -526,13 +523,11 @@ export default {
           icon: "image",
           iconColor: "#dc2626",
           type: "Mechanical",
-          file_type: "PNG",
           project: "San Mateo Fire Station Repair",
           uploaded_by: "Admin Sarah Lee",
           date_uploaded: "Oct 10, 2023 · 11:20 AM",
           version: "v2.0",
-          status: "revision",
-          remarks: "Update schematics per consultant notes"
+          status: "revision"
         },
         {
           id: 4,
@@ -541,13 +536,11 @@ export default {
           icon: "article",
           iconColor: "#2563eb",
           type: "Mechanical",
-          file_type: "DOCX",
           project: "Isabela Logistic Center",
           uploaded_by: "Engr. Leo Gomez",
           date_uploaded: "Oct 15, 2023 · 04:30 PM",
           version: "v1.0",
-          status: "uploaded",
-          remarks: "Initial upload - pending metadata"
+          status: "uploaded"
         }
       ]
     };
