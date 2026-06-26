@@ -10,16 +10,27 @@
             <span>Engineering Plans Management</span>
           </p>
           <h4 class="mb-0">Engineering Plans</h4>
-          <p class="text-secondary small">Centralized repository for all technical engineering documentation.</p>
+          <p class="text-secondary small">
+            Upload, review, and track technical drawings and engineering documents linked to existing projects.
+          </p>
         </div>
         <div class="col-lg-4 text-end d-flex gap-2 justify-content-end">
           <button class="btn btn-outline-secondary btn-sm" @click="showExportModal = true">
             <i class="material-icons-round">cloud_download</i> Export All
           </button>
-          <button class="btn btn-primary btn-sm" @click="showUploadPlanModal = true">
+          <button
+            class="btn btn-primary btn-sm"
+            :disabled="isLoadingProjects || projects.length === 0"
+            title="Create a project first in Infrastructure Plans"
+            @click="showUploadPlanModal = true"
+          >
             <i class="material-icons-round">cloud_upload</i> Upload New Plan
           </button>
         </div>
+      </div>
+
+      <div v-if="!isLoadingProjects && projects.length === 0" class="alert alert-warning py-2 px-3 mb-4">
+        Create a project first in Infrastructure Plans before uploading engineering plans.
       </div>
 
       <!-- Stat Cards -->
@@ -250,8 +261,7 @@
         <div class="bfp-section-label"><i class="material-icons-round">assignment</i> Document Details</div>
         <div class="bfp-form-grid">
           <div class="bfp-field-full">
-            <!-- REMOVED * from label — not required for testing -->
-            <label class="bfp-label">Plan Title</label>
+            <label class="bfp-label">Plan Title <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">title</i>
               <input
@@ -263,21 +273,21 @@
             </div>
           </div>
           <div class="bfp-field-half">
-            <!-- REMOVED * from label — not required for testing -->
-            <label class="bfp-label">Project</label>
+            <label class="bfp-label">Project <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">business</i>
               <select class="bfp-input bfp-select" v-model="engineeringPlanForm.project_id">
                 <option value="">
-                  {{ isLoadingProjects ? 'Loading projects...' : 'Select a project (optional)' }}
+                  {{ isLoadingProjects ? 'Loading projects...' : 'Select a project' }}
                 </option>
-                <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.project_name }}</option>
+                <option v-for="p in projects" :key="p.id" :value="p.id">
+                  {{ p.project_code }} · {{ p.project_name }}
+                </option>
               </select>
             </div>
           </div>
           <div class="bfp-field-half">
-            <!-- REMOVED * from label — not required for testing -->
-            <label class="bfp-label">Plan Type</label>
+            <label class="bfp-label">Plan Type <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">category</i>
               <select class="bfp-input bfp-select" v-model="engineeringPlanForm.plan_type">
@@ -573,18 +583,22 @@ export default {
     },
 
     async submitEngineeringPlan() {
-      // TEST MODE: all fields optional — just submit whatever is filled in
       if (this.isSavingPlan) return;
 
-      // ── REMOVED: required field checks (for testing purposes) ──
-      // if (!this.engineeringPlanForm.project_id || !this.engineeringPlanForm.plan_title) {
-      //   alert("Project and Plan Title are required.");
-      //   return;
-      // }
-      // if (this.selectedPlanFiles.length === 0) {
-      //   alert("Please attach a plan file.");
-      //   return;
-      // }
+      if (!this.engineeringPlanForm.project_id) {
+        alert("Create/select a project first in Infrastructure Plans.");
+        return;
+      }
+
+      if (!this.engineeringPlanForm.plan_title.trim()) {
+        alert("Plan title is required.");
+        return;
+      }
+
+      if (this.selectedPlanFiles.length === 0) {
+        alert("Please attach a plan file.");
+        return;
+      }
 
       this.isSavingPlan = true;
 
@@ -593,10 +607,7 @@ export default {
         Object.entries(this.engineeringPlanForm).forEach(([key, val]) => {
           formData.append(key, val ?? "");
         });
-        // Only attach file if one was selected
-        if (this.selectedPlanFiles.length > 0) {
-          formData.append("file", this.selectedPlanFiles[0]);
-        }
+        formData.append("file", this.selectedPlanFiles[0]);
 
         const { data } = await EngineeringPlanService.create(formData);
         const plan = data.data;

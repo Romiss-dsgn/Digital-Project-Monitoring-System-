@@ -78,6 +78,14 @@ Implementation rule:
 - Merge `Cashflows` and `Variation Orders` conceptually as `Financial Management`, because approved variation orders change contract value and cashflow planning.
 - Keep `Reports` and `Audit Logs` separate if role-based access differs.
 
+Project module rule:
+
+- `Infrastructure Plans` owns project creation and project baseline data.
+- `Engineering Plans` only uploads/reviews technical documents for existing projects.
+- `Project Accomplishments` only records milestone progress and evidence for existing projects.
+- Do not add separate "Add Project" flows in Engineering Plans or Project Accomplishments.
+- Keep the current sidebar names for now; use page descriptions to clarify each module's purpose instead of renaming routes/menus.
+
 See [PLAN.md](PLAN.md) for the detailed sequence of next modules.
 
 ## Project Structure

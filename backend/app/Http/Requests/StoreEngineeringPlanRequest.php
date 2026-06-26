@@ -29,18 +29,23 @@ class StoreEngineeringPlanRequest extends FormRequest
         return true;
     }
 
- public function rules(): array
-{
-    return [
-        'project_id' => ['nullable', 'integer', 'exists:projects,id'],
-        'plan_title' => ['nullable', 'string', 'max:255'],
-        'plan_type'  => ['nullable', 'string'],
-        'version'    => ['nullable', 'string', 'max:50'],
-        'status'     => ['nullable', 'string'],
-        'remarks'    => ['nullable', 'string', 'max:2000'],
-        'file'       => ['nullable', 'file', 'max:25600'],
-    ];
-}
+    public function rules(): array
+    {
+        return [
+            // Engineering plan documents must be traceable to an active project.
+            'project_id' => [
+                'required',
+                'integer',
+                Rule::exists('projects', 'id')->where(fn ($query) => $query->where('is_archived', false)),
+            ],
+            'plan_title' => ['required', 'string', 'max:255'],
+            'plan_type' => ['required', 'string', Rule::in(EngineeringPlan::PLAN_TYPES)],
+            'version' => ['nullable', 'string', 'max:50'],
+            'status' => ['required', 'string', Rule::in(EngineeringPlan::STATUSES)],
+            'remarks' => ['nullable', 'string', 'max:2000'],
+            'file' => ['required', 'file', 'max:' . self::MAX_FILE_SIZE_KB],
+        ];
+    }
     public function messages(): array
     {
         return [

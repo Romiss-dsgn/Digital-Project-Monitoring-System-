@@ -12,6 +12,7 @@ All notable project-owned changes to ConTrackPro are documented here.
 - Expanded the root README with software architecture and deployment planning notes.
 - Updated Docker documentation with setup, seeding, migration, phpMyAdmin, and troubleshooting commands.
 - Added `PLAN.md` for module sequencing, module merge decisions, branch rules, and PR checklist.
+- Documented the project ownership rule: Infrastructure Plans creates projects, Engineering Plans manages project documents, and Project Accomplishments records progress evidence.
 - Updated the issue template to include module, branch, API route, DB table, and testing context.
 
 ### Current Working Scope

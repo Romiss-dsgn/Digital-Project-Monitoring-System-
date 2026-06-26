@@ -6,16 +6,28 @@
       <div class="row mb-4 align-items-center">
         <div class="col-lg-8">
           <h4 class="mb-0">Accomplishments Monitoring</h4>
-          <p class="text-secondary small">Track milestones and project completion status</p>
+          <p class="text-secondary small">
+            Record milestone progress, completion evidence, validation status, and accomplishment reports for existing projects.
+          </p>
         </div>
         <div class="col-lg-4 text-end">
           <button class="btn btn-light btn-sm me-2" @click="showFilterModal = true">
             <i class="material-icons-round">filter_list</i> Filters
           </button>
-          <button v-if="permissions.create" class="btn btn-primary btn-sm" @click="openCreateModal">
+          <button
+            v-if="permissions.create"
+            class="btn btn-primary btn-sm"
+            :disabled="isLoading || projects.length === 0"
+            title="Create a project first in Infrastructure Plans"
+            @click="openCreateModal"
+          >
             <i class="material-icons-round">upload</i> Upload Report
           </button>
         </div>
+      </div>
+
+      <div v-if="!isLoading && projects.length === 0" class="alert alert-warning py-2 px-3 mb-4">
+        Create a project first in Infrastructure Plans before adding accomplishment reports.
       </div>
 
       <!-- Summary Cards Row -->
@@ -478,6 +490,11 @@ export default {
   },
   methods: {
     openCreateModal() {
+      if (!this.projects.length) {
+        alert("Create a project first in Infrastructure Plans before adding accomplishment reports.");
+        return;
+      }
+
       this.accomplishmentForm = emptyAccomplishmentForm();
       this.showUploadReportModal = true;
     },
@@ -506,6 +523,12 @@ export default {
     },
     async saveAccomplishment() {
       if (this.isSaving) return;
+
+      if (!this.accomplishmentForm.project_id) {
+        this.apiError = "Please select an existing project before saving an accomplishment report.";
+        return;
+      }
+
       this.isSaving = true;
       this.apiError = "";
 

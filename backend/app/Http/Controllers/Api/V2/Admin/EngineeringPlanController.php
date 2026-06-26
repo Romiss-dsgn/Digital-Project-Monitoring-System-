@@ -16,52 +16,52 @@ class EngineeringPlanController extends Controller
         private readonly EngineeringPlanFileService $fileService
     ) {}
 
-   public function store(StoreEngineeringPlanRequest $request): JsonResponse
-{
-    $validated = $request->validated();
-
-    DB::beginTransaction();
-
-    try {
-        // FILE: only store if one was actually attached
+    public function store(StoreEngineeringPlanRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
         $fileInfo = null;
-        if ($request->hasFile('file')) {
+
+        DB::beginTransaction();
+
+        try {
+            // Store only validated uploads; the request already requires project, title, type, status, and file.
             $fileInfo = $this->fileService->store($request->file('file'));
+
+            $plan = EngineeringPlan::create([
+                'project_id' => $validated['project_id'],
+                'plan_title' => $validated['plan_title'],
+                'plan_type' => $validated['plan_type'],
+                'version' => $validated['version'] ?? null,
+                'status' => $validated['status'],
+                'remarks' => $validated['remarks'] ?? null,
+                'file_name' => $fileInfo['name'],
+                'file_path' => $fileInfo['path'],
+                'file_type' => $fileInfo['type'],
+                'uploaded_by' => $request->user()?->id,
+                'uploaded_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'data' => $plan->fresh(['project', 'uploader']),
+            ], 201);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            if ($fileInfo) {
+                $this->fileService->delete($fileInfo['path']);
+            }
+
+            Log::error('EngineeringPlan store failed', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to save engineering plan. Please try again.',
+            ], 500);
         }
-
-        $plan = EngineeringPlan::create([
-            'project_id'  => $validated['project_id'] ?? null,
-            'plan_title'  => $validated['plan_title']  ?? 'Test Plan',
-            'plan_type'   => $validated['plan_type']   ?? null,
-            'version'     => $validated['version']     ?? null,
-            'status'      => $validated['status']      ?? EngineeringPlan::STATUS_FOR_REVIEW,
-            'remarks'     => $validated['remarks']     ?? null,
-            'file_name'   => $fileInfo['name'] ?? null,
-            'file_path'   => $fileInfo['path'] ?? null,
-            'file_type'   => $fileInfo['type'] ?? null,
-            'uploaded_by' => $request->user()?->id,
-            'uploaded_at' => now(),
-        ]);
-
-        DB::commit();
-
-        return response()->json(['data' => $plan->fresh()], 201);
-
-    } catch (\Throwable $e) {
-        DB::rollBack();
-
-        if (isset($fileInfo)) {
-            $this->fileService->delete($fileInfo['path']);
-        }
-
-        Log::error('EngineeringPlan store failed', [
-            'user_id' => $request->user()?->id,
-            'error'   => $e->getMessage(),
-        ]);
-
-        return response()->json([
-            'message' => 'Failed to save engineering plan. Please try again.',
-        ], 500);
     }
-}
 }

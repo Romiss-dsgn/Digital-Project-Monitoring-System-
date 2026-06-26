@@ -55,6 +55,37 @@ Settings
 
 ## Module Merge Decisions
 
+### Project Ownership Rule
+
+For the MVP, do not create duplicate "Add Project" flows across modules.
+
+Infrastructure Plans is the source of truth for project records:
+
+- Project code
+- Project name
+- Location
+- Contractor
+- Budget
+- Timeline
+- Phase
+- Overall status
+- Latest summary progress
+
+Engineering Plans and Project Accomplishments must use existing project records from `projects`.
+
+```text
+Infrastructure Plans
+  creates and edits the project
+
+Engineering Plans
+  uploads and reviews technical documents for that project
+
+Project Accomplishments
+  records milestone/progress evidence for that project
+```
+
+This keeps the database clean and avoids different modules creating conflicting versions of the same project.
+
 ### Project Plans
 
 Merge conceptually:
@@ -74,6 +105,46 @@ MVP implementation:
 - Share the same `projects` data.
 - Engineering plan records should belong to a project.
 - Later, this can become one `Project Plans` module with tabs.
+
+### Infrastructure Plans vs Project Accomplishments
+
+These modules both show progress, but they are not redundant.
+
+Infrastructure Plans is the project registry and planning baseline:
+
+- One row per project.
+- Stores the latest high-level status and progress.
+- Answers: "What project exists, where is it, who owns it, and what is its current state?"
+
+Project Accomplishments is the progress evidence/history:
+
+- Many accomplishment records can belong to one project.
+- Stores milestone updates, report attachments, validation status, and progress details.
+- Answers: "What work was completed, when was it reported, and what evidence supports the progress?"
+
+MVP rule:
+
+- Add/edit project only in Infrastructure Plans.
+- Add milestone/report only in Project Accomplishments.
+- When an accomplishment is validated, it may update or support the project summary progress shown in Infrastructure Plans.
+
+### UI Naming Guidance
+
+Do not rename the sidebar modules yet. Keep the current labels so the team avoids unnecessary router/sidebar churn:
+
+```text
+Infrastructure Plans
+Engineering Plans
+Project Accomplishments
+```
+
+Instead, add short page descriptions under each module title:
+
+- Infrastructure Plans: "Register and manage project baselines, locations, budgets, contractors, timelines, and overall status."
+- Engineering Plans: "Upload, review, and track technical drawings and engineering documents linked to existing projects."
+- Project Accomplishments: "Record milestone progress, completion evidence, validation status, and accomplishment reports for existing projects."
+
+This explains the purpose of each module without changing routes, menu labels, or user expectations.
 
 ### Financial Management
 
@@ -131,7 +202,33 @@ Reason:
 
 ## Recommended Next Work Sequence
 
-### 1. Stabilize User Management
+### 1. Centralize Project Creation And Project Selection
+
+Owner: `infrastructure-plans`, `engineering-plans`, or `project-plans` branch.
+
+Backend:
+
+- Confirm Infrastructure Plans is the only place that creates/updates project records.
+- Confirm Engineering Plans requires a valid `project_id`.
+- Confirm Project Accomplishments requires a valid `project_id`.
+- Keep project dropdown options reusable for Engineering Plans and Project Accomplishments.
+
+Frontend:
+
+- Keep `Add New Project` only in Infrastructure Plans.
+- Remove or avoid any add-project modal in Engineering Plans or Project Accomplishments.
+- Add clear module descriptions under page titles.
+- If no project records exist, show an empty state that tells the user to create a project in Infrastructure Plans first.
+- Make Engineering Plans project selection required for upload.
+- Make Project Accomplishments project selection required for reports.
+
+Tests:
+
+- Engineering plan upload fails if `project_id` is missing.
+- Accomplishment report creation fails if `project_id` is missing.
+- Project dropdowns load from the same project source.
+
+### 2. Stabilize User Management
 
 Owner: `user-management` branch.
 
@@ -155,7 +252,7 @@ Tests:
 - Admin can create/update/deactivate user.
 - Non-admin is rejected if permissions are enforced.
 
-### 2. Finish Project Plans Foundation
+### 3. Finish Project Plans Foundation
 
 Owner: `infrastructure-plans` or `project-plans` branch.
 
@@ -179,7 +276,7 @@ Tests:
 - Project archive.
 - Project list filters.
 
-### 3. Finish Engineering Plans
+### 4. Finish Engineering Plans
 
 Owner: `engineering-plans` branch.
 
@@ -205,7 +302,7 @@ Tests:
 - Review changes status.
 - Download requires auth.
 
-### 4. Build Financial Management
+### 5. Build Financial Management
 
 Owner: new `financial-management` branch.
 
@@ -236,7 +333,7 @@ Tests:
 - VO approval updates financial summary.
 - Cashflow summary calculates totals from DB.
 
-### 5. Records and Reports
+### 6. Records and Reports
 
 Owner: new `records-reports` branch.
 
@@ -256,7 +353,7 @@ Tests:
 - Audit logs are created by write actions.
 - Audit logs are read-only.
 
-### 6. Dashboard Metrics
+### 7. Dashboard Metrics
 
 Owner: new `dashboard-metrics` branch.
 
