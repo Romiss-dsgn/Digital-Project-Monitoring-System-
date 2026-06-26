@@ -26,6 +26,16 @@ DB_HOST=mysql
 DB_PORT=3306
 ```
 
+Backend PHP upload limits:
+
+```text
+upload_max_filesize=32M
+post_max_size=32M
+memory_limit=256M
+```
+
+These values support the current Engineering Plans upload rule of 25 MB per plan file. If this Dockerfile setting changes, rebuild the backend container.
+
 From your host machine or MySQL Workbench:
 
 ```text
@@ -346,6 +356,29 @@ Most likely frontend `.env` is stale.
 2. Confirm frontend uses `VUE_APP_API_BASE_URL=http://127.0.0.1:8000/api/v2`.
 3. Restart `npm run serve`.
 4. Hard refresh browser.
+
+### Engineering Plan upload fails for files near 25 MB
+
+Check PHP upload limits inside the backend container:
+
+```powershell
+docker compose exec -T backend php -i | findstr /i "upload_max_filesize post_max_size memory_limit"
+```
+
+Expected values:
+
+```text
+upload_max_filesize => 32M
+post_max_size => 32M
+memory_limit => 256M
+```
+
+If the values still show `2M` or `8M`, rebuild the backend image:
+
+```powershell
+docker compose up -d --build --force-recreate backend
+docker compose exec backend php artisan optimize:clear
+```
 
 ## DevOps Rules
 

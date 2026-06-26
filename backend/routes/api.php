@@ -91,6 +91,7 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
         Route::get('/roles',                    [UserManagementController::class, 'roles']);
 
         // Engineering plans
+        Route::get('/engineering-plans',        [EngineeringPlanController::class, 'index']);
         Route::post('/engineering-plans',       [EngineeringPlanController::class, 'store']);
 
         // Projects

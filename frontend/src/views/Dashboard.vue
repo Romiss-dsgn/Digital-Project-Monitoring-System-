@@ -1091,6 +1091,7 @@ h4 {
 
 /* Dashboard Footer */
 .dashboard-footer {
+  display: none;
   text-align: center;
   padding: 1.5rem 0 0.5rem;
   font-size: 0.75rem;

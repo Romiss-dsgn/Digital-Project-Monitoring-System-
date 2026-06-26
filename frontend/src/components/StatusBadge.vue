@@ -35,6 +35,9 @@ export default {
         "ongoing":                  "Ongoing",
         "planning":                 "Planning",
         "suspended":                "Suspended",
+        "for_review":               "For Review",
+        "revision":                 "Revision Required",
+        "uploaded":                 "Uploaded",
         // BFP Module statuses
         "dashboard":                "Dashboard",
         "infrastructure_plans":     "Infrastructure Plans",
@@ -105,13 +108,17 @@ export default {
 /* ── Amber — in progress / pending / ongoing ── */
 .badge-in_progress,
 .badge-pending,
-.badge-ongoing {
+.badge-ongoing,
+.badge-for_review,
+.badge-uploaded {
   background: rgba(245, 158, 11, 0.15);
   color: #b45309;
 }
 .badge-in_progress .badge-dot,
 .badge-pending .badge-dot,
-.badge-ongoing .badge-dot {
+.badge-ongoing .badge-dot,
+.badge-for_review .badge-dot,
+.badge-uploaded .badge-dot {
   background: #d97706;
 }
 
@@ -126,12 +133,14 @@ export default {
 
 /* ── Red — error / delay states ── */
 .badge-delayed,
-.badge-rejected {
+.badge-rejected,
+.badge-revision {
   background: rgba(239, 68, 68, 0.12);
   color: #c62828;
 }
 .badge-delayed .badge-dot,
-.badge-rejected .badge-dot {
+.badge-rejected .badge-dot,
+.badge-revision .badge-dot {
   background: #c62828;
 }
 

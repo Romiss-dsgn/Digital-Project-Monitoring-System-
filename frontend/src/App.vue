@@ -29,18 +29,21 @@ Coded by www.creative-tim.com
       v-if="showNavbar"
     />
     <router-view />
+    <app-footer v-if="showFooter" />
   </main>
 </template>
 <script>
 import Sidenav from "./examples/Sidenav";
 import Navbar from "@/examples/Navbars/Navbar.vue";
+import AppFooter from "@/examples/Footer.vue";
 import { mapMutations, mapState } from "vuex";
 
 export default {
   name: "App",
   components: {
     Sidenav,
-    Navbar
+    Navbar,
+    AppFooter
   },
   methods: {
     ...mapMutations(["navbarMinimize"])
@@ -54,7 +57,8 @@ export default {
       "navbarFixed",
       "absolute",
       "showSidenav",
-      "showNavbar"
+      "showNavbar",
+      "showFooter"
     ])
   },
   beforeMount() {

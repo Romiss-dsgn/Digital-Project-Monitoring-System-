@@ -13,6 +13,13 @@ RUN apt-get update && apt-get install -y \
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
+# Engineering Plans accepts files up to 25 MB. PHP needs extra room for multipart form overhead.
+RUN { \
+        echo "upload_max_filesize=32M"; \
+        echo "post_max_size=32M"; \
+        echo "memory_limit=256M"; \
+    } > /usr/local/etc/php/conf.d/contrackpro-uploads.ini
+
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
     && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
     && echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf \

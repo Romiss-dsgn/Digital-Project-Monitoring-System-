@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ContractManagementSeeder::class,
             ProjectAccomplishmentsSeeder::class,
             ProjectsSeeder::class,
+            EngineeringPlansSeeder::class,
         ]);
     }
 }
