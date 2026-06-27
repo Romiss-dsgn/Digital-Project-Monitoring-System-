@@ -23,8 +23,8 @@ The MVP should prove these workflows first:
 | --- | --- | --- |
 | Dashboard | Partial | UI exists. Needs real metrics from connected modules. |
 | User Management | In progress | Backend admin endpoints exist. Frontend module is active branch work. |
-| Infrastructure Plans | In progress | DB-backed project register foundation is active. This remains the only project creation workflow. |
-| Engineering Plans | MVP connected | DB-backed listing, summary cards, pagination, project dropdown, and upload exist. Review/download/archive are still pending. |
+| Infrastructure Plans | MVP connected | DB-backed project register, summary cards, filters, create/edit/archive flow, audit logging, and UI cleanup are active. This remains the only project creation workflow. |
+| Engineering Plans | MVP connected | DB-backed listing, summary cards, pagination, project dropdown, upload, download, review status updates, archive, and audit logging exist. |
 | Contract Management | MVP connected | DB-backed CRUD/archive, documents, summary, permissions, audit logs, seeders, tests. |
 | Project Accomplishments | MVP connected | DB-backed CRUD/archive/validate, documents, summary, project progress sync, seeders, tests. |
 | Cashflows | Not connected | UI exists. Backend tables/models exist. |
@@ -208,23 +208,25 @@ Owner: `infrastructure-plans`, `engineering-plans`, or `project-plans` branch.
 
 Current progress:
 
+- Infrastructure Plans now owns project creation/edit/archive and reads the project register from `projects`.
+- Infrastructure Plans now has aligned page header, stable pagination, usable filters, DB-backed summary cards, regional distribution, and recent updates.
 - Engineering Plans now requires an existing `project_id` before upload.
 - Engineering Plans now loads project options from the backend instead of using dot/placeholder labels.
-- Engineering Plans list, cards, and pagination now read from `engineering_plans`.
+- Engineering Plans list, cards, pagination, download, review status, and archive actions now read/write `engineering_plans`.
 - Infrastructure Plans remains the correct place to create project records.
 
 Backend:
 
-- Confirm Infrastructure Plans is the only place that creates/updates project records.
+- Infrastructure Plans is the only place that creates/updates project records.
 - Confirm Engineering Plans continues to require a valid `project_id`.
 - Confirm Project Accomplishments requires a valid `project_id`.
 - Keep project dropdown options reusable for Engineering Plans and Project Accomplishments.
 
 Frontend:
 
-- Keep `Add New Project` only in Infrastructure Plans.
-- Remove or avoid any add-project modal in Engineering Plans or Project Accomplishments.
-- Add clear module descriptions under page titles.
+- `Add New Project` stays only in Infrastructure Plans.
+- Do not add project creation modals in Engineering Plans or Project Accomplishments.
+- Clear module descriptions are shown under page titles.
 - If no project records exist, show an empty state that tells the user to create a project in Infrastructure Plans first.
 - Keep Engineering Plans project selection required for upload.
 - Make Project Accomplishments project selection required for reports.
@@ -265,17 +267,17 @@ Owner: `infrastructure-plans` or `project-plans` branch.
 
 Backend:
 
-- Finalize `ProjectController`.
-- Confirm `projects` validation matches schema.
-- Add summary endpoint for plan/project dashboard metrics.
-- Add audit logging for create/update/archive.
+- `ProjectController` supports list, filters, create, update, and archive.
+- `ProjectController` returns project summary metrics with the list response.
+- `ProjectController` writes audit logs for create/update/archive.
+- Next backend improvement: add a dedicated project options endpoint if more modules need lighter dropdown data.
 
 Frontend:
 
-- Replace static infrastructure plan data.
-- Use `project.service.js`.
-- Add create/edit/archive project flow.
-- Make Engineering Plans project dropdown use real projects.
+- Infrastructure Plans uses `project.service.js` and no longer depends on static register data.
+- Infrastructure Plans has create/edit/archive project flow.
+- Infrastructure Plans page header, table overflow, pagination, and empty states are cleaned up.
+- Engineering Plans project dropdown uses real projects.
 
 Tests:
 
@@ -289,18 +291,19 @@ Owner: `engineering-plans` branch.
 
 Backend:
 
-- Add show endpoint.
-- Add download endpoint.
-- Add status/review endpoint.
-- Add archive endpoint.
-- Add audit logging.
+- Show endpoint exists.
+- Download endpoint exists for stored upload files.
+- Status/review endpoint exists for approved, revision required, and for review states.
+- Archive endpoint exists.
+- Audit logging exists for create, review, and archive actions.
 
 Frontend:
 
-- Keep the engineering document list DB-backed.
-- Add loading/empty/error states.
-- Add download/review/archive actions.
-- Keep upload modal connected.
+- Engineering document list remains DB-backed.
+- Loading/empty/error states exist.
+- Download/review/archive actions are connected.
+- Upload modal remains connected and requires an existing project.
+- Pagination now uses compact round controls aligned with Infrastructure Plans.
 
 Tests:
 

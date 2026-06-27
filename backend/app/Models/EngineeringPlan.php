@@ -38,7 +38,10 @@ class EngineeringPlan extends Model
         'status',
         'uploaded_by',
         'uploaded_at',
+        'reviewed_by',
+        'reviewed_at',
         'remarks',
+        'is_archived',
     ];
 
     protected $casts = [

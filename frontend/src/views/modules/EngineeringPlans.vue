@@ -14,15 +14,11 @@
           </p>
         </div>
         <div class="engineering-hero-actions">
-          <button class="btn btn-outline-secondary btn-sm engineering-toolbar-btn" type="button" @click="showExportModal = true">
-            <i class="material-icons-round">cloud_download</i>
-            Export All
-          </button>
           <button
             class="btn btn-primary btn-sm engineering-primary-btn"
             type="button"
             :disabled="isLoadingProjects || selectableProjects.length === 0"
-            title="Create a project first in Infrastructure Plans"
+            :title="selectableProjects.length === 0 ? 'Create a project first in Infrastructure Plans' : 'Upload a new plan'"
             @click="showUploadPlanModal = true"
           >
             <i class="material-icons-round">cloud_upload</i>
@@ -75,10 +71,6 @@
             <button class="btn btn-outline-secondary btn-sm engineering-toolbar-btn" type="button" @click="showFilterModal = true">
               <i class="material-icons-round">filter_list</i>
               Filter
-            </button>
-            <button class="btn btn-outline-secondary btn-sm engineering-toolbar-btn" type="button" @click="showSortModal = true">
-              <i class="material-icons-round">sort</i>
-              Sort: Latest
             </button>
           </div>
         </div>
@@ -141,29 +133,42 @@
                     <button
                       class="btn btn-sm btn-icon btn-light text-secondary"
                       type="button"
+                      :disabled="busyPlanId === doc.id"
                       data-bs-toggle="dropdown"
                       aria-expanded="false"
                     >
-                      <i class="material-icons-round">more_vert</i>
+                      <i class="material-icons-round">{{ busyPlanId === doc.id ? "hourglass_empty" : "more_vert" }}</i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                       <li>
-                        <a class="dropdown-item" href="#" @click.prevent="viewDocument(doc)">
-                          <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
-                          View
+                        <a class="dropdown-item" href="#" @click.prevent="downloadDocument(doc)">
+                          <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">download</i>
+                          Download
                         </a>
                       </li>
-                      <li>
-                        <a class="dropdown-item" href="#" @click.prevent="editDocument(doc)">
-                          <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
-                          Edit
+                      <li v-if="doc.status !== 'approved'">
+                        <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'approved')">
+                          <i class="material-icons-round align-middle me-2 dropdown-icon approve-icon">check_circle</i>
+                          Mark Approved
+                        </a>
+                      </li>
+                      <li v-if="doc.status !== 'revision'">
+                        <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'revision')">
+                          <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit_document</i>
+                          Require Revision
+                        </a>
+                      </li>
+                      <li v-if="doc.status !== 'for_review'">
+                        <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'for_review')">
+                          <i class="material-icons-round align-middle me-2 dropdown-icon review-icon">pending_actions</i>
+                          Send to Review
                         </a>
                       </li>
                       <li><hr class="dropdown-divider" /></li>
                       <li>
-                        <a class="dropdown-item text-danger" href="#" @click.prevent="deleteDocument(doc)">
+                        <a class="dropdown-item text-danger" href="#" @click.prevent="archiveDocument(doc)">
                           <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
-                          Delete
+                          Archive
                         </a>
                       </li>
                     </ul>
@@ -176,30 +181,37 @@
 
         <div class="engineering-register-footer">
           <div class="engineering-summary">{{ tableRangeLabel }}</div>
-          <nav v-if="planMeta.last_page > 1" aria-label="Engineering plan pagination">
-            <ul class="pagination pagination-sm mb-0 engineering-pagination">
-              <li class="page-item" :class="{ disabled: planMeta.current_page <= 1 }">
-                <button class="page-link" type="button" :disabled="planMeta.current_page <= 1" @click="goToPage(planMeta.current_page - 1)">
-                  Previous
-                </button>
-              </li>
-              <li
-                v-for="page in paginationPages"
-                :key="page"
-                class="page-item"
-                :class="{ active: planMeta.current_page === page }"
-              >
-                <button class="page-link" type="button" :disabled="planMeta.current_page === page" @click="goToPage(page)">
-                  {{ page }}
-                </button>
-              </li>
-              <li class="page-item" :class="{ disabled: planMeta.current_page >= planMeta.last_page }">
-                <button class="page-link" type="button" :disabled="planMeta.current_page >= planMeta.last_page" @click="goToPage(planMeta.current_page + 1)">
-                  Next
-                </button>
-              </li>
-            </ul>
-          </nav>
+          <div v-if="planMeta.last_page > 1" class="engineering-pagination" role="navigation" aria-label="Engineering plan pagination">
+            <button
+              class="engineering-page-btn"
+              type="button"
+              :disabled="planMeta.current_page <= 1"
+              aria-label="Previous page"
+              @click="goToPage(planMeta.current_page - 1)"
+            >
+              <i class="material-icons-round">chevron_left</i>
+            </button>
+            <button
+              v-for="page in paginationPages"
+              :key="page"
+              class="engineering-page-btn engineering-page-number"
+              :class="{ active: planMeta.current_page === page }"
+              type="button"
+              :disabled="planMeta.current_page === page"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+            <button
+              class="engineering-page-btn"
+              type="button"
+              :disabled="planMeta.current_page >= planMeta.last_page"
+              aria-label="Next page"
+              @click="goToPage(planMeta.current_page + 1)"
+            >
+              <i class="material-icons-round">chevron_right</i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -356,40 +368,6 @@
       </div>
     </BfpModal>
 
-    <BfpModal
-      :show="showExportModal"
-      title="Export Engineering Plans"
-      stripe="DOCUMENT EXPORT"
-      confirm-text="Prepare Export"
-      confirm-icon="cloud_download"
-      @close="showExportModal = false"
-      @confirm="showExportModal = false"
-    >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
-        <div class="bfp-form-grid">
-          <label class="bfp-check-option"><input type="checkbox" checked /> Include approved plans</label>
-          <label class="bfp-check-option"><input type="checkbox" checked /> Include review queue</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Include file metadata</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Include uploader history</label>
-        </div>
-      </div>
-    </BfpModal>
-
-    <BfpModal
-      :show="showSortModal"
-      title="Sort Engineering Plans"
-      stripe="DOCUMENT ORDERING"
-      confirm-text="Apply Sort"
-      confirm-icon="sort"
-      @close="showSortModal = false"
-      @confirm="showSortModal = false"
-    >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">sort</i> Sort Settings</div>
-        <p class="text-secondary small mb-0">Records are currently sorted by latest upload from the database.</p>
-      </div>
-    </BfpModal>
   </div>
 </template>
 
@@ -420,10 +398,9 @@ export default {
       activeTab: "All Documents",
       showUploadPlanModal: false,
       showFilterModal: false,
-      showExportModal: false,
-      showSortModal: false,
       planUploadDragOver: false,
       selectedPlanFiles: [],
+      busyPlanId: null,
       maxPlanFileSizeMb: 25,
       allowedPlanExtensions: [".pdf", ".dwg", ".png", ".docx"],
       allowedPlanTypes: [
@@ -782,16 +759,81 @@ export default {
       });
     },
 
-    viewDocument(doc) {
-      alert(`View document ${doc.filename}`);
+    async downloadDocument(doc) {
+      if (this.busyPlanId) return;
+
+      this.busyPlanId = doc.id;
+      try {
+        const response = await EngineeringPlanService.download(doc.id);
+        const blob = new Blob([response.data], {
+          type: response.headers["content-type"] || "application/octet-stream",
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = doc.filename || "engineering-plan";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        alert(error.response?.status === 404
+          ? "The stored file was not found. Seeded demo rows may not have a physical file yet."
+          : "Failed to download engineering plan.");
+      } finally {
+        this.busyPlanId = null;
+      }
     },
 
-    editDocument(doc) {
-      alert(`Edit document ${doc.filename}`);
+    async updateDocumentStatus(doc, status) {
+      if (this.busyPlanId) return;
+
+      const labels = {
+        approved: "mark this plan as approved",
+        revision: "require revision for this plan",
+        for_review: "send this plan back to review",
+      };
+
+      if (!confirm(`Are you sure you want to ${labels[status] || "update this plan"}?`)) {
+        return;
+      }
+
+      const remarks = status === "revision"
+        ? prompt("Revision remarks", doc.remarks || "")
+        : doc.remarks || "";
+
+      if (status === "revision" && remarks === null) {
+        return;
+      }
+
+      this.busyPlanId = doc.id;
+      try {
+        await EngineeringPlanService.updateStatus(doc.id, {
+          status,
+          remarks,
+        });
+        await this.fetchEngineeringPlans(this.planMeta.current_page);
+      } catch (error) {
+        alert(error.response?.data?.message || "Failed to update engineering plan status.");
+      } finally {
+        this.busyPlanId = null;
+      }
     },
 
-    deleteDocument(doc) {
-      alert(`Delete document ${doc.filename}`);
+    async archiveDocument(doc) {
+      if (this.busyPlanId) return;
+      if (!confirm(`Archive "${doc.filename}"?`)) return;
+
+      this.busyPlanId = doc.id;
+      try {
+        await EngineeringPlanService.remove(doc.id);
+        await this.fetchEngineeringPlans(this.planMeta.current_page);
+      } catch (error) {
+        alert(error.response?.data?.message || "Failed to archive engineering plan.");
+      } finally {
+        this.busyPlanId = null;
+      }
     },
   },
 };
@@ -1028,18 +1070,48 @@ export default {
   font-weight: 700;
 }
 
-.engineering-pagination .page-link {
-  border: 1px solid #dce3ee;
-  border-radius: 10px;
-  color: #6b7280;
-  font-weight: 800;
-  margin: 0 3px;
+.engineering-pagination {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
 }
 
-.engineering-pagination .page-item.active .page-link {
-  background: #e91e63;
-  border-color: #e91e63;
+.engineering-page-btn {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dce3ee;
+  border-radius: 999px;
+  color: #475569;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 800;
+  height: 34px;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+  width: 34px;
+}
+
+.engineering-page-btn .material-icons-round {
+  font-size: 1.05rem;
+}
+
+.engineering-page-btn:hover:not(:disabled),
+.engineering-page-number.active {
+  background: #ef476f;
+  border-color: #ef476f;
+  box-shadow: 0 8px 18px rgba(239, 71, 111, 0.22);
   color: #fff;
+}
+
+.engineering-page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.engineering-page-number.active:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .dropdown-menu {

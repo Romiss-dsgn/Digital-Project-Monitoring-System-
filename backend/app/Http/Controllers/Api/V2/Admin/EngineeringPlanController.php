@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Api\V2\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEngineeringPlanRequest;
 use App\Models\EngineeringPlan;
+use App\Services\AuditLogger;
 use App\Services\EngineeringPlanFileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EngineeringPlanController extends Controller
 {
@@ -23,6 +27,7 @@ class EngineeringPlanController extends Controller
             ->with([
                 'project:id,project_code,project_name',
                 'uploader:id,name,email',
+                'reviewer:id,name,email',
             ])
             ->where('is_archived', false)
             ->when($request->query('type'), fn ($query, $type) => $query->where('plan_type', $type))
@@ -91,6 +96,16 @@ class EngineeringPlanController extends Controller
 
             DB::commit();
 
+            AuditLogger::record(
+                $request,
+                'created',
+                'engineering_plans',
+                $plan->id,
+                $plan->file_name,
+                null,
+                $plan->fresh()->toArray()
+            );
+
             return response()->json([
                 'data' => $this->formatPlan($plan->fresh(['project', 'uploader'])),
             ], 201);
@@ -113,6 +128,80 @@ class EngineeringPlanController extends Controller
         }
     }
 
+    public function show(EngineeringPlan $engineeringPlan): JsonResponse
+    {
+        abort_if($engineeringPlan->is_archived, 404);
+
+        return response()->json([
+            'data' => $this->formatPlan($engineeringPlan->load(['project', 'uploader', 'reviewer'])),
+        ]);
+    }
+
+    public function updateStatus(Request $request, EngineeringPlan $engineeringPlan): JsonResponse
+    {
+        abort_if($engineeringPlan->is_archived, 404);
+
+        $validated = $request->validate([
+            'status' => ['required', Rule::in(EngineeringPlan::STATUSES)],
+            'remarks' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $oldValues = $engineeringPlan->toArray();
+
+        // Review actions do not replace the uploaded file; they only update the review trail.
+        $engineeringPlan->update([
+            'status' => $validated['status'],
+            'remarks' => $validated['remarks'] ?? $engineeringPlan->remarks,
+            'reviewed_by' => $request->user()?->id,
+            'reviewed_at' => now(),
+        ]);
+
+        AuditLogger::record(
+            $request,
+            'reviewed',
+            'engineering_plans',
+            $engineeringPlan->id,
+            $engineeringPlan->file_name,
+            $oldValues,
+            $engineeringPlan->fresh()->toArray()
+        );
+
+        return response()->json([
+            'message' => 'Engineering plan status updated.',
+            'data' => $this->formatPlan($engineeringPlan->fresh(['project', 'uploader', 'reviewer'])),
+        ]);
+    }
+
+    public function destroy(Request $request, EngineeringPlan $engineeringPlan): JsonResponse
+    {
+        abort_if($engineeringPlan->is_archived, 404);
+
+        $oldValues = $engineeringPlan->toArray();
+        $engineeringPlan->update(['is_archived' => true]);
+
+        AuditLogger::record(
+            $request,
+            'archived',
+            'engineering_plans',
+            $engineeringPlan->id,
+            $engineeringPlan->file_name,
+            $oldValues,
+            $engineeringPlan->fresh()->toArray()
+        );
+
+        return response()->json([
+            'message' => 'Engineering plan archived successfully.',
+        ]);
+    }
+
+    public function download(EngineeringPlan $engineeringPlan): StreamedResponse
+    {
+        abort_if($engineeringPlan->is_archived, 404);
+        abort_unless(Storage::disk('public')->exists($engineeringPlan->file_path), 404, 'Stored file was not found.');
+
+        return Storage::disk('public')->download($engineeringPlan->file_path, $engineeringPlan->file_name);
+    }
+
     private function formatPlan(EngineeringPlan $plan): array
     {
         return [
@@ -129,6 +218,8 @@ class EngineeringPlanController extends Controller
             'status' => $plan->status,
             'uploaded_by' => $plan->uploader?->name ?? $plan->uploader?->email,
             'uploaded_at' => $plan->uploaded_at?->toIso8601String(),
+            'reviewed_by' => $plan->reviewer?->name ?? $plan->reviewer?->email,
+            'reviewed_at' => $plan->reviewed_at?->toIso8601String(),
             'remarks' => $plan->remarks,
             'created_at' => $plan->created_at?->toIso8601String(),
             'updated_at' => $plan->updated_at?->toIso8601String(),

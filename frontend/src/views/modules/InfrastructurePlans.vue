@@ -6,7 +6,7 @@
           <p class="infra-eyebrow mb-2">Infrastructure Plans Management</p>
           <h4 class="mb-2">Infrastructure Plans Management</h4>
           <p class="infra-hero-subtitle mb-0">
-            Monitor and manage institutional construction projects across Region II.
+            Register project baselines, budgets, contractors, timelines, and overall status across Region II.
           </p>
         </div>
         <div class="infra-hero-actions">
@@ -67,19 +67,10 @@
               <i class="material-icons-round">filter_alt</i>
               Filters
             </button>
-            <button
-              v-if="canCreate"
-              class="btn btn-outline-secondary btn-sm infra-toolbar-btn"
-              type="button"
-              @click="openCreateModal"
-            >
-              <i class="material-icons-round">timeline</i>
-              Timeline
-            </button>
           </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive inventory-table-shell">
           <table class="table align-items-center mb-0 inventory-table">
             <thead>
               <tr>
@@ -147,18 +138,14 @@
                     <button
                       class="btn btn-sm btn-icon btn-light text-secondary"
                       type="button"
+                      :disabled="!canEdit && !canDelete"
                       data-bs-toggle="dropdown"
                       aria-expanded="false"
+                      :title="canEdit || canDelete ? 'Project actions' : 'No actions available'"
                     >
                       <i class="material-icons-round">more_vert</i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                      <li>
-                        <a class="dropdown-item" href="#" @click.prevent="viewProject(project)">
-                          <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
-                          View
-                        </a>
-                      </li>
                       <li v-if="canEdit">
                         <a class="dropdown-item" href="#" @click.prevent="editProject(project)">
                           <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
@@ -184,24 +171,37 @@
           <div class="inventory-summary">
             {{ tableRangeLabel }}
           </div>
-          <nav v-if="meta.last_page > 1" aria-label="Project pagination">
-            <ul class="pagination pagination-sm mb-0 infra-pagination">
-              <li class="page-item" :class="{ disabled: meta.current_page <= 1 }">
-                <button class="page-link" type="button" :disabled="meta.current_page <= 1" @click="goToPage(meta.current_page - 1)">Previous</button>
-              </li>
-              <li
-                v-for="page in paginationPages"
-                :key="page"
-                class="page-item"
-                :class="{ active: meta.current_page === page }"
-              >
-                <button class="page-link" type="button" :disabled="meta.current_page === page" @click="goToPage(page)">{{ page }}</button>
-              </li>
-              <li class="page-item" :class="{ disabled: meta.current_page >= meta.last_page }">
-                <button class="page-link" type="button" :disabled="meta.current_page >= meta.last_page" @click="goToPage(meta.current_page + 1)">Next</button>
-              </li>
-            </ul>
-          </nav>
+          <div v-if="meta.last_page > 1" class="infra-pagination" role="navigation" aria-label="Project pagination">
+            <button
+              class="infra-page-btn"
+              type="button"
+              :disabled="meta.current_page <= 1"
+              aria-label="Previous page"
+              @click="goToPage(meta.current_page - 1)"
+            >
+              <i class="material-icons-round">chevron_left</i>
+            </button>
+            <button
+              v-for="page in paginationPages"
+              :key="page"
+              class="infra-page-btn infra-page-number"
+              :class="{ active: meta.current_page === page }"
+              type="button"
+              :disabled="meta.current_page === page"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+            <button
+              class="infra-page-btn"
+              type="button"
+              :disabled="meta.current_page >= meta.last_page"
+              aria-label="Next page"
+              @click="goToPage(meta.current_page + 1)"
+            >
+              <i class="material-icons-round">chevron_right</i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -221,7 +221,7 @@
             </div>
 
             <div class="regional-grid">
-              <div class="regional-bars">
+              <div v-if="regionalDistribution.length" class="regional-bars">
                 <div v-for="item in regionalDistribution" :key="item.location" class="regional-row">
                   <div class="regional-row-head">
                     <span>{{ item.location }}</span>
@@ -231,6 +231,9 @@
                     <div class="progress-bar regional-progress-bar" :style="{ width: item.percent + '%' }"></div>
                   </div>
                 </div>
+              </div>
+              <div v-else class="regional-empty">
+                Create a project first in Infrastructure Plans to populate regional distribution.
               </div>
 
               <div class="regional-insights">
@@ -272,11 +275,10 @@
                 </div>
                 <span class="update-status" :class="item.status">{{ statusLabel(item.status) }}</span>
               </div>
+              <div v-if="!recentUpdates.length" class="update-empty">
+                Recent project updates will appear after creating or editing project records.
+              </div>
             </div>
-
-            <button class="audit-trail-btn" type="button" @click="showFilterModal = true">
-              View Full Audit Trail
-            </button>
           </div>
         </div>
       </div>
@@ -975,10 +977,6 @@ export default {
       }
     },
 
-    viewProject(project) {
-      alert(`View: ${project.name}`);
-    },
-
     editProject(project) {
       if (!this.canEdit) {
         return;
@@ -1125,12 +1123,15 @@ export default {
 
 .infra-hero {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1.5rem;
-  padding: 1.6rem 1.75rem;
-  border-radius: 1.25rem;
-  background: linear-gradient(135deg, #ffffff 0%, #fff7f5 100%);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  padding: 1.5rem 1.5rem 2.15rem;
+  border-radius: 8px;
+  background: #fff;
+  min-height: 176px;
+  text-align: center;
 }
 
 .infra-eyebrow {
@@ -1142,23 +1143,30 @@ export default {
 }
 
 .infra-hero-copy h4 {
-  font-size: 2rem;
+  font-size: 1.55rem;
   font-weight: 800;
   color: #1f2937;
-  line-height: 1.05;
+  line-height: 1.15;
+}
+
+.infra-hero-copy {
+  max-width: 760px;
 }
 
 .infra-hero-subtitle {
   max-width: 56rem;
   color: #6b7280;
-  font-size: 0.98rem;
+  font-size: 0.95rem;
 }
 
 .infra-hero-actions {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-top: 1.25rem;
 }
 
 .infra-ghost-btn,
@@ -1278,7 +1286,7 @@ export default {
 
 .inventory-card,
 .analytics-card {
-  border-radius: 1.25rem;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -1292,12 +1300,25 @@ export default {
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
+.inventory-header {
+  align-items: center;
+}
+
 .inventory-toolbar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.inventory-table-shell {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.inventory-table {
+  min-width: 1120px;
 }
 
 .inventory-tabs {
@@ -1514,10 +1535,6 @@ export default {
   font-size: 1rem;
 }
 
-.view-icon {
-  color: #2563eb;
-}
-
 .edit-icon {
   color: #d97706;
 }
@@ -1537,18 +1554,48 @@ export default {
   font-weight: 600;
 }
 
-.infra-pagination .page-link {
-  border-radius: 0.8rem;
-  margin: 0 0.14rem;
-  border-color: rgba(15, 23, 42, 0.08);
-  color: #374151;
-  font-weight: 700;
+.infra-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
 }
 
-.infra-pagination .page-item.active .page-link {
+.infra-page-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.infra-page-btn .material-icons-round {
+  font-size: 1.05rem;
+}
+
+.infra-page-btn:hover:not(:disabled),
+.infra-page-number.active {
   background: #ef476f;
   border-color: #ef476f;
   color: #fff;
+  box-shadow: 0 8px 18px rgba(239, 71, 111, 0.22);
+}
+
+.infra-page-btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.infra-page-number.active:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .analytics-card {
@@ -1588,6 +1635,17 @@ export default {
 .regional-bars {
   display: grid;
   gap: 1rem;
+}
+
+.regional-empty,
+.update-empty {
+  border: 1px dashed rgba(15, 23, 42, 0.16);
+  border-radius: 8px;
+  color: #7c869a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 1rem;
+  background: #fbfcfe;
 }
 
 .regional-row-head {
@@ -1737,17 +1795,6 @@ export default {
   color: #6d28d9;
 }
 
-.audit-trail-btn {
-  width: calc(100% - 2.9rem);
-  margin: 0 1.45rem 1.45rem;
-  border-radius: 0.95rem;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #fff;
-  min-height: 44px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
 .bfp-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1821,8 +1868,7 @@ export default {
 
 @media (max-width: 992px) {
   .infra-hero {
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .inventory-header,
@@ -1834,6 +1880,14 @@ export default {
 
   .inventory-toolbar {
     justify-content: flex-start;
+  }
+
+  .inventory-footer {
+    align-items: stretch;
+  }
+
+  .infra-pagination {
+    align-self: flex-end;
   }
 }
 
@@ -1848,12 +1902,23 @@ export default {
   }
 
   .infra-hero-copy h4 {
-    font-size: 1.6rem;
+    font-size: 1.35rem;
   }
 
   .inventory-tab {
     font-size: 0.72rem;
     padding: 0.45rem 0.7rem;
+  }
+
+  .infra-hero-actions,
+  .infra-ghost-btn,
+  .infra-primary-btn {
+    width: 100%;
+  }
+
+  .infra-ghost-btn,
+  .infra-primary-btn {
+    justify-content: center;
   }
 }
 </style>

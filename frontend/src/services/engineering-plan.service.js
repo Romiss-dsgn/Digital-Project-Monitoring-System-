@@ -25,6 +25,15 @@ export default {
   },
 
   /**
+   * Fetch one engineering plan record.
+   */
+  async getById(id) {
+    return axios.get(`${API_URL}/admin/engineering-plans/${id}`, {
+      headers: authHeader()
+    });
+  },
+
+  /**
    * Upload a new engineering plan.
    * Expects a FormData object containing the file + metadata fields.
    */
@@ -48,6 +57,28 @@ export default {
         ...authHeader(),
         'Content-Type': 'multipart/form-data'
       }
+    });
+  },
+
+  /**
+   * Update only the review status/remarks. The file remains unchanged.
+   */
+  async updateStatus(id, payload) {
+    return axios.patch(`${API_URL}/admin/engineering-plans/${id}/status`, payload, {
+      headers: {
+        ...authHeader(),
+        'Content-Type': 'application/json'
+      }
+    });
+  },
+
+  /**
+   * Download the stored engineering plan file.
+   */
+  async download(id) {
+    return axios.get(`${API_URL}/admin/engineering-plans/${id}/download`, {
+      headers: authHeader(),
+      responseType: 'blob'
     });
   },
 

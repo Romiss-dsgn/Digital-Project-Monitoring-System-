@@ -93,6 +93,10 @@ Route::prefix('v2')->middleware('json.api')->group(function () {
         // Engineering plans
         Route::get('/engineering-plans',        [EngineeringPlanController::class, 'index']);
         Route::post('/engineering-plans',       [EngineeringPlanController::class, 'store']);
+        Route::get('/engineering-plans/{engineeringPlan}', [EngineeringPlanController::class, 'show']);
+        Route::get('/engineering-plans/{engineeringPlan}/download', [EngineeringPlanController::class, 'download']);
+        Route::patch('/engineering-plans/{engineeringPlan}/status', [EngineeringPlanController::class, 'updateStatus']);
+        Route::delete('/engineering-plans/{engineeringPlan}', [EngineeringPlanController::class, 'destroy']);
 
         // Projects
         Route::get('/projects',                    [ProjectController::class, 'index']);
