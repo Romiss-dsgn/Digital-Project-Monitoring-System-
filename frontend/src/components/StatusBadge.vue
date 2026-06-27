@@ -38,6 +38,9 @@ export default {
         "for_review":               "For Review",
         "revision":                 "Revision Required",
         "uploaded":                 "Uploaded",
+        "draft":                    "Draft",
+        "submitted":                "Submitted",
+        "under_review":             "Under Review",
         // BFP Module statuses
         "dashboard":                "Dashboard",
         "infrastructure_plans":     "Infrastructure Plans",
@@ -129,6 +132,33 @@ export default {
 }
 .badge-planning .badge-dot {
   background: #2563eb;
+}
+
+/* ── Amber — draft (planning stage) ── */
+.badge-draft {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+.badge-draft .badge-dot {
+  background: #d97706;
+}
+
+/* ── Amber — submitted ── */
+.badge-submitted {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+.badge-submitted .badge-dot {
+  background: #d97706;
+}
+
+/* ── Amber — under review ── */
+.badge-under_review {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+.badge-under_review .badge-dot {
+  background: #d97706;
 }
 
 /* ── Red — error / delay states ── */

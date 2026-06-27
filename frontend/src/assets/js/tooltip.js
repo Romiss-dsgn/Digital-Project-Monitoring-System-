@@ -9,4 +9,12 @@ export default function setTooltip() {
   var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl);
   });
+
+  // Initialize dropdowns
+  var dropdownTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="dropdown"]')
+  );
+  dropdownTriggerList.map(function (dropdownTriggerEl) {
+    return new bootstrap.Dropdown(dropdownTriggerEl);
+  });
 }

@@ -19,6 +19,17 @@ class Invoice extends Model
         'approved_at' => 'datetime',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($invoice) {
+            if ($invoice->status === null) {
+                $invoice->status = 'Pending';
+            }
+        });
+    }
+
     public function contract()
     {
         return $this->belongsTo(Contract::class);

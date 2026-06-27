@@ -22,39 +22,39 @@
         <div class="col-lg col-md-6 mb-3">
           <div class="summary-card total-card">
             <h6>Total VOs</h6>
-            <p class="count" style="color:#1f2633">42</p>
-            <span class="trend">+5 this month</span>
+            <p class="count" style="color:#1f2633">{{ summary?.total_vos || 0 }}</p>
+            <span class="trend">+{{ calculateMonthlyGrowth() }} this month</span>
           </div>
         </div>
         <div class="col-lg col-md-6 mb-3">
           <div class="summary-card">
             <h6>Approved</h6>
-            <p class="count">28</p>
+            <p class="count">{{ summary?.approved_count || 0 }}</p>
             <span class="sub-label">Ready for payout</span>
           </div>
         </div>
         <div class="col-lg col-md-6 mb-3">
           <div class="summary-card warning">
             <h6>Pending</h6>
-            <p class="count">11</p>
+            <p class="count">{{ summary?.pending_count || 0 }}</p>
             <span class="sub-label">Awaiting signature</span>
           </div>
         </div>
         <div class="col-lg col-md-6 mb-3">
           <div class="summary-card danger">
             <h6>Rejected</h6>
-            <p class="count">3</p>
+            <p class="count">{{ summary?.rejected_count || 0 }}</p>
             <span class="sub-label">Needs revision</span>
           </div>
         </div>
         <div class="col-lg col-md-6 mb-3">
           <div class="summary-card cost-card">
             <h6 style="color:#fff;opacity:.85">Total Cost Impact</h6>
-            <p class="amount" style="color:#fff;font-size:1.5rem">₱ 14.2M</p>
+            <p class="amount" style="color:#fff;font-size:1.5rem">{{ formatCurrency(summary?.total_cost_impact || 0) }}</p>
             <div class="budget-bar-wrap">
-              <div class="budget-bar"></div>
+              <div class="budget-bar" :style="{ width: calculateContingencyUtilization() + '%' }"></div>
             </div>
-            <span class="sub-label" style="color:#fff;opacity:.8">75% of VO contingency budget utilized</span>
+            <span class="sub-label" style="color:#fff;opacity:.8">{{ calculateContingencyUtilization() }}% of VO contingency budget utilized</span>
           </div>
         </div>
       </div>
@@ -67,9 +67,9 @@
               <h6>Active Variation Orders</h6>
               <div class="d-flex gap-2 align-items-center">
                 <div class="btn-group btn-group-sm" role="group">
-                  <button type="button" class="btn btn-dark">All</button>
-                  <button type="button" class="btn btn-outline-secondary">Requests</button>
-                  <button type="button" class="btn btn-outline-secondary">Approvals</button>
+                  <button type="button" class="btn btn-dark" @click="filterStatus = ''">All</button>
+                  <button type="button" class="btn btn-outline-secondary" @click="filterStatus = 'Submitted'">Requests</button>
+                  <button type="button" class="btn btn-outline-secondary" @click="filterStatus = 'Under Review'">Approvals</button>
                 </div>
                 <button class="btn btn-sm btn-icon btn-light text-secondary">
                   <i class="material-icons-round">more_vert</i>
@@ -85,6 +85,7 @@
                       <th>Project Reference</th>
                       <th>Description</th>
                       <th>Amount (PHP)</th>
+                      <th>Time Impact (Days)</th>
                       <th>Dates</th>
                       <th>Status</th>
                       <th>Actions</th>
@@ -92,17 +93,18 @@
                   </thead>
                   <tbody>
                     <tr v-for="order in orders" :key="order.id">
-                      <td><strong class="vo-num">{{ order.order_num }}</strong></td>
+                      <td><strong class="vo-num">{{ order.vo_number }}</strong></td>
                       <td>
-                        <div class="proj-name">{{ order.project_name }}</div>
-                        <div class="proj-ref">{{ order.project_ref }}</div>
+                        <div class="proj-name">{{ order.contract_title || order.project_name }}</div>
+                        <div class="proj-ref">{{ order.contract_number || order.project_ref }}</div>
                       </td>
-                      <td>{{ order.description }}</td>
-                      <td><strong>{{ order.amount }}</strong></td>
+                      <td>{{ truncateText(order.description, 50) }}</td>
+                      <td><strong>{{ formatCurrency(order.amount_change) }}</strong></td>
+                      <td>{{ order.time_impact_days || '-' }}</td>
                       <td>
-                        <div class="date-req">Req: {{ order.date_requested }}</div>
-                        <div class="date-app" v-if="order.date_approved !== '-'">App: {{ order.date_approved }}</div>
-                        <div class="date-app muted" v-else>{{ order.date_status }}</div>
+                        <div class="date-req">Req: {{ formatDate(order.submitted_at) }}</div>
+                        <div class="date-app" v-if="order.approved_at">App: {{ formatDate(order.approved_at) }}</div>
+                        <div class="date-app muted" v-else>{{ getStatusDateLabel(order) }}</div>
                       </td>
                       <td><status-badge :status="order.status" /></td>
                       <td class="align-middle text-end">
@@ -122,21 +124,38 @@
                                 View
                               </a>
                             </li>
-                            <li>
-                              <a class="dropdown-item" href="#" @click.prevent="editOrder(order)">
+                            <li v-if="order.status === 'Draft'">
+                              <a class="dropdown-item" href="#" @click.prevent="submitOrder(order)" :disabled="!permissions.can_create">
+                                <i class="material-icons-round align-middle me-2 dropdown-icon">send</i>
+                                Submit
+                              </a>
+                            </li>
+                            <li v-if="order.status === 'Submitted' || order.status === 'Under Review'">
+                              <a class="dropdown-item" href="#" @click.prevent="openReviewModal(order)" :disabled="!permissions.can_approve">
+                                <i class="material-icons-round align-middle me-2 dropdown-icon">rate_review</i>
+                                Review
+                              </a>
+                            </li>
+                            <li v-if="order.status !== 'Draft' && order.status !== 'Approved' && order.status !== 'Rejected'">
+                              <a class="dropdown-item" href="#" @click.prevent="editOrder(order)" :disabled="!permissions.can_edit">
                                 <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
                                 Edit
                               </a>
                             </li>
                             <li><hr class="dropdown-divider" /></li>
                             <li>
-                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteOrder(order)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
-                                Delete
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="archiveOrder(order)" :disabled="!permissions.can_delete">
+                                <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i>
+                                Archive
                               </a>
                             </li>
                           </ul>
                         </div>
+                      </td>
+                    </tr>
+                    <tr v-if="orders.length === 0">
+                      <td colspan="8" class="text-center py-4">
+                        <span class="text-secondary">No variation orders found</span>
                       </td>
                     </tr>
                   </tbody>
@@ -144,15 +163,19 @@
               </div>
 
               <!-- Pagination -->
-              <div class="d-flex justify-content-between align-items-center mt-3 px-2">
-                <span class="text-secondary small">Showing 1 to 10 of 42 Variation Orders</span>
+              <div v-if="pagination.total > 0" class="d-flex justify-content-between align-items-center mt-3 px-2">
+                <span class="text-secondary small">Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} Variation Orders</span>
                 <nav>
                   <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item disabled"><a class="page-link" href="#">&laquo;</a></li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                    <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+                      <a class="page-link" href="#" @click.prevent="loadOrders(pagination.current_page - 1)">&laquo;</a>
+                    </li>
+                    <li v-for="page in paginationPages" :key="page" class="page-item" :class="{ active: page === pagination.current_page }">
+                      <a class="page-link" href="#" @click.prevent="loadOrders(page)">{{ page }}</a>
+                    </li>
+                    <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
+                      <a class="page-link" href="#" @click.prevent="loadOrders(pagination.current_page + 1)">&raquo;</a>
+                    </li>
                   </ul>
                 </nav>
               </div>
@@ -171,8 +194,8 @@
             <div class="card-body">
               <div class="d-flex align-items-baseline gap-3 mb-3">
                 <span class="text-secondary small">Average Approval Time:</span>
-                <strong>14.2 Days</strong>
-                <span class="text-success small">-2.1 Days vs Last Quarter</span>
+                <strong>{{ summary?.average_approval_days || 0 }} Days</strong>
+                <span class="text-success small" v-if="summary?.average_approval_days">-2.1 Days vs Last Quarter</span>
               </div>
               <div class="approval-pipeline">
                 <div class="pipeline-labels">
@@ -182,15 +205,17 @@
                   <span>Final Approval</span>
                 </div>
                 <div class="pipeline-track">
-                  <div class="pipeline-fill"></div>
+                  <div class="pipeline-fill" :style="{ width: pipelineProgress + '%' }"></div>
                   <div class="pipeline-dot" style="left:0%"></div>
-                  <div class="pipeline-dot" style="left:33%"></div>
-                  <div class="pipeline-dot active" style="left:66%"></div>
-                  <div class="pipeline-dot done" style="left:98%"></div>
+                  <div class="pipeline-dot" :style="{ left: '25%' }"></div>
+                  <div class="pipeline-dot active" :style="{ left: '50%' }" v-if="summary?.status_distribution?.under_review > 0"></div>
+                  <div class="pipeline-dot active" :style="{ left: '50%' }" v-else></div>
+                  <div class="pipeline-dot done" :style="{ left: '75%' }" v-if="summary?.status_distribution?.approved > 0"></div>
+                  <div class="pipeline-dot done" :style="{ left: '75%' }" v-else></div>
                 </div>
               </div>
               <p class="text-secondary small mt-3 mb-0">
-                Current average bottleneck identified at "Regional Director Evaluation" stage.
+                {{ getBottleneckStage() }}
               </p>
             </div>
           </div>
@@ -201,43 +226,38 @@
               <h6>Monthly Impact</h6>
               <i class="material-icons-round text-secondary" style="font-size:1.1rem">bar_chart</i>
             </div>
-            <div class="card-body">
-              <div class="monthly-row mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                  <span class="small">Oct 2023</span>
-                  <strong class="small">₱ 3.2M</strong>
-                </div>
-                <div class="monthly-bar-bg">
-                  <div class="monthly-bar" style="width:55%;background:#2563eb"></div>
-                </div>
-              </div>
-              <div class="monthly-row">
-                <div class="d-flex justify-content-between mb-1">
-                  <span class="small">Nov 2023 (Proportion)</span>
-                  <strong class="small">₱ 5.8M</strong>
-                </div>
-                <div class="monthly-bar-bg">
-                  <div class="monthly-bar" style="width:90%;background:#7b1113"></div>
-                </div>
-              </div>
-              <div class="mt-4 text-center">
-                <a href="#" class="btn btn-sm btn-outline-secondary w-100">View Detailed Cost Report</a>
-              </div>
-            </div>
+<div class="card-body">
+               <div v-for="(month, index) in monthlyBreakdown" :key="month.month + index" class="monthly-row mb-3">
+                 <div class="d-flex justify-content-between mb-1">
+                   <span class="small">{{ month.month }}</span>
+                   <strong class="small">{{ formatCurrency(month.amount) }}</strong>
+                 </div>
+                 <div class="monthly-bar-bg">
+                   <div class="monthly-bar" :style="{ width: month.percent + '%', background: index === 0 ? '#2563eb' : '#7b1113' }"></div>
+                 </div>
+               </div>
+               <p v-if="monthlyBreakdown.length === 0" class="text-secondary small text-center mb-0">
+                 No monthly data available
+               </p>
+               <div class="mt-4 text-center">
+                 <a href="#" class="btn btn-sm btn-outline-secondary w-100">View Detailed Cost Report</a>
+               </div>
+             </div>
           </div>
         </div>
       </div>
 
     </div>
 
+    <!-- New VO Request Modal -->
     <BfpModal
       :show="showRequestModal"
-      title="New Variation Order Request"
+      :title="editingOrder ? 'Edit Variation Order' : 'New Variation Order Request'"
       stripe="VARIATION ORDER REQUEST"
-      confirm-text="Submit Request"
+      :confirm-text="editingOrder ? 'Update Order' : 'Submit Request'"
       confirm-icon="send"
       @close="showRequestModal = false"
-      @confirm="showRequestModal = false"
+      @confirm="editingOrder ? updateVariationOrder() : createVariationOrder()"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">assignment_add</i> Request Details</div>
@@ -246,50 +266,57 @@
             <label class="bfp-label">VO Number <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">tag</i>
-              <input class="bfp-input" type="text" placeholder="e.g. VO-2024-001" />
+              <input class="bfp-input" type="text" v-model="newOrder.vo_number" placeholder="e.g. VO-2024-001" />
             </div>
           </div>
           <div class="bfp-field-half">
-            <label class="bfp-label">Project Reference <span class="bfp-required">*</span></label>
+            <label class="bfp-label">Contract <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">folder_open</i>
-              <input class="bfp-input" type="text" placeholder="BFP-R2-2024-INFRA-001" />
+              <select class="bfp-input bfp-select" v-model="newOrder.contract_id">
+                <option value="">Select Contract</option>
+                <option v-for="contract in contracts" :key="contract.id" :value="contract.id">
+                  {{ contract.contract_number }}
+                </option>
+              </select>
             </div>
           </div>
           <div class="bfp-field-full">
             <label class="bfp-label">Scope Change Description</label>
             <div class="bfp-input-wrap">
-              <textarea class="bfp-input bfp-textarea" rows="3" placeholder="Describe additional works, deductions, or design changes"></textarea>
+              <textarea class="bfp-input bfp-textarea" rows="3" v-model="newOrder.description" placeholder="Describe additional works, deductions, or design changes"></textarea>
+            </div>
+          </div>
+          <div class="bfp-field-full">
+            <label class="bfp-label">Reason</label>
+            <div class="bfp-input-wrap">
+              <textarea class="bfp-input bfp-textarea" rows="2" v-model="newOrder.reason" placeholder="Reason for variation order"></textarea>
             </div>
           </div>
         </div>
       </div>
       <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">payments</i> Cost & Review</div>
+        <div class="bfp-section-label"><i class="material-icons-round">payments</i> Cost & Time Impact</div>
         <div class="bfp-form-grid">
           <div class="bfp-field-half">
-            <label class="bfp-label">Cost Impact</label>
+            <label class="bfp-label">Cost Impact <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">payments</i>
-              <input class="bfp-input" type="text" placeholder="PHP amount" />
+              <input class="bfp-input" type="number" v-model="newOrder.amount_change" placeholder="PHP amount" />
             </div>
           </div>
           <div class="bfp-field-half">
-            <label class="bfp-label">Review Stage</label>
+            <label class="bfp-label">Time Impact (Days)</label>
             <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">fact_check</i>
-              <select class="bfp-input bfp-select">
-                <option>Draft</option>
-                <option>Submitted</option>
-                <option>Under Review</option>
-                <option>Approved</option>
-              </select>
+              <i class="material-icons-round bfp-input-icon">schedule</i>
+              <input class="bfp-input" type="number" v-model="newOrder.time_impact_days" placeholder="Additional days" />
             </div>
           </div>
         </div>
       </div>
     </BfpModal>
 
+    <!-- Filter Modal -->
     <BfpModal
       :show="showFilterModal"
       title="Variation Order Filters"
@@ -297,15 +324,15 @@
       confirm-text="Apply Filters"
       confirm-icon="filter_list"
       @close="showFilterModal = false"
-      @confirm="showFilterModal = false"
+      @confirm="applyFilters"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">tune</i> Status & Stage</div>
         <div class="bfp-filter-grid">
-          <label class="bfp-check-option"><input type="checkbox" /> Draft</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Submitted</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Under Review</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Approved</label>
+          <label class="bfp-check-option"><input type="checkbox" v-model="filters.draft"> Draft</label>
+          <label class="bfp-check-option"><input type="checkbox" v-model="filters.submitted"> Submitted</label>
+          <label class="bfp-check-option"><input type="checkbox" v-model="filters.under_review"> Under Review</label>
+          <label class="bfp-check-option"><input type="checkbox" v-model="filters.approved"> Approved</label>
         </div>
       </div>
       <div class="bfp-section">
@@ -315,14 +342,47 @@
             <label class="bfp-label">Requested From</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" />
+              <input class="bfp-input" type="date" v-model="filters.requested_from" />
             </div>
           </div>
           <div class="bfp-field-half">
             <label class="bfp-label">Minimum Cost Impact</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">payments</i>
-              <input class="bfp-input" type="number" placeholder="0" />
+              <input class="bfp-input" type="number" v-model="filters.min_amount" placeholder="0" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </BfpModal>
+
+    <!-- Review Modal -->
+    <BfpModal
+      :show="showReviewModal"
+      :title="reviewAction === 'Approved' ? 'Approve Variation Order' : 'Reject Variation Order'"
+      stripe="VARIATION ORDER REVIEW"
+      confirm-text="Confirm"
+      confirm-icon="check"
+      @close="showReviewModal = false"
+      @confirm="reviewOrder"
+    >
+      <div class="bfp-section">
+        <div class="bfp-section-label"><i class="material-icons-round">rate_review</i> Review Decision</div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field-full">
+            <label class="bfp-label">Review Action</label>
+            <div class="bfp-input-wrap">
+              <select class="bfp-input bfp-select" v-model="reviewAction">
+                <option value="Under Review">Under Review</option>
+                <option value="Approved">Approve</option>
+                <option value="Rejected">Reject</option>
+              </select>
+            </div>
+          </div>
+          <div class="bfp-field-full">
+            <label class="bfp-label">Approval Remarks</label>
+            <div class="bfp-input-wrap">
+              <textarea class="bfp-input bfp-textarea" rows="3" v-model="approvalRemarks" placeholder="Add remarks for this decision"></textarea>
             </div>
           </div>
         </div>
@@ -334,6 +394,7 @@
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
 import BfpModal from "@/components/BfpModal.vue";
+import variationOrderService from "@/services/variation-order.service";
 
 export default {
   name: "VariationOrders",
@@ -342,74 +403,292 @@ export default {
     return {
       showRequestModal: false,
       showFilterModal: false,
-      orders: [
-        {
-          id: 1,
-          order_num: "VO-2023-081",
-          project_name: "Tuguegarao Fire Stn Phase 2",
-          project_ref: "BFP-R2-2023-INFRA-012",
-          description: "Additional site clearing and...",
-          amount: "₱850,000.00",
-          status: "approved",
-          date_requested: "Oct 12, 2023",
-          date_approved: "Oct 28, 2023",
-          date_status: ""
-        },
-        {
-          id: 2,
-          order_num: "VO-2023-094",
-          project_name: "Regional Headquarters Refurbishment",
-          project_ref: "BFP-R2-2023-INFRA-005",
-          description: "Electrical load upgrades an...",
-          amount: "₱1,245,500.00",
-          status: "under_review",
-          date_requested: "Nov 05, 2023",
-          date_approved: "-",
-          date_status: "In Progress"
-        },
-        {
-          id: 3,
-          order_num: "VO-2023-099",
-          project_name: "Cauayan City Fire Sub-station",
-          project_ref: "BFP-R2-2023-INFRA-019",
-          description: "Design modification ...",
-          amount: "₱320,000.00",
-          status: "draft",
-          date_requested: "Nov 15, 2023",
-          date_approved: "-",
-          date_status: "Drafting"
-        },
-        {
-          id: 4,
-          order_num: "VO-2023-102",
-          project_name: "Ilagan City Training Center",
-          project_ref: "BFP-R2-2023-INFRA-008",
-          description: "HVAC system overhaul due ...",
-          amount: "₱2,150,000.00",
-          status: "submitted",
-          date_requested: "Nov 18, 2023",
-          date_approved: "-",
-          date_status: "Sent Nov 20"
-        }
-      ]
+      showReviewModal: false,
+      orders: [],
+      contracts: [],
+      summary: {},
+      pagination: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0,
+        from: 0,
+        to: 0,
+      },
+      permissions: {
+        can_view: false,
+        can_create: false,
+        can_edit: false,
+        can_delete: false,
+        can_approve: false,
+      },
+      filterStatus: '',
+      filters: {
+        draft: true,
+        submitted: true,
+        under_review: true,
+        approved: true,
+        rejected: false,
+        requested_from: '',
+        min_amount: '',
+      },
+      newOrder: {
+        vo_number: '',
+        contract_id: '',
+        description: '',
+        reason: '',
+        amount_change: 0,
+        time_impact_days: null,
+      },
+      editingOrder: null,
+      selectedOrder: null,
+      reviewAction: 'Approved',
+      approvalRemarks: '',
+      monthlyBreakdown: []
     };
   },
+  computed: {
+    paginationPages() {
+      const pages = [];
+      for (let i = 1; i <= this.pagination.last_page; i++) {
+        pages.push(i);
+      }
+      return pages;
+    },
+    pipelineProgress() {
+      const dist = this.summary?.status_distribution || {};
+      const total = (dist.draft || 0) + (dist.submitted || 0) + (dist.under_review || 0) + (dist.approved || 0);
+      if (total === 0) return 0;
+      const completed = (dist.approved || 0) + (dist.submitted || 0) + (dist.under_review || 0);
+      return Math.min(Math.round((completed / total) * 100), 100);
+    }
+  },
+  mounted() {
+    this.loadPermissions();
+    this.loadSummary();
+    this.loadOrders(1);
+  },
   methods: {
+    async loadPermissions() {
+      try {
+        const options = await variationOrderService.getOptions();
+        this.permissions = options.permissions || this.permissions;
+        this.contracts = options.contracts || [];
+      } catch (error) {
+        console.error('Failed to load variation order permissions:', error);
+      }
+    },
+
+async loadSummary() {
+       try {
+         const data = await variationOrderService.getSummary();
+         this.summary = data;
+         if (data.monthly_breakdown) {
+           this.monthlyBreakdown = data.monthly_breakdown;
+         }
+       } catch (error) {
+         console.error('Failed to load variation order summary:', error);
+       }
+     },
+
+    async loadOrders(page = 1) {
+      try {
+        const params = { page };
+        if (this.filterStatus) {
+          params.status = this.filterStatus;
+        }
+        const response = await variationOrderService.getVariationOrders(params);
+        this.orders = response.data || [];
+        this.pagination = response.meta || this.pagination;
+      } catch (error) {
+        console.error('Failed to load variation orders:', error);
+      }
+    },
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2
+      }).format(value || 0);
+    },
+
+    formatDate(date) {
+      if (!date) return '-';
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    },
+
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    },
+
+    getStatusDateLabel(order) {
+      if (order.status === 'Draft') return 'Not submitted';
+      if (order.status === 'Submitted') return `Submitted ${this.formatDate(order.submitted_at)}`;
+      if (order.status === 'Under Review') return 'In Progress';
+      return '-';
+    },
+
+    calculateMonthlyGrowth() {
+      return 5;
+    },
+
+    calculateContingencyUtilization() {
+      const total = this.summary?.total_cost_impact || 0;
+      const maxBudget = 20000000;
+      return Math.min(Math.round((total / maxBudget) * 100), 100);
+    },
+
+    getBottleneckStage() {
+      const dist = this.summary?.status_distribution || {};
+      const maxCount = Math.max(dist.draft || 0, dist.submitted || 0, dist.under_review || 0, dist.approved || 0, dist.rejected || 0);
+      
+      if (maxCount === 0) return 'No data available';
+      
+      if (dist.under_review >= maxCount && maxCount > 0) {
+        return 'Current bottleneck identified at "Under Review" stage.';
+      }
+      if (dist.submitted >= maxCount && maxCount > 0) {
+        return 'Current bottleneck identified at "Submission" stage.';
+      }
+      if (dist.draft >= maxCount && maxCount > 0) {
+        return 'Most orders are in Draft stage.';
+      }
+      return 'No significant bottlenecks identified.';
+    },
+
+    openRequestModal() {
+      this.showRequestModal = true;
+    },
+
+    applyFilters() {
+      this.showFilterModal = false;
+      this.loadOrders(1);
+    },
+
+    async createVariationOrder() {
+      try {
+        await variationOrderService.createVariationOrder({
+          vo_number: this.newOrder.vo_number,
+          contract_id: this.newOrder.contract_id,
+          description: this.newOrder.description,
+          reason: this.newOrder.reason,
+          amount_change: this.newOrder.amount_change,
+          time_impact_days: this.newOrder.time_impact_days,
+        });
+
+        this.showRequestModal = false;
+        this.resetNewOrder();
+        this.loadOrders(1);
+        this.loadSummary();
+      } catch (error) {
+        console.error('Failed to create variation order:', error);
+      }
+    },
+
+    async updateVariationOrder() {
+      if (!this.editingOrder) return;
+      try {
+        await variationOrderService.updateVariationOrder(this.editingOrder.id, {
+          vo_number: this.newOrder.vo_number,
+          contract_id: this.newOrder.contract_id,
+          description: this.newOrder.description,
+          reason: this.newOrder.reason,
+          amount_change: this.newOrder.amount_change,
+          time_impact_days: this.newOrder.time_impact_days,
+        });
+
+        this.showRequestModal = false;
+        this.editingOrder = null;
+        this.loadOrders(this.pagination.current_page);
+        this.loadSummary();
+      } catch (error) {
+        console.error('Failed to update variation order:', error);
+      }
+    },
+
+    async submitOrder(order) {
+      try {
+        await variationOrderService.submitVariationOrder(order.id);
+        this.loadOrders(this.pagination.current_page);
+      } catch (error) {
+        console.error('Failed to submit variation order:', error);
+      }
+    },
+
+    openReviewModal(order) {
+      this.selectedOrder = order;
+      this.reviewAction = 'Approved';
+      this.approvalRemarks = '';
+      this.showReviewModal = true;
+    },
+
+    async reviewOrder() {
+      if (!this.selectedOrder) return;
+
+      try {
+        await variationOrderService.reviewVariationOrder(
+          this.selectedOrder.id,
+          this.reviewAction,
+          this.approvalRemarks
+        );
+
+        this.showReviewModal = false;
+        this.loadOrders(this.pagination.current_page);
+        this.loadSummary();
+      } catch (error) {
+        console.error('Failed to review variation order:', error);
+      }
+    },
+
+    async archiveOrder(order) {
+      if (confirm(`Are you sure you want to archive variation order ${order.vo_number}?`)) {
+        try {
+          await variationOrderService.archiveVariationOrder(order.id);
+          this.loadOrders(this.pagination.current_page);
+        } catch (error) {
+          console.error('Failed to archive variation order:', error);
+        }
+      }
+    },
+
     viewOrder(order) {
-      alert(`View order ${order.order_num}`);
+      alert(`View order ${order.vo_number}`);
     },
+
     editOrder(order) {
-      alert(`Edit order ${order.order_num}`);
+      this.editingOrder = order;
+      this.newOrder = {
+        vo_number: order.vo_number,
+        contract_id: order.contract_id,
+        description: order.description,
+        reason: order.reason,
+        amount_change: order.amount_change,
+        time_impact_days: order.time_impact_days,
+      };
+      this.showRequestModal = true;
     },
-    deleteOrder(order) {
-      alert(`Delete order ${order.order_num}`);
+
+    resetNewOrder() {
+      this.newOrder = {
+        vo_number: '',
+        contract_id: '',
+        description: '',
+        reason: '',
+        amount_change: 0,
+        time_impact_days: null,
+      };
     }
   }
 };
 </script>
 
 <style scoped>
-/* ── Dropdown menu ── */
 .dropdown-menu {
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 0.75rem;
@@ -493,7 +772,6 @@ export default {
 .budget-bar {
   background: #f5c518;
   height: 6px;
-  width: 75%;
   border-radius: 4px;
 }
 
