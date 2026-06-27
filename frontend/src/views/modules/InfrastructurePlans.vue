@@ -1,15 +1,14 @@
 <template>
   <div class="admin-page infra-page">
     <div class="container-fluid py-4">
-      <div class="infra-hero card shadow-sm border-0 mb-4">
-        <div class="infra-hero-copy">
-          <p class="infra-eyebrow mb-2">Infrastructure Plans Management</p>
-          <h4 class="mb-2">Infrastructure Plans Management</h4>
-          <p class="infra-hero-subtitle mb-0">
+      <div class="row mb-4 align-items-center infra-page-header">
+        <div class="col">
+          <h4 class="mb-1">Infrastructure Plans Management</h4>
+          <p class="infra-page-subtitle mb-0">
             Register project baselines, budgets, contractors, timelines, and overall status across Region II.
           </p>
         </div>
-        <div class="infra-hero-actions">
+        <div class="col-auto infra-header-actions">
           <button class="btn btn-outline-secondary btn-sm infra-ghost-btn" type="button" @click="showFilterModal = true">
             <i class="material-icons-round">tune</i>
             Apply Filters
@@ -1121,52 +1120,29 @@ export default {
     linear-gradient(180deg, #f7f8fc 0%, #f5f6fa 100%);
 }
 
-.infra-hero {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
-  padding: 1.5rem 1.5rem 2.15rem;
-  border-radius: 8px;
-  background: #fff;
-  min-height: 176px;
-  text-align: center;
+.infra-page-header {
+  min-height: 52px;
 }
 
-.infra-eyebrow {
-  font-size: 0.72rem;
+.infra-page-header h4 {
+  font-size: 1.5rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #ef476f;
+  color: #111827;
+  line-height: 1.2;
 }
 
-.infra-hero-copy h4 {
-  font-size: 1.55rem;
-  font-weight: 800;
-  color: #1f2937;
-  line-height: 1.15;
-}
-
-.infra-hero-copy {
-  max-width: 760px;
-}
-
-.infra-hero-subtitle {
-  max-width: 56rem;
+.infra-page-subtitle {
   color: #6b7280;
   font-size: 0.95rem;
 }
 
-.infra-hero-actions {
+.infra-header-actions {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   flex: 0 0 auto;
-  margin-top: 1.25rem;
 }
 
 .infra-ghost-btn,
@@ -1867,8 +1843,12 @@ export default {
 }
 
 @media (max-width: 992px) {
-  .infra-hero {
-    align-items: center;
+  .infra-page-header {
+    row-gap: 1rem;
+  }
+
+  .infra-header-actions {
+    justify-content: flex-start;
   }
 
   .inventory-header,
@@ -1901,7 +1881,7 @@ export default {
     grid-column: span 1;
   }
 
-  .infra-hero-copy h4 {
+  .infra-page-header h4 {
     font-size: 1.35rem;
   }
 
@@ -1910,7 +1890,7 @@ export default {
     padding: 0.45rem 0.7rem;
   }
 
-  .infra-hero-actions,
+  .infra-header-actions,
   .infra-ghost-btn,
   .infra-primary-btn {
     width: 100%;
