@@ -11,7 +11,7 @@
           <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" @click="showAdvancedFilterModal = true">
             <i class="bi bi-sliders"></i> Advanced Filters
           </button>
-          <button class="btn btn-danger btn-sm d-flex align-items-center gap-1" @click="openExportModal('All Formats')">
+          <button class="btn btn-danger btn-sm d-flex align-items-center gap-1" @click="openExportModal">
             <i class="bi bi-download"></i> Export Logs
           </button>
         </div>
@@ -23,7 +23,12 @@
           <div class="card shadow-sm border-0 stat-card stat-blue">
             <div class="card-body">
               <div class="stat-card-label">Total Events (24h)</div>
-              <div class="stat-card-value">1,248 <span class="stat-card-badge text-success">+12%</span></div>
+              <div class="stat-card-value">
+                {{ statsLoading ? '...' : stats.total_events_24h.toLocaleString() }}
+                <span class="stat-card-badge" :class="stats.percent_change >= 0 ? 'text-success' : 'text-danger'">
+                  {{ stats.percent_change >= 0 ? '+' : '' }}{{ stats.percent_change }}%
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -31,7 +36,10 @@
           <div class="card shadow-sm border-0 stat-card stat-red">
             <div class="card-body">
               <div class="stat-card-label">Security Alerts</div>
-              <div class="stat-card-value">3 <span class="stat-card-sub text-danger">Critical</span></div>
+              <div class="stat-card-value">
+                {{ statsLoading ? '...' : stats.security_alerts }}
+                <span class="stat-card-sub text-danger">Critical</span>
+              </div>
             </div>
           </div>
         </div>
@@ -39,7 +47,10 @@
           <div class="card shadow-sm border-0 stat-card stat-olive">
             <div class="card-body">
               <div class="stat-card-label">Modules Active</div>
-              <div class="stat-card-value">14 <span class="stat-card-sub text-secondary">System-wide</span></div>
+              <div class="stat-card-value">
+                {{ statsLoading ? '...' : stats.modules_active }}
+                <span class="stat-card-sub text-secondary">System-wide</span>
+              </div>
             </div>
           </div>
         </div>
@@ -47,7 +58,10 @@
           <div class="card shadow-sm border-0 stat-card stat-dark-red">
             <div class="card-body">
               <div class="stat-card-label">Active Admin Users</div>
-              <div class="stat-card-value">24 <span class="stat-card-sub text-secondary">Online Now</span></div>
+              <div class="stat-card-value">
+                {{ statsLoading ? '...' : stats.active_admin_users }}
+                <span class="stat-card-sub text-secondary">Online Now</span>
+              </div>
             </div>
           </div>
         </div>
@@ -62,10 +76,50 @@
                 <i class="bi bi-bar-chart-steps text-primary"></i>
                 ACTIVITY LOG LEDGER
               </h6>
-              <span class="text-secondary small">Showing 1-15 of 12,482 entries</span>
+              <span class="text-secondary small" v-if="!logsLoading">
+                Showing {{ pagination.from }}-{{ pagination.to }} of {{ pagination.total.toLocaleString() }} entries
+              </span>
+              <span class="text-secondary small" v-else>Loading...</span>
             </div>
             <div class="card-body pt-2">
-              <div class="table-responsive">
+
+              <!-- Search Bar -->
+              <div class="d-flex gap-2 mb-3">
+                <div class="input-group input-group-sm" style="max-width: 320px;">
+                  <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-secondary"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control border-start-0"
+                    placeholder="Search user, module, action..."
+                    v-model="filters.search"
+                    @input="debouncedFetch"
+                  />
+                </div>
+                <button
+                  v-if="hasActiveFilters"
+                  class="btn btn-sm btn-outline-secondary"
+                  @click="clearFilters"
+                >
+                  <i class="bi bi-x-circle"></i> Clear Filters
+                </button>
+              </div>
+
+              <!-- Loading State -->
+              <div v-if="logsLoading" class="text-center py-5">
+                <div class="spinner-border text-danger" role="status"></div>
+                <div class="text-secondary small mt-2">Fetching audit logs...</div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else-if="logs.length === 0" class="text-center py-5">
+                <i class="bi bi-journal-x text-secondary" style="font-size: 2rem;"></i>
+                <div class="text-secondary mt-2">No audit logs found.</div>
+              </div>
+
+              <!-- Table -->
+              <div v-else class="table-responsive">
                 <table class="table align-items-center mb-0">
                   <thead>
                     <tr>
@@ -82,29 +136,33 @@
                   <tbody>
                     <tr v-for="log in logs" :key="log.id">
                       <td>
-                        <div class="fw-semibold small">{{ log.date }}</div>
-                        <div class="text-secondary" style="font-size:0.75rem;">{{ log.time }}</div>
+                        <div class="fw-semibold small">{{ formatDate(log.performed_at) }}</div>
+                        <div class="text-secondary" style="font-size:0.75rem;">{{ formatTime(log.performed_at) }}</div>
                       </td>
                       <td>
                         <div class="d-flex align-items-center gap-2">
-                          <div class="user-avatar" :style="{ background: log.avatarColor }">{{ log.initials }}</div>
-                          <span class="small">{{ log.user }}</span>
+                          <div class="user-avatar" :style="{ background: avatarColor(log.user_name) }">
+                            {{ initials(log.user_name) }}
+                          </div>
+                          <span class="small">{{ log.user_name || 'System' }}</span>
                         </div>
                       </td>
                       <td>
-                        <span class="role-badge" :class="'role-' + log.role.toLowerCase()">{{ log.role }}</span>
+                        <span class="role-badge" :class="roleBadgeClass(log.role_name)">
+                          {{ log.role_name || 'N/A' }}
+                        </span>
                       </td>
-                      <td><span class="small">{{ log.module }}</span></td>
+                      <td><span class="small text-capitalize">{{ log.module }}</span></td>
                       <td>
                         <span class="action-badge" :class="'action-' + log.action.toLowerCase()">
                           <i class="bi" :class="actionIcon(log.action)"></i>
-                          {{ log.action }}
+                          {{ log.action.toUpperCase() }}
                         </span>
                       </td>
-                      <td><span class="fw-semibold small text-dark">{{ log.record }}</span></td>
-                      <td><small class="text-secondary fst-italic">{{ log.remarks }}</small></td>
+                      <td><span class="fw-semibold small text-dark">{{ log.record_code || '-' }}</span></td>
+                      <td><small class="text-secondary fst-italic">{{ log.remarks || '-' }}</small></td>
                       <td>
-                        <button class="btn btn-sm btn-outline-secondary p-1 lh-1">
+                        <button class="btn btn-sm btn-outline-secondary p-1 lh-1" @click="showDetail(log)">
                           <i class="bi bi-info-circle"></i>
                         </button>
                       </td>
@@ -112,24 +170,46 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Pagination -->
+              <div class="d-flex justify-content-between align-items-center mt-3" v-if="pagination.last_page > 1">
+                <div class="text-secondary small">
+                  Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                </div>
+                <div class="d-flex gap-1">
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    :disabled="pagination.current_page === 1"
+                    @click="changePage(pagination.current_page - 1)"
+                  >
+                    <i class="bi bi-chevron-left"></i>
+                  </button>
+                  <button
+                    v-for="page in visiblePages"
+                    :key="page"
+                    class="btn btn-sm"
+                    :class="page === pagination.current_page ? 'btn-danger' : 'btn-outline-secondary'"
+                    @click="changePage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    :disabled="pagination.current_page === pagination.last_page"
+                    @click="changePage(pagination.current_page + 1)"
+                  >
+                    <i class="bi bi-chevron-right"></i>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Export Options -->
-      <div class="row mt-4">
-        <div class="col-12">
-          <button class="btn btn-secondary btn-sm me-2" @click="openExportModal('Excel')">
-            <i class="bi bi-file-earmark-excel me-1"></i> Export to Excel
-          </button>
-          <button class="btn btn-secondary btn-sm" @click="openExportModal('PDF')">
-            <i class="bi bi-file-earmark-pdf me-1"></i> Export to PDF
-          </button>
-        </div>
-      </div>
     </div>
 
+    <!-- Advanced Filter Modal -->
     <BfpModal
       :show="showAdvancedFilterModal"
       title="Audit Log Advanced Filters"
@@ -138,7 +218,7 @@
       confirm-icon="filter_list"
       width="680px"
       @close="showAdvancedFilterModal = false"
-      @confirm="showAdvancedFilterModal = false"
+      @confirm="applyAdvancedFilters"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">admin_panel_settings</i> Users & Modules</div>
@@ -147,12 +227,9 @@
             <label class="bfp-label">Role</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">badge</i>
-              <select class="bfp-input bfp-select">
-                <option>All Roles</option>
-                <option>Administrator</option>
-                <option>Editor</option>
-                <option>Superuser</option>
-                <option>Viewer</option>
+              <select class="bfp-input bfp-select" v-model="advFilters.role">
+                <option value="">All Roles</option>
+                <option v-for="r in roleOptions" :key="r.id" :value="r.name">{{ r.name }}</option>
               </select>
             </div>
           </div>
@@ -160,12 +237,9 @@
             <label class="bfp-label">Module</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">apps</i>
-              <select class="bfp-input bfp-select">
-                <option>All Modules</option>
-                <option>Contract Management</option>
-                <option>Reports</option>
-                <option>Engineering Plans</option>
-                <option>Payments</option>
+              <select class="bfp-input bfp-select" v-model="advFilters.module">
+                <option value="">All Modules</option>
+                <option v-for="m in moduleOptions" :key="m" :value="m">{{ m }}</option>
               </select>
             </div>
           </div>
@@ -174,30 +248,30 @@
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">manage_search</i> Actions & Date Range</div>
         <div class="bfp-filter-grid">
-          <label class="bfp-check-option"><input type="checkbox" /> Created</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Updated</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Deleted</label>
-          <label class="bfp-check-option"><input type="checkbox" /> Accessed</label>
+          <label class="bfp-check-option" v-for="action in actionOptions" :key="action">
+            <input type="checkbox" :value="action" v-model="advFilters.actions" /> {{ action }}
+          </label>
         </div>
         <div class="bfp-form-grid mt-3">
           <div class="bfp-field-half">
             <label class="bfp-label">Date From</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" />
+              <input class="bfp-input" type="date" v-model="advFilters.date_from" />
             </div>
           </div>
           <div class="bfp-field-half">
             <label class="bfp-label">Date To</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">event_available</i>
-              <input class="bfp-input" type="date" />
+              <input class="bfp-input" type="date" v-model="advFilters.date_to" />
             </div>
           </div>
         </div>
       </div>
     </BfpModal>
 
+    <!-- Export Modal -->
     <BfpModal
       :show="showExportModal"
       title="Export Audit Logs"
@@ -205,20 +279,19 @@
       confirm-text="Export Logs"
       confirm-icon="download"
       @close="showExportModal = false"
-      @confirm="showExportModal = false"
+      @confirm="doExport"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Package</div>
         <div class="bfp-form-grid">
           <div class="bfp-field-half">
-            <label class="bfp-label">Format</label>
+            <label class="bfp-label">Format <span class="text-danger">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">file_download</i>
-              <select class="bfp-input bfp-select" v-model="exportFormat">
-                <option>All Formats</option>
-                <option>Excel</option>
-                <option>PDF</option>
-                <option>CSV</option>
+              <select class="bfp-input bfp-select" v-model="exportOptions.format">
+                <option value="csv">CSV</option>
+                <option value="excel">Excel</option>
+                <option value="pdf">PDF</option>
               </select>
             </div>
           </div>
@@ -226,116 +299,437 @@
             <label class="bfp-label">Retention Label</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">label</i>
-              <select class="bfp-input bfp-select">
-                <option>Official Copy</option>
-                <option>Internal Review</option>
-                <option>Security Incident</option>
+              <select class="bfp-input bfp-select" v-model="exportOptions.retention_label">
+                <option value="Official Copy">Official Copy</option>
+                <option value="Internal Review">Internal Review</option>
+                <option value="Security Incident">Security Incident</option>
               </select>
             </div>
           </div>
-          <label class="bfp-check-option bfp-field-full"><input type="checkbox" checked /> Include user, role, module, and remarks columns</label>
+        </div>
+      </div>
+      <div class="bfp-section">
+        <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Date Range (Optional)</div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field-half">
+            <label class="bfp-label">Date From</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">event</i>
+              <input class="bfp-input" type="date" v-model="exportOptions.date_from" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Date To</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">event_available</i>
+              <input class="bfp-input" type="date" v-model="exportOptions.date_to" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-danger small mt-2" v-if="exportError">{{ exportError }}</div>
+    </BfpModal>
+
+    <!-- Detail Modal -->
+    <BfpModal
+      :show="showDetailModal"
+      title="Audit Log Detail"
+      stripe="ACTIVITY RECORD DETAIL"
+      confirm-text="Close"
+      confirm-icon="close"
+      @close="showDetailModal = false"
+      @confirm="showDetailModal = false"
+    >
+      <div class="bfp-section" v-if="selectedLog">
+        <div class="bfp-section-label"><i class="material-icons-round">info</i> Log Information</div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field-half">
+            <label class="bfp-label">Date/Time</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">schedule</i>
+              <input class="bfp-input" readonly :value="formatDate(selectedLog.performed_at) + ' ' + formatTime(selectedLog.performed_at)" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">User</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">person</i>
+              <input class="bfp-input" readonly :value="selectedLog.user_name || 'System'" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Role</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">badge</i>
+              <input class="bfp-input" readonly :value="selectedLog.role_name || 'N/A'" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Module</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">apps</i>
+              <input class="bfp-input" readonly :value="selectedLog.module" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Action</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">bolt</i>
+              <input class="bfp-input" readonly :value="selectedLog.action.toUpperCase()" />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Record Affected</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">folder</i>
+              <input class="bfp-input" readonly :value="selectedLog.record_code || '-'" />
+            </div>
+          </div>
+          <div class="bfp-field-full">
+            <label class="bfp-label">Remarks</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">notes</i>
+              <input class="bfp-input" readonly :value="selectedLog.remarks || '-'" />
+            </div>
+          </div>
+          <div class="bfp-field-full">
+            <label class="bfp-label">IP Address</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">router</i>
+              <input class="bfp-input" readonly :value="selectedLog.ip_address || '-'" />
+            </div>
+          </div>
+        </div>
+        <div v-if="selectedLog.new_values" class="mt-3">
+          <div class="bfp-section-label"><i class="material-icons-round">difference</i> Changes</div>
+          <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0; font-size:0.8rem;">
+            <div v-if="selectedLog.old_values" class="mb-2">
+              <strong class="text-danger">Before:</strong>
+              <pre class="mb-0 mt-1" style="font-size:0.75rem;">{{ JSON.stringify(selectedLog.old_values, null, 2) }}</pre>
+            </div>
+            <div>
+              <strong class="text-success">After:</strong>
+              <pre class="mb-0 mt-1" style="font-size:0.75rem;">{{ JSON.stringify(selectedLog.new_values, null, 2) }}</pre>
+            </div>
+          </div>
         </div>
       </div>
     </BfpModal>
+
   </div>
 </template>
 
 <script>
 import BfpModal from "@/components/BfpModal.vue";
+import AuditService from "@/services/audit.service";
+
+const AVATAR_COLORS = [
+  "#3b4fc4","#7c5cbf","#c0392b","#e67e22",
+  "#27ae60","#0288d1","#d81b60","#00838f",
+];
 
 export default {
   name: "AuditTrail",
   components: { BfpModal },
   data() {
     return {
+      // State
+      logs: [],
+      logsLoading: false,
+      statsLoading: false,
+      stats: {
+        total_events_24h: 0,
+        percent_change: 0,
+        security_alerts: 0,
+        modules_active: 0,
+        active_admin_users: 0,
+      },
+      pagination: {
+        current_page: 1,
+        last_page: 1,
+        from: 0,
+        to: 0,
+        total: 0,
+      },
+
+      // Filters
+      filters: {
+        search: "",
+        role: "",
+        module: "",
+        actions: [],
+        date_from: "",
+        date_to: "",
+        per_page: 15,
+      },
+
+      // Advanced filter modal temp state
+      advFilters: {
+        role: "",
+        module: "",
+        actions: [],
+        date_from: "",
+        date_to: "",
+      },
+
+      // Options for dropdowns
+      roleOptions: [],
+      moduleOptions: [],
+      actionOptions: ["created", "updated", "deleted", "accessed", "uploaded", "login", "approval"],
+
+      // Modals
       showAdvancedFilterModal: false,
       showExportModal: false,
-      exportFormat: "All Formats",
-      logs: [
-        {
-          id: 1,
-          date: "Oct 24, 2023",
-          time: "14:32:11 PM",
-          user: "Supt. Juan Dela Cruz",
-          initials: "JD",
-          avatarColor: "#3b4fc4",
-          role: "ADMINISTRATOR",
-          module: "Contract Management",
-          action: "CREATED",
-          record: "CNTR-2023-0882",
-          remarks: "New infrastructure plan for Tuguegarao Station.",
-        },
-        {
-          id: 2,
-          date: "Oct 24, 2023",
-          time: "13:15:04 PM",
-          user: "Maria Ressa",
-          initials: "MR",
-          avatarColor: "#7c5cbf",
-          role: "EDITOR",
-          module: "Reports",
-          action: "UPDATED",
-          record: "REP-ANNUAL-2023",
-          remarks: "Modified financial summary in annual accomplishment.",
-        },
-        {
-          id: 3,
-          date: "Oct 24, 2023",
-          time: "11:02:45 AM",
-          user: "SysAdmin",
-          initials: "SA",
-          avatarColor: "#c0392b",
-          role: "SUPERUSER",
-          module: "Settings",
-          action: "DELETED",
-          record: "USR-9921",
-          remarks: "Permanent deletion of inactive staff account.",
-        },
-        {
-          id: 4,
-          date: "Oct 24, 2023",
-          time: "09:44:52 AM",
-          user: "Ricardo Lindo",
-          initials: "RL",
-          avatarColor: "#e67e22",
-          role: "VIEWER",
-          module: "Engineering Plans",
-          action: "ACCESSED",
-          record: "PLN-TUG-S3",
-          remarks: "Viewed blueprint for structural reinforcement.",
-        },
-        {
-          id: 5,
-          date: "Oct 24, 2023",
-          time: "08:30:10 AM",
-          user: "Anna Mendoza",
-          initials: "AM",
-          avatarColor: "#27ae60",
-          role: "EDITOR",
-          module: "Payments",
-          action: "UPLOADED",
-          record: "TRANS-0041",
-          remarks: "Attached receipt for material procurement.",
-        },
-      ],
+      showDetailModal: false,
+      selectedLog: null,
+
+      // Export
+      exportOptions: {
+        format: "csv",
+        retention_label: "Official Copy",
+        date_from: "",
+        date_to: "",
+        include_ip: false,
+        include_user_agent: false,
+      },
+      exportError: "",
+      exportLoading: false,
+
+      // Debounce timer
+      searchTimer: null,
     };
   },
+
+  computed: {
+    hasActiveFilters() {
+      return (
+        this.filters.search ||
+        this.filters.role ||
+        this.filters.module ||
+        this.filters.actions.length > 0 ||
+        this.filters.date_from ||
+        this.filters.date_to
+      );
+    },
+    visiblePages() {
+      const current = this.pagination.current_page;
+      const last = this.pagination.last_page;
+      const pages = [];
+      const delta = 2;
+      for (let i = Math.max(1, current - delta); i <= Math.min(last, current + delta); i++) {
+        pages.push(i);
+      }
+      return pages;
+    },
+  },
+
+  mounted() {
+    this.fetchLogs();
+    this.fetchStats();
+    this.fetchModules();
+    this.fetchRoles();
+  },
+
   methods: {
-    openExportModal(format) {
-      this.exportFormat = format;
+    async fetchLogs(page = 1) {
+      this.logsLoading = true;
+      try {
+        const params = {
+          page,
+          per_page: this.filters.per_page,
+        };
+        if (this.filters.search)   params.search   = this.filters.search;
+        if (this.filters.role)     params.role     = this.filters.role;
+        if (this.filters.module)   params.module   = this.filters.module;
+        if (this.filters.date_from) params.date_from = this.filters.date_from;
+        if (this.filters.date_to)   params.date_to   = this.filters.date_to;
+        if (this.filters.actions.length > 0) {
+          params.action = this.filters.actions.join(",");
+        }
+
+        const res = await AuditService.getLogs(params);
+        const data = res.data;
+        this.logs = data.logs.data;
+        this.pagination = {
+          current_page: data.logs.current_page,
+          last_page:    data.logs.last_page,
+          from:         data.logs.from || 0,
+          to:           data.logs.to || 0,
+          total:        data.logs.total,
+        };
+        if (data.stats) this.stats = data.stats;
+      } catch (e) {
+        console.error("Failed to fetch audit logs", e);
+      } finally {
+        this.logsLoading = false;
+      }
+    },
+
+    async fetchStats() {
+      this.statsLoading = true;
+      try {
+        const res = await AuditService.getStats();
+        this.stats = res.data;
+      } catch (e) {
+        console.error("Failed to fetch stats", e);
+      } finally {
+        this.statsLoading = false;
+      }
+    },
+
+    async fetchModules() {
+      try {
+        const res = await AuditService.getModules();
+        this.moduleOptions = res.data;
+      } catch (e) {
+        console.error("Failed to fetch modules", e);
+      }
+    },
+
+    async fetchRoles() {
+      try {
+        const res = await AuditService.getRoles();
+        this.roleOptions = res.data;
+      } catch (e) {
+        console.error("Failed to fetch roles", e);
+      }
+    },
+
+    debouncedFetch() {
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => this.fetchLogs(1), 400);
+    },
+
+    changePage(page) {
+      if (page < 1 || page > this.pagination.last_page) return;
+      this.fetchLogs(page);
+    },
+
+    applyAdvancedFilters() {
+      this.filters.role     = this.advFilters.role;
+      this.filters.module   = this.advFilters.module;
+      this.filters.actions  = [...this.advFilters.actions];
+      this.filters.date_from = this.advFilters.date_from;
+      this.filters.date_to   = this.advFilters.date_to;
+      this.showAdvancedFilterModal = false;
+      this.fetchLogs(1);
+    },
+
+    clearFilters() {
+      this.filters = {
+        search: "",
+        role: "",
+        module: "",
+        actions: [],
+        date_from: "",
+        date_to: "",
+        per_page: 15,
+      };
+      this.advFilters = {
+        role: "",
+        module: "",
+        actions: [],
+        date_from: "",
+        date_to: "",
+      };
+      this.fetchLogs(1);
+    },
+
+    openExportModal() {
+      this.exportError = "";
       this.showExportModal = true;
+    },
+
+    async doExport() {
+      this.exportError = "";
+      if (!this.exportOptions.format) {
+        this.exportError = "Please select a format.";
+        return;
+      }
+      this.exportLoading = true;
+      try {
+        const payload = {
+          format:          this.exportOptions.format,
+          retention_label: this.exportOptions.retention_label,
+        };
+        if (this.exportOptions.date_from) payload.date_from = this.exportOptions.date_from;
+        if (this.exportOptions.date_to)   payload.date_to   = this.exportOptions.date_to;
+        if (this.exportOptions.include_ip) payload.include_ip = true;
+        if (this.exportOptions.include_user_agent) payload.include_user_agent = true;
+        if (this.filters.module)  payload.module = this.filters.module;
+        if (this.filters.actions.length > 0) payload.action = this.filters.actions.join(",");
+
+        const res = await AuditService.exportLogs(payload);
+
+        const extMap = { csv: 'csv', excel: 'xlsx', pdf: 'pdf' };
+        const ext    = extMap[this.exportOptions.format] || this.exportOptions.format;
+        const url    = window.URL.createObjectURL(new Blob([res.data]));
+        const link   = document.createElement('a');
+        link.href    = url;
+        link.setAttribute('download', `audit_logs_${Date.now()}.${ext}`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        this.showExportModal = false;
+      } catch (e) {
+        this.exportError = "Export failed. Please try again.";
+        console.error(e);
+      } finally {
+        this.exportLoading = false;
+      }
+    },
+
+    showDetail(log) {
+      this.selectedLog = log;
+      this.showDetailModal = true;
+    },
+
+    // Helpers
+    formatDate(dt) {
+      if (!dt) return "-";
+      return new Date(dt).toLocaleDateString("en-US", {
+        month: "short", day: "2-digit", year: "numeric",
+      });
+    },
+    formatTime(dt) {
+      if (!dt) return "";
+      return new Date(dt).toLocaleTimeString("en-US", {
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+      });
+    },
+    initials(name) {
+      if (!name) return "?";
+      return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+    },
+    avatarColor(name) {
+      if (!name) return "#aaa";
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+    },
+    roleBadgeClass(role) {
+      if (!role) return "role-viewer";
+      const map = {
+        "System Administrator": "role-administrator",
+        "Administrator":        "role-administrator",
+        "Editor":               "role-editor",
+        "Superuser":            "role-superuser",
+        "Viewer":               "role-viewer",
+      };
+      return map[role] || "role-viewer";
     },
     actionIcon(action) {
       const map = {
-        CREATED: "bi-plus-circle-fill",
-        UPDATED: "bi-pencil-fill",
-        DELETED: "bi-trash-fill",
-        ACCESSED: "bi-eye-fill",
-        UPLOADED: "bi-upload",
-        LOGIN: "bi-box-arrow-in-right",
-        APPROVAL: "bi-check-circle-fill",
+        created:  "bi-plus-circle-fill",
+        updated:  "bi-pencil-fill",
+        deleted:  "bi-trash-fill",
+        accessed: "bi-eye-fill",
+        uploaded: "bi-upload",
+        login:    "bi-box-arrow-in-right",
+        approval: "bi-check-circle-fill",
       };
-      return map[action] || "bi-circle-fill";
+      return map[action?.toLowerCase()] || "bi-circle-fill";
     },
   },
 };
@@ -346,29 +740,22 @@ export default {
   background: #f7fafc;
   min-height: 100vh;
 }
-
 .card {
   border: none;
   border-radius: 1rem;
   box-shadow: 0 15px 35px rgba(15, 23, 42, 0.1);
 }
-
 .card-header {
   background: transparent;
   border-bottom: 1px solid #e0e5ee;
   padding: 1.5rem;
 }
-
 .card-header h6 {
   color: #1f2633;
   font-weight: 700;
   margin: 0;
 }
-
-.table {
-  font-size: 0.85rem;
-}
-
+.table { font-size: 0.85rem; }
 .action-badge {
   padding: 0.35rem 0.75rem;
   border-radius: 0.5rem;
@@ -381,121 +768,38 @@ export default {
   align-items: center;
   gap: 0.3rem;
 }
-
-.action-upload {
-  background: #0288d1;
-}
-
-.action-approval {
-  background: #4caf50;
-}
-
-.action-status_change {
-  background: #fb8500;
-}
-
-.action-login {
-  background: #2c5aa0;
-}
-
-.action-delete, .action-deleted {
-  background: #d32f2f;
-}
-
-.action-created {
-  background: #2e7d32;
-}
-
-.action-updated {
-  background: #1565c0;
-}
-
-.action-accessed {
-  background: #6a1b9a;
-}
-
-.action-uploaded {
-  background: #0277bd;
-}
-
-.form-control {
-  border-radius: 0.75rem;
-  border: 1px solid #dfe4ed;
-}
-
-.btn-block {
-  width: 100%;
-}
-
-/* Stat cards */
-.stat-card {
-  border-radius: 0.75rem;
-  border-top: 3px solid transparent !important;
-}
-.stat-blue { border-top-color: #3b4fc4 !important; }
-.stat-red { border-top-color: #c0392b !important; }
-.stat-olive { border-top-color: #7d8b00 !important; }
+.action-deleted  { background: #d32f2f; }
+.action-created  { background: #2e7d32; }
+.action-updated  { background: #1565c0; }
+.action-accessed { background: #6a1b9a; }
+.action-uploaded { background: #0277bd; }
+.action-login    { background: #2c5aa0; }
+.action-approval { background: #4caf50; }
+.stat-card { border-radius: 0.75rem; border-top: 3px solid transparent !important; }
+.stat-blue     { border-top-color: #3b4fc4 !important; }
+.stat-red      { border-top-color: #c0392b !important; }
+.stat-olive    { border-top-color: #7d8b00 !important; }
 .stat-dark-red { border-top-color: #8b1a1a !important; }
-
-.stat-card-label {
-  font-size: 0.75rem;
-  color: #888;
-  margin-bottom: 0.25rem;
-}
+.stat-card-label { font-size: 0.75rem; color: #888; margin-bottom: 0.25rem; }
 .stat-card-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2633;
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
+  font-size: 1.5rem; font-weight: 700; color: #1f2633;
+  display: flex; align-items: baseline; gap: 0.4rem;
 }
-.stat-card-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.stat-card-sub {
-  font-size: 0.75rem;
-  font-weight: 400;
-}
-
-/* User avatar */
+.stat-card-badge { font-size: 0.75rem; font-weight: 600; }
+.stat-card-sub   { font-size: 0.75rem; font-weight: 400; }
 .user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 50%;
+  color: white; font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-
-/* Role badges */
 .role-badge {
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  padding: 0.25rem 0.6rem; border-radius: 0.4rem;
+  font-size: 0.7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
 }
-.role-administrator {
-  background: #e3e8ff;
-  color: #3b4fc4;
-}
-.role-editor {
-  background: #ede8f9;
-  color: #7c5cbf;
-}
-.role-superuser {
-  background: #fde8e8;
-  color: #c0392b;
-}
-.role-viewer {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
+.role-administrator { background: #e3e8ff; color: #3b4fc4; }
+.role-editor        { background: #ede8f9; color: #7c5cbf; }
+.role-superuser     { background: #fde8e8; color: #c0392b; }
+.role-viewer        { background: #e8f5e9; color: #2e7d32; }
+pre { white-space: pre-wrap; word-break: break-all; }
 </style>
