@@ -1,32 +1,33 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Dashboard from "../views/Dashboard.vue";
-import Tables from "../views/Tables.vue";
-import Billing from "../views/Billing.vue";
-import RTL from "../views/Rtl.vue";
-import Notifications from "../views/Notifications.vue";
-import Profile from "../views/Profile.vue";
-import SignIn from "../views/SignIn.vue";
-import SignUp from "../views/SignUp.vue";
-import Login from "../views/examples-api/Login.vue";
-import Signup from "../views/examples-api/Signup.vue";
-import PasswordForgot from "../views/examples-api/PasswordForgot.vue";
-import PasswordReset from "../views/examples-api/PasswordReset.vue";
-import UserProfile from "../views/examples-api/profile/UserProfile.vue";
-import Users from "../views/examples-api/users/UsersList.vue";
 
-// Module imports
-import ContractManagement from "../views/modules/ContractManagement.vue";
-import CashflowManagement from "../views/modules/CashflowManagement.vue";
-import EngineeringPlans from "../views/modules/EngineeringPlans.vue";
-import VariationOrders from "../views/modules/VariationOrders.vue";
-import Accomplishments from "../views/modules/Accomplishments.vue";
-import ContractorPerformance from "../views/modules/ContractorPerformance.vue";
-import AuditTrail from "../views/modules/AuditTrail.vue";
-import NotificationsInbox from "../views/modules/NotificationsInbox.vue";
-import InfrastructurePlans from "../views/modules/InfrastructurePlans.vue";
-import Reports from "../views/modules/Reports.vue";
-import Settings from "../views/modules/Settings.vue";
-import UserManagement from "../views/modules/UserManagement.vue";
+// Lazy route imports keep module screens out of the initial bundle.
+// This makes the login/dashboard load lighter while each module is still loaded on demand.
+const Dashboard = () => import("../views/Dashboard.vue");
+const Tables = () => import("../views/Tables.vue");
+const Billing = () => import("../views/Billing.vue");
+const RTL = () => import("../views/Rtl.vue");
+const Notifications = () => import("../views/Notifications.vue");
+const Profile = () => import("../views/Profile.vue");
+const SignIn = () => import("../views/SignIn.vue");
+const SignUp = () => import("../views/SignUp.vue");
+const Login = () => import("../views/examples-api/Login.vue");
+const Signup = () => import("../views/examples-api/Signup.vue");
+const PasswordForgot = () => import("../views/examples-api/PasswordForgot.vue");
+const PasswordReset = () => import("../views/examples-api/PasswordReset.vue");
+const UserProfile = () => import("../views/examples-api/profile/UserProfile.vue");
+const Users = () => import("../views/examples-api/users/UsersList.vue");
+const ContractManagement = () => import("../views/modules/ContractManagement.vue");
+const CashflowManagement = () => import("../views/modules/CashflowManagement.vue");
+const EngineeringPlans = () => import("../views/modules/EngineeringPlans.vue");
+const VariationOrders = () => import("../views/modules/VariationOrders.vue");
+const Accomplishments = () => import("../views/modules/Accomplishments.vue");
+const ContractorPerformance = () => import("../views/modules/ContractorPerformance.vue");
+const AuditTrail = () => import("../views/modules/AuditTrail.vue");
+const NotificationsInbox = () => import("../views/modules/NotificationsInbox.vue");
+const InfrastructurePlans = () => import("../views/modules/InfrastructurePlans.vue");
+const Reports = () => import("../views/modules/Reports.vue");
+const Settings = () => import("../views/modules/Settings.vue");
+const UserManagement = () => import("../views/modules/UserManagement.vue");
 
 const routes = [
   {

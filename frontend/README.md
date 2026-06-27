@@ -90,11 +90,11 @@ frontend/src/views/modules/ContractorPerformance.vue
 | Auth/Login | Connected to backend login. Uses Passport token response. |
 | Register/Request Access | Connected to backend request-access registration flow. |
 | Profile | Connected to backend `/me` profile endpoints. |
-| Layout | ConTrackPro header/sidebar branding applied. Footer/floating settings removed from main module layout. |
+| Layout | ConTrackPro header/sidebar branding applied. Shared ConTrackPro footer is enabled for authenticated module pages. |
 | Dashboard | Designed as the system overview. Some summary values may still be static or partially connected. |
 | Infrastructure Plans | Project-based work in progress. Uses project service and backend project routes. |
 | Contract Management | Connected to DB-backed contract API. Create/update/archive, summary, filters, document workflow. |
-| Engineering Plans | Upload modal and backend upload endpoint exist. Full DB-backed list/review still pending. |
+| Engineering Plans | Connected to DB-backed engineering plans API for list, stats, pagination, project dropdown, and upload. Review/download/archive still pending. |
 | Project Accomplishments | Connected to DB-backed accomplishments API. Create/update/archive/validate, summary, documents. |
 | User Management | Frontend module is active work. Backend admin endpoints exist. |
 | Cashflows | UI exists; backend integration pending. |
@@ -204,7 +204,7 @@ Build has warnings:
 
 1. Finish User Management frontend connection.
 2. Finish Infrastructure Plans / Project Plans connection.
-3. Finish Engineering Plans list/review workflow.
+3. Finish Engineering Plans review/download/archive workflow.
 4. Implement Financial Management as Cashflows + Variation Orders.
 5. Implement Records & Reports.
 6. Add Dashboard real metrics from connected modules.

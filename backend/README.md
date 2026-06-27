@@ -45,10 +45,10 @@ backend/
 | Roles and permissions | `roles` and `role_permissions` seeders; module permission middleware. |
 | User management | Admin user CRUD/status/accept/reject endpoints. |
 | Access requests | Admin approve/reject request-access workflow. |
-| Projects / Infrastructure Plans | Project model, seeder, policy, controller, and admin routes are present. |
+| Projects / Infrastructure Plans | Project model, seeder, policy, controller, and admin routes are present. Infrastructure Plans owns project creation. |
 | Contract Management | Contracts CRUD/archive, document upload/download/status/archive, summary/options endpoints, audit logging, tests. |
 | Project Accomplishments | Accomplishment CRUD/archive/validation, document upload/download, project progress sync, summary/options endpoints, tests. |
-| Engineering Plans | Model, request validation, file service, and upload/store endpoint exist. Full listing/review API still pending. |
+| Engineering Plans | DB-backed list/stats endpoint, request validation, file service, project-linked upload/store endpoint, and seeder exist. Review/download/archive API still pending. |
 | Cashflows | Tables/models exist. Controller/API work pending. |
 | Variation Orders | Tables/models exist. Controller/API work pending. |
 | Reports | Tables/models foundation exists through source modules. Report controller/API pending. |
@@ -125,6 +125,7 @@ DELETE /api/v2/admin/users/{user}
 POST   /api/v2/admin/users/{user}/accept
 DELETE /api/v2/admin/users/{user}/reject
 GET    /api/v2/admin/roles
+GET    /api/v2/admin/engineering-plans
 POST   /api/v2/admin/engineering-plans
 GET    /api/v2/admin/projects
 POST   /api/v2/admin/projects
@@ -177,6 +178,7 @@ Current data-heavy MVP tables:
 - `contract_documents`
 - `project_accomplishments`
 - `accomplishment_documents`
+- `engineering_plans`
 - `audit_logs`
 - `users`
 - `roles`
@@ -199,6 +201,7 @@ UsersSeeder
 ContractManagementSeeder
 ProjectAccomplishmentsSeeder
 ProjectsSeeder
+EngineeringPlansSeeder
 ```
 
 Run all seeders:

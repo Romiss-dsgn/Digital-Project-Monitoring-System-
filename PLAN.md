@@ -23,8 +23,8 @@ The MVP should prove these workflows first:
 | --- | --- | --- |
 | Dashboard | Partial | UI exists. Needs real metrics from connected modules. |
 | User Management | In progress | Backend admin endpoints exist. Frontend module is active branch work. |
-| Infrastructure Plans | In progress | Project CRUD backend and service exist. Frontend connection still needs hardening. |
-| Engineering Plans | Partial | Upload/store exists. Needs DB-backed listing, review, download, archive. |
+| Infrastructure Plans | In progress | DB-backed project register foundation is active. This remains the only project creation workflow. |
+| Engineering Plans | MVP connected | DB-backed listing, summary cards, pagination, project dropdown, and upload exist. Review/download/archive are still pending. |
 | Contract Management | MVP connected | DB-backed CRUD/archive, documents, summary, permissions, audit logs, seeders, tests. |
 | Project Accomplishments | MVP connected | DB-backed CRUD/archive/validate, documents, summary, project progress sync, seeders, tests. |
 | Cashflows | Not connected | UI exists. Backend tables/models exist. |
@@ -206,10 +206,17 @@ Reason:
 
 Owner: `infrastructure-plans`, `engineering-plans`, or `project-plans` branch.
 
+Current progress:
+
+- Engineering Plans now requires an existing `project_id` before upload.
+- Engineering Plans now loads project options from the backend instead of using dot/placeholder labels.
+- Engineering Plans list, cards, and pagination now read from `engineering_plans`.
+- Infrastructure Plans remains the correct place to create project records.
+
 Backend:
 
 - Confirm Infrastructure Plans is the only place that creates/updates project records.
-- Confirm Engineering Plans requires a valid `project_id`.
+- Confirm Engineering Plans continues to require a valid `project_id`.
 - Confirm Project Accomplishments requires a valid `project_id`.
 - Keep project dropdown options reusable for Engineering Plans and Project Accomplishments.
 
@@ -219,7 +226,7 @@ Frontend:
 - Remove or avoid any add-project modal in Engineering Plans or Project Accomplishments.
 - Add clear module descriptions under page titles.
 - If no project records exist, show an empty state that tells the user to create a project in Infrastructure Plans first.
-- Make Engineering Plans project selection required for upload.
+- Keep Engineering Plans project selection required for upload.
 - Make Project Accomplishments project selection required for reports.
 
 Tests:
@@ -282,7 +289,6 @@ Owner: `engineering-plans` branch.
 
 Backend:
 
-- Add list endpoint.
 - Add show endpoint.
 - Add download endpoint.
 - Add status/review endpoint.
@@ -291,7 +297,7 @@ Backend:
 
 Frontend:
 
-- Replace static engineering document list.
+- Keep the engineering document list DB-backed.
 - Add loading/empty/error states.
 - Add download/review/archive actions.
 - Keep upload modal connected.

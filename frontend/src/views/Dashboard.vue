@@ -1,12 +1,14 @@
 <template>
   <div class="dashboard-page">
     <div class="container-fluid py-4">
-
       <!-- Page Header -->
       <div class="row mb-4 align-items-center">
         <div class="col">
           <h4 class="mb-1">Regional Dashboard</h4>
-          <p class="text-muted mb-0">Welcome back. Here is the overview for BFP Region II Contract Progress.</p>
+          <p class="text-muted mb-0">
+            Welcome back. Here is the overview for BFP Region II Contract
+            Progress.
+          </p>
         </div>
         <div class="col-auto d-flex gap-2 align-items-center">
           <button class="fiscal-year-btn" @click="showFiscalYearModal = true">
@@ -23,7 +25,11 @@
 
       <!-- Fiscal Year Modal -->
       <transition name="modal-fade">
-        <div v-if="showFiscalYearModal" class="modal-overlay" @click.self="showFiscalYearModal = false">
+        <div
+          v-if="showFiscalYearModal"
+          class="modal-overlay"
+          @click.self="showFiscalYearModal = false"
+        >
           <div class="modal-box modal-box-sm">
             <div class="modal-header-strip">
               <div class="modal-header-left">
@@ -32,10 +38,15 @@
                 </div>
                 <div>
                   <h6 class="modal-title">Select Fiscal Year</h6>
-                  <p class="modal-subtitle">Filter dashboard data by fiscal year</p>
+                  <p class="modal-subtitle">
+                    Filter dashboard data by fiscal year
+                  </p>
                 </div>
               </div>
-              <button class="modal-close-btn" @click="showFiscalYearModal = false">
+              <button
+                class="modal-close-btn"
+                @click="showFiscalYearModal = false"
+              >
                 <i class="material-icons-round">close</i>
               </button>
             </div>
@@ -44,7 +55,10 @@
                 <button
                   v-for="fy in fiscalYears"
                   :key="fy.value"
-                  :class="['fy-option', { 'fy-option-active': selectedFiscalYear === fy.value }]"
+                  :class="[
+                    'fy-option',
+                    { 'fy-option-active': selectedFiscalYear === fy.value },
+                  ]"
                   @click="selectFiscalYear(fy.value)"
                 >
                   <div class="fy-option-left">
@@ -55,8 +69,14 @@
                     </div>
                   </div>
                   <div class="fy-option-right">
-                    <span v-if="fy.tag" :class="['fy-tag', fy.tagClass]">{{ fy.tag }}</span>
-                    <i v-if="selectedFiscalYear === fy.value" class="material-icons-round fy-check">check_circle</i>
+                    <span v-if="fy.tag" :class="['fy-tag', fy.tagClass]">{{
+                      fy.tag
+                    }}</span>
+                    <i
+                      v-if="selectedFiscalYear === fy.value"
+                      class="material-icons-round fy-check"
+                      >check_circle</i
+                    >
                   </div>
                 </button>
               </div>
@@ -67,7 +87,11 @@
 
       <!-- Export Summary Modal -->
       <transition name="modal-fade">
-        <div v-if="showExportModal" class="modal-overlay" @click.self="showExportModal = false">
+        <div
+          v-if="showExportModal"
+          class="modal-overlay"
+          @click.self="showExportModal = false"
+        >
           <div class="modal-box">
             <div class="modal-header-strip">
               <div class="modal-header-left">
@@ -76,7 +100,9 @@
                 </div>
                 <div>
                   <h6 class="modal-title">Export Summary</h6>
-                  <p class="modal-subtitle">FY{{ selectedFiscalYear }} — BFP Region II</p>
+                  <p class="modal-subtitle">
+                    FY{{ selectedFiscalYear }} — BFP Region II
+                  </p>
                 </div>
               </div>
               <button class="modal-close-btn" @click="showExportModal = false">
@@ -89,7 +115,10 @@
                 <button
                   v-for="fmt in exportFormats"
                   :key="fmt.value"
-                  :class="['export-format-btn', { 'export-format-active': exportForm.format === fmt.value }]"
+                  :class="[
+                    'export-format-btn',
+                    { 'export-format-active': exportForm.format === fmt.value },
+                  ]"
                   @click="exportForm.format = fmt.value"
                 >
                   <i class="material-icons-round">{{ fmt.icon }}</i>
@@ -122,18 +151,32 @@
               <div class="export-date-row">
                 <div class="export-date-field">
                   <label class="date-label">From</label>
-                  <input type="date" v-model="exportForm.dateFrom" class="date-input" />
+                  <input
+                    type="date"
+                    v-model="exportForm.dateFrom"
+                    class="date-input"
+                  />
                 </div>
                 <div class="export-date-sep">—</div>
                 <div class="export-date-field">
                   <label class="date-label">To</label>
-                  <input type="date" v-model="exportForm.dateTo" class="date-input" />
+                  <input
+                    type="date"
+                    v-model="exportForm.dateTo"
+                    class="date-input"
+                  />
                 </div>
               </div>
             </div>
             <div class="modal-footer">
-              <button class="modal-btn-cancel" @click="showExportModal = false">Cancel</button>
-              <button class="modal-btn-export" @click="confirmExport" :disabled="exportForm.scopes.length === 0">
+              <button class="modal-btn-cancel" @click="showExportModal = false">
+                Cancel
+              </button>
+              <button
+                class="modal-btn-export"
+                @click="confirmExport"
+                :disabled="exportForm.scopes.length === 0"
+              >
                 <i class="material-icons-round">download</i>
                 Export {{ exportForm.format.toUpperCase() }}
               </button>
@@ -174,7 +217,9 @@
               <i class="material-icons-round">payments</i>
             </div>
             <div class="stat-info">
-              <div class="stat-badge text-muted-badge">Disbursement Rate: 64.2%</div>
+              <div class="stat-badge text-muted-badge">
+                Disbursement Rate: 64.2%
+              </div>
               <p class="stat-label">TOTAL PROJECT BUDGET (FY24)</p>
               <h3 class="stat-value stat-value-lg">₱142,850,000.00</h3>
             </div>
@@ -238,13 +283,17 @@
         <!-- Project Status Donut -->
         <div class="col-lg-5 mb-4">
           <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
               <h6>Project Status</h6>
               <button class="btn-icon">
                 <i class="material-icons-round">more_vert</i>
               </button>
             </div>
-            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+            <div
+              class="card-body d-flex flex-column align-items-center justify-content-center"
+            >
               <div class="donut-wrapper">
                 <canvas ref="donutChart" width="220" height="220"></canvas>
                 <div class="donut-center">
@@ -254,19 +303,19 @@
               </div>
               <div class="donut-legend">
                 <div class="legend-item">
-                  <span class="legend-dot" style="background: #4A90D9;"></span>
+                  <span class="legend-dot" style="background: #4a90d9"></span>
                   <span>Planning (12)</span>
                 </div>
                 <div class="legend-item">
-                  <span class="legend-dot" style="background: #7B6B3D;"></span>
+                  <span class="legend-dot" style="background: #7b6b3d"></span>
                   <span>Ongoing (24)</span>
                 </div>
                 <div class="legend-item">
-                  <span class="legend-dot" style="background: #3EBD7F;"></span>
+                  <span class="legend-dot" style="background: #3ebd7f"></span>
                   <span>Completed (14)</span>
                 </div>
                 <div class="legend-item">
-                  <span class="legend-dot" style="background: #E05C5C;"></span>
+                  <span class="legend-dot" style="background: #e05c5c"></span>
                   <span>Delayed (4)</span>
                 </div>
               </div>
@@ -277,14 +326,23 @@
         <!-- Budget vs Expenditure Bar Chart -->
         <div class="col-lg-7 mb-4">
           <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
               <div>
                 <h6>Budget vs Expenditure</h6>
-                <p class="card-subtitle">Comparison of allocated funds vs actual disbursements per quarter.</p>
+                <p class="card-subtitle">
+                  Comparison of allocated funds vs actual disbursements per
+                  quarter.
+                </p>
               </div>
               <div class="chart-legend">
-                <span class="legend-pill" style="background:#4A90D9;">Budget</span>
-                <span class="legend-pill" style="background:#7B6B3D;">Expenditure</span>
+                <span class="legend-pill" style="background: #4a90d9"
+                  >Budget</span
+                >
+                <span class="legend-pill" style="background: #7b6b3d"
+                  >Expenditure</span
+                >
               </div>
             </div>
             <div class="card-body">
@@ -345,7 +403,9 @@
                 <div class="deadline-content">
                   <div class="d-flex justify-content-between align-items-start">
                     <p class="deadline-title">{{ deadline.title }}</p>
-                    <span v-if="deadline.urgent" class="badge-urgent">URGENT</span>
+                    <span v-if="deadline.urgent" class="badge-urgent"
+                      >URGENT</span
+                    >
                   </div>
                   <p class="deadline-desc">{{ deadline.description }}</p>
                 </div>
@@ -378,9 +438,11 @@
 
       <!-- Footer -->
       <div class="dashboard-footer">
-        <span>© 2024 Bureau of Fire Protection - Region II. ConTrackPro v4.2.0. All Rights Reserved.</span>
+        <span
+          >© 2024 Bureau of Fire Protection - Region II. ConTrackPro v4.2.0. All
+          Rights Reserved.</span
+        >
       </div>
-
     </div>
   </div>
 </template>
@@ -400,10 +462,30 @@ export default {
       barChartInstance: null,
 
       fiscalYears: [
-        { value: "2024", range: "Jan 2024 – Dec 2024", tag: "Current", tagClass: "fy-tag-green" },
-        { value: "2023", range: "Jan 2023 – Dec 2023", tag: "Closed", tagClass: "fy-tag-gray" },
-        { value: "2022", range: "Jan 2022 – Dec 2022", tag: "Closed", tagClass: "fy-tag-gray" },
-        { value: "2021", range: "Jan 2021 – Dec 2021", tag: "Closed", tagClass: "fy-tag-gray" },
+        {
+          value: "2024",
+          range: "Jan 2024 – Dec 2024",
+          tag: "Current",
+          tagClass: "fy-tag-green",
+        },
+        {
+          value: "2023",
+          range: "Jan 2023 – Dec 2023",
+          tag: "Closed",
+          tagClass: "fy-tag-gray",
+        },
+        {
+          value: "2022",
+          range: "Jan 2022 – Dec 2022",
+          tag: "Closed",
+          tagClass: "fy-tag-gray",
+        },
+        {
+          value: "2021",
+          range: "Jan 2021 – Dec 2021",
+          tag: "Closed",
+          tagClass: "fy-tag-gray",
+        },
       ],
 
       exportFormats: [
@@ -413,11 +495,36 @@ export default {
       ],
 
       exportScopes: [
-        { value: "contracts", label: "Contract Summary", desc: "All contracts and statuses", icon: "description" },
-        { value: "cashflow", label: "Cashflow Report", desc: "Budget vs actual disbursements", icon: "trending_up" },
-        { value: "variation_orders", label: "Variation Orders", desc: "Approved and pending VOs", icon: "edit_document" },
-        { value: "accomplishments", label: "Project Accomplishments", desc: "Completion rates and milestones", icon: "check_circle" },
-        { value: "audit", label: "Audit Logs", desc: "System activity and changes", icon: "manage_search" },
+        {
+          value: "contracts",
+          label: "Contract Summary",
+          desc: "All contracts and statuses",
+          icon: "description",
+        },
+        {
+          value: "cashflow",
+          label: "Cashflow Report",
+          desc: "Budget vs actual disbursements",
+          icon: "trending_up",
+        },
+        {
+          value: "variation_orders",
+          label: "Variation Orders",
+          desc: "Approved and pending VOs",
+          icon: "edit_document",
+        },
+        {
+          value: "accomplishments",
+          label: "Project Accomplishments",
+          desc: "Completion rates and milestones",
+          icon: "check_circle",
+        },
+        {
+          value: "audit",
+          label: "Audit Logs",
+          desc: "System activity and changes",
+          icon: "manage_search",
+        },
       ],
 
       exportForm: {
@@ -442,7 +549,8 @@ export default {
           iconBg: "icon-bg-blue",
           project: "Cauayan City Equipment Supply",
           time: "5h ago",
-          description: "Progress payment of ₱2.4M released to ABC Construction.",
+          description:
+            "Progress payment of ₱2.4M released to ABC Construction.",
         },
         {
           id: 3,
@@ -450,7 +558,8 @@ export default {
           iconBg: "icon-bg-yellow",
           project: "Santiago Sub-Station Repair",
           time: "Yesterday",
-          description: "New milestone added: Foundation structural works completed.",
+          description:
+            "New milestone added: Foundation structural works completed.",
         },
       ],
 
@@ -485,11 +594,36 @@ export default {
       ],
 
       quickActions: [
-        { id: 1, icon: "add_circle_outline", label: "Add Project", route: "add-project" },
-        { id: 2, icon: "upload_file", label: "Upload Document", route: "upload-document" },
-        { id: 3, icon: "note_add", label: "Add Contract", route: "add-contract" },
-        { id: 4, icon: "add_photo_alternate", label: "Create VO", route: "create-vo" },
-        { id: 5, icon: "bar_chart", label: "Generate Report", route: "generate-report" },
+        {
+          id: 1,
+          icon: "add_circle_outline",
+          label: "Add Project",
+          route: "add-project",
+        },
+        {
+          id: 2,
+          icon: "upload_file",
+          label: "Upload Document",
+          route: "upload-document",
+        },
+        {
+          id: 3,
+          icon: "note_add",
+          label: "Add Contract",
+          route: "add-contract",
+        },
+        {
+          id: 4,
+          icon: "add_photo_alternate",
+          label: "Create VO",
+          route: "create-vo",
+        },
+        {
+          id: 5,
+          icon: "bar_chart",
+          label: "Generate Report",
+          route: "generate-report",
+        },
       ],
     };
   },
@@ -565,7 +699,9 @@ export default {
             tooltip: {
               callbacks: {
                 label: (ctx) =>
-                  ` ${ctx.dataset.label}: ₱${(ctx.parsed.y / 1000000).toFixed(1)}M`,
+                  ` ${ctx.dataset.label}: ₱${(ctx.parsed.y / 1000000).toFixed(
+                    1,
+                  )}M`,
               },
             },
           },
@@ -594,7 +730,6 @@ export default {
 
     confirmExport() {
       if (this.exportForm.scopes.length === 0) return;
-      console.log("Exporting", this.exportForm);
       this.showExportModal = false;
     },
 
@@ -707,20 +842,48 @@ h4 {
   font-size: 1.4rem;
 }
 
-.stat-icon-blue { background: #dbeafe; }
-.stat-icon-blue i { color: #2563eb; }
-.stat-icon-yellow { background: #fef3c7; }
-.stat-icon-yellow i { color: #d97706; }
-.stat-icon-teal { background: #d1fae5; }
-.stat-icon-teal i { color: #059669; }
-.stat-icon-green { background: #dcfce7; }
-.stat-icon-green i { color: #16a34a; }
-.stat-icon-orange { background: #ffedd5; }
-.stat-icon-orange i { color: #ea580c; }
-.stat-icon-red { background: #fee2e2; }
-.stat-icon-red i { color: #dc2626; }
-.stat-icon-gray { background: #f1f5f9; }
-.stat-icon-gray i { color: #64748b; }
+.stat-icon-blue {
+  background: #dbeafe;
+}
+.stat-icon-blue i {
+  color: #2563eb;
+}
+.stat-icon-yellow {
+  background: #fef3c7;
+}
+.stat-icon-yellow i {
+  color: #d97706;
+}
+.stat-icon-teal {
+  background: #d1fae5;
+}
+.stat-icon-teal i {
+  color: #059669;
+}
+.stat-icon-green {
+  background: #dcfce7;
+}
+.stat-icon-green i {
+  color: #16a34a;
+}
+.stat-icon-orange {
+  background: #ffedd5;
+}
+.stat-icon-orange i {
+  color: #ea580c;
+}
+.stat-icon-red {
+  background: #fee2e2;
+}
+.stat-icon-red i {
+  color: #dc2626;
+}
+.stat-icon-gray {
+  background: #f1f5f9;
+}
+.stat-icon-gray i {
+  color: #64748b;
+}
 
 .stat-info {
   flex: 1;
@@ -735,10 +898,22 @@ h4 {
   margin-bottom: 0.4rem;
 }
 
-.text-info-badge { background: #dbeafe; color: #1d4ed8; }
-.text-success-badge { background: #dcfce7; color: #15803d; }
-.text-warning-badge { background: #fff7ed; color: #c2410c; }
-.text-muted-badge { background: #f1f5f9; color: #64748b; }
+.text-info-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.text-success-badge {
+  background: #dcfce7;
+  color: #15803d;
+}
+.text-warning-badge {
+  background: #fff7ed;
+  color: #c2410c;
+}
+.text-muted-badge {
+  background: #f1f5f9;
+  color: #64748b;
+}
 
 .stat-label {
   font-size: 0.7rem;
@@ -934,12 +1109,24 @@ h4 {
   font-size: 1.1rem;
 }
 
-.icon-bg-red { background: #fee2e2; }
-.icon-bg-red i { color: #dc2626; }
-.icon-bg-blue { background: #dbeafe; }
-.icon-bg-blue i { color: #2563eb; }
-.icon-bg-yellow { background: #fef3c7; }
-.icon-bg-yellow i { color: #d97706; }
+.icon-bg-red {
+  background: #fee2e2;
+}
+.icon-bg-red i {
+  color: #dc2626;
+}
+.icon-bg-blue {
+  background: #dbeafe;
+}
+.icon-bg-blue i {
+  color: #2563eb;
+}
+.icon-bg-yellow {
+  background: #fef3c7;
+}
+.icon-bg-yellow i {
+  color: #d97706;
+}
 
 .update-content {
   flex: 1;
@@ -988,12 +1175,24 @@ h4 {
   border-radius: 0.5rem;
 }
 
-.date-red { background: #fee2e2; }
-.date-red .deadline-month { color: #dc2626; }
-.date-red .deadline-day { color: #dc2626; }
-.date-blue { background: #dbeafe; }
-.date-blue .deadline-month { color: #1d4ed8; }
-.date-blue .deadline-day { color: #1d4ed8; }
+.date-red {
+  background: #fee2e2;
+}
+.date-red .deadline-month {
+  color: #dc2626;
+}
+.date-red .deadline-day {
+  color: #dc2626;
+}
+.date-blue {
+  background: #dbeafe;
+}
+.date-blue .deadline-month {
+  color: #1d4ed8;
+}
+.date-blue .deadline-day {
+  color: #1d4ed8;
+}
 
 .deadline-month {
   font-size: 0.65rem;

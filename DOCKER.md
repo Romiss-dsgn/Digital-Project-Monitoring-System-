@@ -169,6 +169,7 @@ docker compose exec backend php artisan db:seed --class=UsersSeeder --force
 docker compose exec backend php artisan db:seed --class=ContractManagementSeeder --force
 docker compose exec backend php artisan db:seed --class=ProjectAccomplishmentsSeeder --force
 docker compose exec backend php artisan db:seed --class=ProjectsSeeder --force
+docker compose exec backend php artisan db:seed --class=EngineeringPlansSeeder --force
 ```
 
 Clear Laravel caches:
@@ -195,7 +196,7 @@ docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro -e "S
 Check seed counts:
 
 ```powershell
-docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro --batch --execute="SELECT 'users' AS item, COUNT(*) AS count FROM users UNION ALL SELECT 'roles', COUNT(*) FROM roles UNION ALL SELECT 'contracts', COUNT(*) FROM contracts UNION ALL SELECT 'projects', COUNT(*) FROM projects UNION ALL SELECT 'accomplishments', COUNT(*) FROM project_accomplishments;"
+docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro --batch --execute="SELECT 'users' AS item, COUNT(*) AS count FROM users UNION ALL SELECT 'roles', COUNT(*) FROM roles UNION ALL SELECT 'contracts', COUNT(*) FROM contracts UNION ALL SELECT 'projects', COUNT(*) FROM projects UNION ALL SELECT 'engineering_plans', COUNT(*) FROM engineering_plans UNION ALL SELECT 'accomplishments', COUNT(*) FROM project_accomplishments;"
 ```
 
 Check admin account:
@@ -232,6 +233,8 @@ Then test:
 ```text
 GET http://localhost:8000/api/v2/me
 GET http://localhost:8000/api/v2/contracts
+GET http://localhost:8000/api/v2/admin/projects
+GET http://localhost:8000/api/v2/admin/engineering-plans
 GET http://localhost:8000/api/v2/project-accomplishments
 ```
 

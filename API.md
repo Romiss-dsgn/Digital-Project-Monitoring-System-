@@ -197,13 +197,45 @@ These endpoints are the backend foundation for Infrastructure Plans / Project Pl
 
 ### Engineering Plans
 
-Current implementation has upload/store foundation.
+These endpoints are DB-backed for the current Engineering Plans MVP. Engineering plans are linked to existing project records from `projects`.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
+| GET | `/admin/engineering-plans` | Paginated/filterable engineering plan document list with summary stats. |
 | POST | `/admin/engineering-plans` | Upload/store engineering plan record and file. |
 
-Use `multipart/form-data` for engineering plan uploads. Planned work should add listing, review, download, archive, and project-linked filters.
+Use `multipart/form-data` for engineering plan uploads.
+
+Query parameters for list:
+
+```text
+page=1
+per_page=10
+type=structural
+status=for_review
+search=fire station
+```
+
+Upload fields:
+
+```text
+project_id      required, existing project ID
+plan_title      required
+plan_type       required, e.g. architectural, structural, electrical, mechanical
+version         optional
+review_status   optional, e.g. for_review, approved, revision, uploaded
+remarks         optional
+file            required for upload flow
+```
+
+Current frontend behavior:
+
+- Loads rows and stats from `GET /admin/engineering-plans`.
+- Loads project options from the project API.
+- Requires an existing project before upload.
+- Refreshes the list from the database after upload.
+
+Pending work should add show, authenticated download, review/status update, archive, and audit logging.
 
 ### JSON:API User Resource
 
@@ -240,12 +272,11 @@ Use this as the future unified planning area for Infrastructure Plans and Engine
 | --- | --- | --- |
 | GET | `/project-plans/summary` | Project plan cards and counts. |
 | GET | `/project-plans` | Combined list of infrastructure and engineering plan records. |
-| GET | `/engineering-plans` | List engineering plan documents. |
-| GET | `/engineering-plans/{engineeringPlan}` | Read one engineering plan. |
-| PATCH | `/engineering-plans/{engineeringPlan}` | Update metadata/status. |
-| GET | `/engineering-plans/{engineeringPlan}/download` | Authenticated file download. |
-| PATCH | `/engineering-plans/{engineeringPlan}/review` | Approve/reject engineering plan. |
-| DELETE | `/engineering-plans/{engineeringPlan}` | Archive engineering plan. |
+| GET | `/admin/engineering-plans/{engineeringPlan}` | Read one engineering plan. |
+| PATCH | `/admin/engineering-plans/{engineeringPlan}` | Update metadata/status. |
+| GET | `/admin/engineering-plans/{engineeringPlan}/download` | Authenticated file download. |
+| PATCH | `/admin/engineering-plans/{engineeringPlan}/review` | Approve/reject engineering plan. |
+| DELETE | `/admin/engineering-plans/{engineeringPlan}` | Archive engineering plan. |
 
 ### Financial Management
 

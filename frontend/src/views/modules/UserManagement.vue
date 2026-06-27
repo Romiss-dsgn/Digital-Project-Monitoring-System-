@@ -724,6 +724,10 @@ export default {
   },
 
   methods: {
+    getErrorMessage(err, fallback) {
+      return err.response?.data?.message || err.message || fallback;
+    },
+
     // ── API Calls ──────────────────────────────────────────
 
     async fetchUsers(page = 1) {
@@ -744,8 +748,7 @@ export default {
         this.users = res.data.data;
         this.meta  = res.data.meta;
       } catch (err) {
-        console.error("Failed to fetch users:", err);
-        this.fetchError = err.response?.data?.message || err.message || "Failed to load users. Check your API connection.";
+        this.fetchError = this.getErrorMessage(err, "Failed to load users. Check your API connection.");
       } finally {
         this.loading = false;
       }
@@ -756,7 +759,7 @@ export default {
         const res = await UserService.getStats();
         this.stats = res.data;
       } catch (err) {
-        console.error("Failed to fetch stats:", err);
+        this.fetchError = this.getErrorMessage(err, "Failed to load user statistics.");
       }
     },
 
@@ -765,7 +768,7 @@ export default {
         const res = await UserService.getRoles();
         this.roles = res.data;
       } catch (err) {
-        console.error("Failed to fetch roles:", err);
+        this.fetchError = this.getErrorMessage(err, "Failed to load roles.");
       }
     },
 
@@ -836,7 +839,7 @@ export default {
         if (err.response?.status === 422) {
           this.errors = err.response.data.errors || {};
         } else {
-          console.error("Save error:", err);
+          this.fetchError = this.getErrorMessage(err, "Failed to save user.");
         }
       } finally {
         this.saving = false;
@@ -860,7 +863,7 @@ export default {
         await this.fetchUsers(this.meta.current_page);
         await this.fetchStats();
       } catch (err) {
-        console.error("Delete error:", err);
+        this.fetchError = this.getErrorMessage(err, "Failed to delete user.");
       } finally {
         this.saving = false;
       }
@@ -883,7 +886,7 @@ export default {
         await this.fetchUsers(this.meta.current_page);
         await this.fetchStats();
       } catch (err) {
-        console.error("Accept error:", err);
+        this.fetchError = this.getErrorMessage(err, "Failed to accept user.");
       } finally {
         this.saving = false;
       }
@@ -906,7 +909,7 @@ export default {
         await this.fetchUsers(this.meta.current_page);
         await this.fetchStats();
       } catch (err) {
-        console.error("Reject error:", err);
+        this.fetchError = this.getErrorMessage(err, "Failed to reject user.");
       } finally {
         this.saving = false;
       }
@@ -921,7 +924,7 @@ export default {
         await this.fetchUsers(this.meta.current_page);
         await this.fetchStats();
       } catch (err) {
-        console.error("Status toggle error:", err);
+        this.fetchError = this.getErrorMessage(err, "Failed to update user status.");
       }
     },
 

@@ -23,13 +23,14 @@ All notable project-owned changes to ConTrackPro are documented here.
 - Contract Management is DB-backed for core CRUD/archive, documents, summaries, permissions, audit logs, seeders, and tests.
 - Project Accomplishments is DB-backed for core CRUD/archive/validation, documents, summaries, project progress sync, seeders, and tests.
 - Infrastructure Plans / Projects backend and service foundation exist.
-- Engineering Plans upload foundation exists.
+- Engineering Plans is DB-backed for list, summary cards, pagination, project dropdown, upload flow, and seed data.
+- Shared ConTrackPro footer now appears on authenticated module pages instead of being dashboard-only.
 
 ### Pending MVP Scope
 
 - Finish User Management frontend integration.
 - Finish Infrastructure Plans / Project Plans DB-backed flow.
-- Finish Engineering Plans listing/review/download/archive flow.
+- Finish Engineering Plans review/download/archive flow.
 - Implement Financial Management by connecting Variation Orders first, then Cashflows.
 - Implement Records & Reports with read-only reports and audit log views.
 - Replace remaining static dashboard/module data with DB-backed summaries.

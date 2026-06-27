@@ -20,8 +20,8 @@ This repository contains:
 | Docker | Backend, MySQL 8, and phpMyAdmin are containerized for local development. |
 | Contract Management | DB-backed MVP with contracts CRUD/archive, document upload/download/review/archive, summary cards, seed data, audit logging, and tests. |
 | Project Accomplishments | DB-backed MVP with accomplishments CRUD/archive/validation, document upload/download, project progress sync, summary cards, seed data, and tests. |
-| Infrastructure Plans | Project CRUD backend and project service are present. Frontend work is in progress. |
-| Engineering Plans | Upload/store endpoint and frontend upload flow exist. Listing/review workflow still needs full DB-backed implementation. |
+| Infrastructure Plans | DB-backed project register foundation is active. This module owns project creation and baseline project data. |
+| Engineering Plans | DB-backed MVP for list, summary cards, pagination, project dropdown, and upload. Review/download/archive workflow is still pending. |
 | Cashflows | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
 | Variation Orders | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
 | Reports and Audit Logs | Frontend modules exist. Audit log table/service exists. Full reporting module is still pending. |
@@ -167,6 +167,7 @@ Frontend layer:
 - API calls should go through `frontend/src/services/`.
 - Auth state and shared user context should remain in the frontend store.
 - The frontend should not hardcode production data once a backend endpoint exists.
+- Shared layout items such as the authenticated header/sidebar/footer should live in shared layout components, not inside each module page.
 
 Backend layer:
 
@@ -313,6 +314,15 @@ docker compose exec backend php artisan optimize:clear
 docker compose exec backend php artisan test
 ```
 
+Run selected module seeders:
+
+```powershell
+docker compose exec backend php artisan db:seed --class=ProjectsSeeder --force
+docker compose exec backend php artisan db:seed --class=EngineeringPlansSeeder --force
+docker compose exec backend php artisan db:seed --class=ContractManagementSeeder --force
+docker compose exec backend php artisan db:seed --class=ProjectAccomplishmentsSeeder --force
+```
+
 Reset and reseed the Docker database:
 
 ```powershell
@@ -349,6 +359,8 @@ Useful checks:
 GET http://localhost:8000/api/v2/me
 GET http://localhost:8000/api/v2/contracts
 GET http://localhost:8000/api/v2/contract-management/summary
+GET http://localhost:8000/api/v2/admin/projects
+GET http://localhost:8000/api/v2/admin/engineering-plans
 GET http://localhost:8000/api/v2/project-accomplishments
 GET http://localhost:8000/api/v2/project-accomplishments/summary
 ```

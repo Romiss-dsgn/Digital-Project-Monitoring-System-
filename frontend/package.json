@@ -14,9 +14,9 @@
     "url": "git+https://github.com/creativetimofficial/ct-vue-material-dashboard-2.git"
   },
   "scripts": {
-    "serve": "vue-cli-service serve --open",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
+    "serve": "node vue-cli-no-debug.js serve --open",
+    "build": "node vue-cli-no-debug.js build",
+    "lint": "node vue-cli-no-debug.js lint",
     "dev": "npm run serve"
   },
   "dependencies": {

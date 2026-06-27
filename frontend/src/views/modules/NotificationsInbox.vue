@@ -206,7 +206,7 @@ export default {
 .notification-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: flex-start;
   margin-bottom: 0.5rem;
 }
 
