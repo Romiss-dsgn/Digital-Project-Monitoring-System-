@@ -103,11 +103,30 @@ class ProjectAccomplishmentController extends Controller
 
     public function options(Request $request): JsonResponse
     {
+        // ── Prevent duplicate project selection ──
+        // Each project should only have one active accomplishment report,
+        // so projects that already have a non-archived record are left out
+        // of the dropdown used when creating a new report.
+        //
+        // When editing an existing record, the frontend should pass
+        // ?include_project_id={id} (the project already tied to that
+        // record) so it still shows up as a selectable option even though
+        // it already "has" a report — otherwise the edit form would have
+        // no matching option for the project it's currently set to.
+        $includeProjectId = $request->integer('include_project_id') ?: null;
+
+        $projectsWithAccomplishments = ProjectAccomplishment::query()
+            ->where('is_archived', false)
+            ->when($includeProjectId, fn (Builder $query, int $id) => $query->where('project_id', '!=', $id))
+            ->pluck('project_id');
+
         return response()->json([
             'projects' => Project::query()
                 ->where('is_archived', false)
+                ->whereNotIn('id', $projectsWithAccomplishments)
                 ->orderBy('project_name')
                 ->get(['id', 'project_code', 'project_name', 'location']),
+            'all_projects_count' => Project::query()->where('is_archived', false)->count(),
             'statuses' => self::STATUSES,
             'permissions' => $request->user()->modulePermissions('project_accomplishments'),
         ]);
@@ -123,6 +142,25 @@ class ProjectAccomplishmentController extends Controller
             $accomplishment = DB::transaction(function () use ($request, $validated, $attachment, &$storedPath) {
                 $attributes = collect($validated)->except('attachment')->all();
                 $attributes['reported_by'] = $request->user()->id;
+
+                // ── NULL fix: never persist remarks/description as NULL ──
+                // Empty optional text fields are normalized to '' here so the
+                // database always has a deterministic value, regardless of
+                // whether the frontend omitted the key or sent an empty
+                // string (which Laravel's ConvertEmptyStringsToNull
+                // middleware turns into null before we even get here).
+                $attributes['remarks'] = $attributes['remarks'] ?? '';
+                $attributes['description'] = $attributes['description'] ?? '';
+
+                // ── Auto-validate on create ──
+                // The reporter is treated as the validator at the moment a
+                // milestone is recorded, so validated_by/validated_at are
+                // never left NULL. The separate "Validate" action/button
+                // still exists for cases where a different approver wants
+                // to re-confirm later (it will just overwrite these values).
+                $attributes['validated_by'] = $request->user()->id;
+                $attributes['validated_at'] = now();
+
                 $attributes['completion_date'] = $attributes['status'] === 'Completed'
                     ? ($attributes['completion_date'] ?? now()->toDateString())
                     : ($attributes['completion_date'] ?? null);
@@ -175,7 +213,12 @@ class ProjectAccomplishmentController extends Controller
     public function update(Request $request, ProjectAccomplishment $accomplishment): JsonResponse
     {
         abort_if($accomplishment->is_archived, 404);
-        $validated = collect($this->validatedAccomplishment($request))->except('attachment')->all();
+        $validated = collect($this->validatedAccomplishment($request, $accomplishment->id))->except('attachment')->all();
+
+        // ── NULL fix: same normalization as store() ──
+        $validated['remarks'] = $validated['remarks'] ?? '';
+        $validated['description'] = $validated['description'] ?? '';
+
         $oldValues = $accomplishment->toArray();
 
         DB::transaction(function () use ($request, $accomplishment, $validated, $oldValues) {
@@ -269,7 +312,8 @@ class ProjectAccomplishmentController extends Controller
                     $accomplishment,
                     $file,
                     $path,
-                    $validated['remarks'] ?? null
+                    // ── NULL fix: default document remarks to '' too ──
+                    $validated['remarks'] ?? ''
                 );
             });
         } catch (Throwable $exception) {
@@ -290,12 +334,21 @@ class ProjectAccomplishmentController extends Controller
         return Storage::disk('local')->download($document->file_path, $document->file_name);
     }
 
-    private function validatedAccomplishment(Request $request): array
+    private function validatedAccomplishment(Request $request, ?int $ignoreAccomplishmentId = null): array
     {
         return $request->validate([
             'project_id' => [
                 'required',
                 Rule::exists('projects', 'id')->where(fn ($query) => $query->where('is_archived', false)),
+                // ── Prevent duplicate project selection (server-side) ──
+                // Belt-and-suspenders check: even if a stale dropdown or a
+                // direct API call tries to reuse a project that already has
+                // an active accomplishment record, this blocks it. On
+                // update, the record being edited is excluded from the
+                // check so it doesn't collide with itself.
+                Rule::unique('project_accomplishments', 'project_id')
+                    ->where('is_archived', false)
+                    ->ignore($ignoreAccomplishmentId),
             ],
             'milestone_title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
@@ -305,6 +358,8 @@ class ProjectAccomplishmentController extends Controller
             'status' => ['required', Rule::in(self::STATUSES)],
             'remarks' => ['nullable', 'string', 'max:5000'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,docx,jpg,jpeg,png', 'max:25600'],
+        ], [
+            'project_id.unique' => 'This project already has an active accomplishment report.',
         ]);
     }
 
@@ -313,7 +368,8 @@ class ProjectAccomplishmentController extends Controller
         ProjectAccomplishment $accomplishment,
         $file,
         string $path,
-        ?string $remarks = null
+        // ── NULL fix: default param to '' instead of null ──
+        string $remarks = ''
     ): AccomplishmentDocument {
         $document = AccomplishmentDocument::create([
             'project_accomplishment_id' => $accomplishment->id,

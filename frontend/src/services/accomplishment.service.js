@@ -13,10 +13,14 @@ function multipartHeaders() {
 function toFormData(payload) {
   const formData = new FormData();
 
+  // ── NULL fix: only skip values that are truly absent (null/undefined,
+  // e.g. no file picked). Empty strings (like an unfilled "remarks" field)
+  // are still sent explicitly, instead of being dropped from the request
+  // entirely — which previously caused the backend to never receive the
+  // key at all and fall back to a NULL column value.
   Object.entries(payload).forEach(([key, value]) => {
-    if (value !== null && value !== undefined && value !== "") {
-      formData.append(key, value);
-    }
+    if (value === null || value === undefined) return;
+    formData.append(key, value);
   });
 
   return formData;
@@ -40,9 +44,10 @@ export default {
     return response.data.data;
   },
 
-  async getOptions() {
+  async getOptions(params = {}) {
     const response = await axios.get(`${API_URL}/project-accomplishments/options`, {
       headers: authHeader(),
+      params,
     });
 
     return response.data;

@@ -18,7 +18,7 @@
             v-if="permissions.create"
             class="btn btn-primary btn-sm"
             :disabled="isLoading || projects.length === 0"
-            title="Create a project first in Infrastructure Plans"
+            :title="projects.length === 0 ? 'All projects already have an accomplishment report' : ''"
             @click="openCreateModal"
           >
             <i class="material-icons-round">upload</i> Upload Report
@@ -26,7 +26,7 @@
         </div>
       </div>
 
-      <div v-if="!isLoading && projects.length === 0" class="alert alert-warning py-2 px-3 mb-4">
+      <div v-if="!isLoading && allProjectsCount === 0" class="alert alert-warning py-2 px-3 mb-4">
         Create a project first in Infrastructure Plans before adding accomplishment reports.
       </div>
 
@@ -240,6 +240,7 @@
       </div>
     </div>
 
+    <!-- ── Upload / Edit Modal ───────────────────────────────────────────────── -->
     <BfpModal
       :show="showUploadReportModal"
       :title="accomplishmentForm.id ? 'Edit Accomplishment' : 'Add Accomplishment Report'"
@@ -249,6 +250,7 @@
       @close="showUploadReportModal = false"
       @confirm="saveAccomplishment"
     >
+      <!-- File attachment -->
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Report Attachment</div>
         <div class="bfp-upload-panel">
@@ -258,21 +260,36 @@
           <input type="file" class="form-control form-control-sm" accept=".pdf,.docx,.jpg,.jpeg,.png" @change="handleReportFile" />
         </div>
       </div>
+
+      <!-- Milestone details -->
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">flag</i> Milestone Details</div>
         <div class="bfp-form-grid">
+
+          <!-- Project -->
           <div class="bfp-field-half">
             <label class="bfp-label">Project <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">business</i>
-              <select v-model="accomplishmentForm.project_id" class="bfp-input bfp-select">
-                <option value="">Select project</option>
-                <option v-for="project in projects" :key="project.id" :value="project.id">
+              <!--
+                Only projects without an existing active accomplishment
+                report are selectable. When editing, the project already
+                tied to this record is included too (fetched separately via
+                include_project_id) so the field doesn't show blank.
+              -->
+              <select v-model="accomplishmentForm.project_id" class="bfp-input bfp-select" :disabled="isLoadingModalProjects">
+                <option value="">{{ isLoadingModalProjects ? 'Loading projects...' : 'Select project' }}</option>
+                <option v-for="project in modalProjects" :key="project.id" :value="project.id">
                   {{ project.project_code }} · {{ project.project_name }}
                 </option>
               </select>
             </div>
+            <p v-if="!isLoadingModalProjects && modalProjects.length === 0 && !accomplishmentForm.id" class="text-secondary small mt-1 mb-0">
+              All active projects already have an accomplishment report.
+            </p>
           </div>
+
+          <!-- Milestone Phase -->
           <div class="bfp-field-half">
             <label class="bfp-label">Milestone Phase</label>
             <div class="bfp-input-wrap">
@@ -280,6 +297,8 @@
               <input v-model="accomplishmentForm.milestone_title" class="bfp-input" type="text" placeholder="e.g. Electrical Installation" />
             </div>
           </div>
+
+          <!-- Completion % -->
           <div class="bfp-field-half">
             <label class="bfp-label">Completion %</label>
             <div class="bfp-input-wrap">
@@ -287,6 +306,8 @@
               <input v-model.number="accomplishmentForm.percent_complete" class="bfp-input" type="number" min="0" max="100" placeholder="0" />
             </div>
           </div>
+
+          <!-- Status -->
           <div class="bfp-field-half">
             <label class="bfp-label">Status</label>
             <div class="bfp-input-wrap">
@@ -296,6 +317,8 @@
               </select>
             </div>
           </div>
+
+          <!-- Target Date -->
           <div class="bfp-field-half">
             <label class="bfp-label">Target Date <span class="bfp-required">*</span></label>
             <div class="bfp-input-wrap">
@@ -303,6 +326,8 @@
               <input v-model="accomplishmentForm.target_date" class="bfp-input" type="date" />
             </div>
           </div>
+
+          <!-- Completion Date -->
           <div class="bfp-field-half">
             <label class="bfp-label">Completion Date</label>
             <div class="bfp-input-wrap">
@@ -310,14 +335,32 @@
               <input v-model="accomplishmentForm.completion_date" class="bfp-input" type="date" />
             </div>
           </div>
+
+          <!-- Description -->
           <div class="bfp-field-full">
             <label class="bfp-label">Description</label>
             <textarea v-model="accomplishmentForm.description" class="bfp-input" rows="2" placeholder="Milestone scope and work completed"></textarea>
           </div>
+
+          <!-- Remarks -->
+          <div class="bfp-field-full">
+            <label class="bfp-label">Remarks</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">notes</i>
+              <input
+                v-model="accomplishmentForm.remarks"
+                class="bfp-input"
+                type="text"
+                placeholder="Optional notes or validation remarks"
+              />
+            </div>
+          </div>
+
         </div>
       </div>
     </BfpModal>
 
+    <!-- ── Filter Modal ──────────────────────────────────────────────────────── -->
     <BfpModal
       :show="showFilterModal"
       title="Accomplishment Filters"
@@ -356,6 +399,7 @@
       </div>
     </BfpModal>
 
+    <!-- ── Print Modal ───────────────────────────────────────────────────────── -->
     <BfpModal
       :show="showPrintModal"
       title="Print Accomplishment Summary"
@@ -371,6 +415,7 @@
       </div>
     </BfpModal>
 
+    <!-- ── Export Modal ──────────────────────────────────────────────────────── -->
     <BfpModal
       :show="showExportModal"
       title="Export Accomplishments"
@@ -413,7 +458,7 @@ const emptyAccomplishmentForm = () => ({
   completion_date: "",
   percent_complete: 0,
   status: "Not Started",
-  remarks: "",
+  remarks: "",        // ← always initialised so it is never sent as null
   attachment: null,
 });
 
@@ -421,8 +466,9 @@ export default {
   name: "Accomplishments",
   components: {
     StatusBadge,
-    BfpModal
+    BfpModal,
   },
+
   data() {
     return {
       showUploadReportModal: false,
@@ -431,11 +477,24 @@ export default {
       showExportModal: false,
       isLoading: false,
       isSaving: false,
+      isLoadingModalProjects: false,
       apiError: "",
       currentPage: 1,
       rowsPerPage: 10,
       accomplishments: [],
+      // Projects without an active accomplishment report yet — used as the
+      // dropdown source when creating a *new* report, and to gate the
+      // "Upload Report" button / empty-state messaging.
       projects: [],
+      // Total active project count (including ones that already have a
+      // report), used only to distinguish "no projects exist at all" from
+      // "all projects already have a report" in the empty-state messaging.
+      allProjectsCount: 0,
+      // Projects shown specifically inside the open Add/Edit modal. For
+      // "create" this mirrors `projects`. For "edit" it's fetched with
+      // include_project_id so the record's current project still appears
+      // as a selectable (and pre-selected) option.
+      modalProjects: [],
       statusOptions: ["Not Started", "In Progress", "Delayed", "Completed"],
       accomplishmentForm: emptyAccomplishmentForm(),
       filters: {
@@ -462,6 +521,7 @@ export default {
       },
     };
   },
+
   computed: {
     filteredAccomplishments() {
       return this.accomplishments.filter((item) => {
@@ -485,19 +545,26 @@ export default {
       return Math.min(this.currentPage * this.rowsPerPage, this.filteredAccomplishments.length);
     },
   },
+
   async mounted() {
     await this.loadAccomplishments();
   },
+
   methods: {
-    openCreateModal() {
-      if (!this.projects.length) {
+    async openCreateModal() {
+      if (this.allProjectsCount === 0) {
         alert("Create a project first in Infrastructure Plans before adding accomplishment reports.");
         return;
       }
-
+      if (!this.projects.length) {
+        alert("Every active project already has an accomplishment report. Edit an existing record instead.");
+        return;
+      }
       this.accomplishmentForm = emptyAccomplishmentForm();
+      this.modalProjects = this.projects;
       this.showUploadReportModal = true;
     },
+
     async loadAccomplishments() {
       this.isLoading = true;
       this.apiError = "";
@@ -511,7 +578,12 @@ export default {
 
         this.accomplishments = records.data || [];
         this.summary = summary;
+        // `options.projects` already excludes projects that have an active
+        // accomplishment report (filtered server-side).
         this.projects = options.projects || [];
+        this.allProjectsCount = typeof options.all_projects_count === "number"
+          ? options.all_projects_count
+          : this.projects.length;
         this.statusOptions = options.statuses || this.statusOptions;
         this.permissions = options.permissions || summary.permissions || this.permissions;
         this.currentPage = 1;
@@ -521,6 +593,7 @@ export default {
         this.isLoading = false;
       }
     },
+
     async saveAccomplishment() {
       if (this.isSaving) return;
 
@@ -550,7 +623,8 @@ export default {
         this.isSaving = false;
       }
     },
-    editAccomplishment(item) {
+
+    async editAccomplishment(item) {
       this.accomplishmentForm = {
         id: item.id,
         project_id: item.project_id,
@@ -563,8 +637,24 @@ export default {
         remarks: item.remarks || "",
         attachment: null,
       };
+
       this.showUploadReportModal = true;
+      this.isLoadingModalProjects = true;
+
+      try {
+        // Re-fetch with include_project_id so this record's own project
+        // still shows up as a selectable option, even though it already
+        // "has" a report (this one).
+        const options = await accomplishmentService.getOptions({ include_project_id: item.project_id });
+        this.modalProjects = options.projects || [];
+      } catch (error) {
+        // Fall back to whatever we already have rather than blocking edit.
+        this.modalProjects = this.projects;
+      } finally {
+        this.isLoadingModalProjects = false;
+      }
     },
+
     async validateAccomplishment(item) {
       try {
         await accomplishmentService.validateAccomplishment(item.id);
@@ -573,6 +663,7 @@ export default {
         this.apiError = this.errorMessage(error, "Unable to validate accomplishment.");
       }
     },
+
     async archiveAccomplishment(item) {
       if (!confirm(`Archive ${item.milestone_title}?`)) return;
 
@@ -583,27 +674,33 @@ export default {
         this.apiError = this.errorMessage(error, "Unable to archive accomplishment.");
       }
     },
+
     handleReportFile(event) {
       this.accomplishmentForm.attachment = event.target.files?.[0] || null;
     },
+
     applyFilters() {
       this.currentPage = 1;
       this.showFilterModal = false;
     },
+
     getProgressClass(status) {
       if (status === "Completed") return "progress-bar-completed";
       if (status === "Delayed") return "progress-bar-delayed";
       if (status === "Not Started") return "progress-bar-empty";
       return "";
     },
+
     formatDate(value) {
       if (!value) return "-";
       return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(new Date(`${value}T00:00:00`));
     },
+
     formatDateTime(value) {
       if (!value) return "-";
       return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
     },
+
     async downloadReport(document) {
       try {
         await accomplishmentService.downloadDocument(document);
@@ -611,18 +708,21 @@ export default {
         this.apiError = this.errorMessage(error, "Unable to download report.");
       }
     },
+
     printSummary() {
       this.showPrintModal = false;
       window.print();
     },
+
     exportCsv() {
-      const headers = ["Project", "Milestone", "Target Date", "Progress", "Status"];
+      const headers = ["Project", "Milestone", "Target Date", "Progress", "Status", "Remarks"];
       const rows = this.filteredAccomplishments.map((item) => [
         item.project_name,
         item.milestone_title,
         item.target_date,
         item.percent_complete,
         item.status,
+        item.remarks || "",
       ]);
       const escape = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
       const csv = [headers, ...rows].map((row) => row.map(escape).join(",")).join("\n");
@@ -634,6 +734,7 @@ export default {
       URL.revokeObjectURL(url);
       this.showExportModal = false;
     },
+
     errorMessage(error, fallback) {
       const errors = error?.response?.data?.errors;
       if (errors && typeof errors === "object" && !Array.isArray(errors)) {
@@ -641,7 +742,7 @@ export default {
       }
       return error?.response?.data?.message || fallback;
     },
-  }
+  },
 };
 </script>
 
