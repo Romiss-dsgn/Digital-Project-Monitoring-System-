@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V2\VariationOrderController;
 use App\Http\Controllers\Api\V2\ProjectAccomplishmentController;
 use App\Http\Controllers\Api\V2\ProjectController;
 use App\Http\Controllers\Api\V2\Admin\EngineeringPlanController;
+use App\Http\Controllers\Api\V2\MeController;
 use App\Http\Controllers\Api\AuditLogController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
