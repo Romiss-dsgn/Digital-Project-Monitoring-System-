@@ -313,7 +313,7 @@
 
 <script>
 import BfpModal from "@/components/BfpModal.vue";
-import ReportService from "@/services/report.service";
+
 export default {
   name: "Reports",
   components: { BfpModal },
@@ -327,8 +327,6 @@ export default {
       dateTo: "",
       selectedPortfolio: "all",
       selectedContractor: "all",
-      isLoading: false,
-      loadError: null,
       reportTypes: [
         {
           value: "project-status",
@@ -351,12 +349,12 @@ export default {
           description: "History of scope changes and costs.",
         },
       ],
-      stats: {
-        total_projects: 0,
-        total_budget: 0,
-        avg_completion: 0,
-      },
-      projects: [],
+      projects: [
+        { name: "Station Refurbishment RII", contractor: "MetroBuild Inc.", status: "ON TRACK", completion: "75%" },
+        { name: "Cauayan Fire Hub Phase 1", contractor: "North Luzon Infra", status: "PENDING VO", completion: "32%" },
+        { name: "Logistics Center Expansion", contractor: "BuildStrong Corp.", status: "DELAYED", completion: "12%" },
+        { name: "District 3 Service Road", contractor: "Luzon Paving Co.", status: "COMPLETED", completion: "100%" },
+      ],
       chartBars: [
         { month: "JAN", height: 40, color: "#c0a0a0" },
         { month: "MAR", height: 55, color: "#c0a0a0" },
@@ -367,44 +365,7 @@ export default {
       ],
     };
   },
-  async mounted() {
-    await this.loadProjectStatusReport();
-  },
   methods: {
-    async loadProjectStatusReport() {
-      this.isLoading = true;
-      this.loadError = null;
-      try {
-        const params = {};
-        if (this.dateFrom) params.date_from = this.dateFrom;
-        if (this.dateTo) params.date_to = this.dateTo;
-
-        const response = await ReportService.getProjectStatus(params);
-        const payload = response.data.data;
-
-        this.stats = payload.stats;
-        this.projects = payload.projects.map((p) => ({
-          name: p.name,
-          contractor: p.contractor,
-          status: this.formatStatusLabel(p.status),
-          completion: p.completion,
-        }));
-      } catch (error) {
-        this.loadError = error.response?.data?.message || "Unable to load report data.";
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    formatStatusLabel(status) {
-      const map = {
-        ongoing: "ON TRACK",
-        on_time: "ON TRACK",
-        pending: "PENDING VO",
-        delayed: "DELAYED",
-        completed: "COMPLETED",
-      };
-      return map[status] || status?.toUpperCase() || "-";
-    },
     statusBadgeClass(status) {
       switch (status) {
         case "ON TRACK": return "bg-success text-white";
@@ -415,11 +376,12 @@ export default {
       }
     },
     refreshPreview() {
-      this.loadProjectStatusReport();
+      // Placeholder for refresh logic
     },
   },
 };
 </script>
+
 <style scoped>
 .module-page {
   min-height: 100vh;
@@ -428,6 +390,7 @@ export default {
 .card {
   border-radius: 1rem;
 }
+
 /* Report type selector */
 .report-type-option {
   display: flex;
@@ -450,12 +413,14 @@ export default {
   margin-top: 2px;
   accent-color: #c0392b;
 }
+
 /* Report document */
 .report-document {
   border: 1px solid #e0e0e0;
   border-radius: 0.5rem;
   background: #fff;
 }
+
 /* Stat boxes */
 .stat-box {
   background: #f5f5f5;
@@ -470,6 +435,7 @@ export default {
   font-size: 1.1rem;
   font-weight: 700;
 }
+
 /* Table */
 .report-table thead th {
   font-size: 0.8rem;
@@ -481,6 +447,7 @@ export default {
   font-size: 0.82rem;
   vertical-align: middle;
 }
+
 /* Chart */
 .chart-area {
   background: #fafafa;

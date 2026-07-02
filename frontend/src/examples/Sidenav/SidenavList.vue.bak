@@ -2,7 +2,7 @@
   <div class="w-auto h-auto collapse navbar-collapse max-height-vh-100 h-100" id="sidenav-collapse-main">
     <ul class="navbar-nav">
 
-      <li class="nav-item" v-if="hasModuleAccess('dashboard')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="dashboard" navText="Dashboard">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">dashboard</span>
@@ -10,7 +10,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('projects')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="infrastructure-plans" navText="Infrastructure Plans">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">architecture</span>
@@ -18,7 +18,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('contracts')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="contract-management" navText="Contract Management">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">contract</span>
@@ -26,7 +26,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('cashflow_periods')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="cashflow" navText="Cashflows Management">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">payments</span>
@@ -34,7 +34,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('engineering_plans')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="engineering-plans" navText="Engineering Plans">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">engineering</span>
@@ -42,7 +42,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('variation_orders')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="variation-orders" navText="Variation Orders">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">pending_actions</span>
@@ -50,7 +50,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('project_accomplishments')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="accomplishments" navText="Project Accomplishments">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">check_circle</span>
@@ -58,7 +58,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('reports')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="reports" navText="Reports">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">analytics</span>
@@ -66,7 +66,7 @@
         </sidenav-collapse>
       </li>
 
-      <li class="nav-item" v-if="hasModuleAccess('audit_logs')">
+      <li class="nav-item">
         <sidenav-collapse :collapse="false" collapseRef="audit-trail" navText="Audit Logs">
           <template v-slot:icon>
             <span class="material-symbols-rounded sidenav-icon">manage_search</span>
@@ -126,13 +126,6 @@ export default {
     }
   },
   methods: {
-    hasModuleAccess(module) {
-      const profile = this.$store.getters["profile/getUserProfile"];
-      if (profile?.role === "System Administrator") {
-        return true;
-      }
-      return !!profile?.module_permissions?.[module]?.can_view;
-    },
     getRoute() {
       const routeArr = this.$route.path.split("/");
       return routeArr[1];
