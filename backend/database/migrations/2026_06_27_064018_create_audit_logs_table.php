@@ -7,23 +7,32 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // The finalized ConTrackPro schema already creates audit_logs. Keep this
+        // migration idempotent so older branches can merge without resetting data.
+        if (Schema::hasTable("audit_logs")) {
+            return;
+        }
+
         Schema::create("audit_logs", function (Blueprint $table) {
             $table->id();
-            $table->foreignId("user_id")->nullable()->constrained("users")->nullOnDelete();
-            $table->string("user_name")->nullable();
-            $table->string("user_role")->nullable();
-            $table->string("module")->nullable();
+            $table->foreignId("user_id")->nullable()->constrained()->nullOnDelete();
             $table->string("action");
-            $table->string("record_affected")->nullable();
-            $table->text("remarks")->nullable();
+            $table->string("module");
+            $table->unsignedBigInteger("record_id")->nullable();
+            $table->string("record_code")->nullable();
+            $table->json("old_values")->nullable();
+            $table->json("new_values")->nullable();
             $table->string("ip_address")->nullable();
-            $table->string("user_agent")->nullable();
-            $table->timestamps();
+            $table->text("user_agent")->nullable();
+            $table->text("remarks")->nullable();
+            $table->timestamp("performed_at")->useCurrent();
+
+            $table->index(["module", "record_id"]);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists("audit_logs");
+        // No-op: audit_logs belongs to the finalized base schema migration.
     }
 };

@@ -164,6 +164,8 @@ Route::prefix("v2")->middleware("json.api")->group(function () {
 
         Route::get("/roles",                    [UserManagementController::class, "roles"])->middleware("permission:roles,view");
 
+        Route::get("/projects/options",         [ProjectController::class, "options"])->middleware("permission:projects,view");
+
         // Engineering plans
         Route::get("/engineering-plans",        [EngineeringPlanController::class, "index"])->middleware("permission:engineering_plans,view");
         Route::post("/engineering-plans",       [EngineeringPlanController::class, "store"])->middleware("permission:engineering_plans,create");

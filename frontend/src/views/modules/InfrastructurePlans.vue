@@ -373,16 +373,44 @@
             </label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">groups</i>
-              <input
+              <select
                 id="m-contractor"
-                v-model="form.contractor"
+                v-model="form.contractor_id"
+                class="bfp-input bfp-select"
+                :class="{ 'bfp-input-error': errors.contractor_id }"
+              >
+                <option value="">Select contractor</option>
+                <option
+                  v-for="contractor in contractors"
+                  :key="contractor.id"
+                  :value="contractor.id"
+                >
+                  {{ contractor.company_name }}
+                </option>
+                <option value="__new">+ Add new contractor</option>
+              </select>
+            </div>
+            <span v-if="errors.contractor_id" class="bfp-error-msg">{{ errors.contractor_id }}</span>
+          </div>
+
+          <div v-if="form.contractor_id === '__new'" class="bfp-field bfp-field-full">
+            <label class="bfp-label" for="m-new-contractor">
+              New Contractor Name <span class="bfp-required">*</span>
+            </label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">business</i>
+              <input
+                id="m-new-contractor"
+                v-model="form.new_contractor_name"
                 type="text"
                 class="bfp-input"
-                :class="{ 'bfp-input-error': errors.contractor }"
+                :class="{ 'bfp-input-error': errors.new_contractor_name }"
                 placeholder="Accredited contractor or company name"
               />
             </div>
-            <span v-if="errors.contractor" class="bfp-error-msg">{{ errors.contractor }}</span>
+            <span v-if="errors.new_contractor_name" class="bfp-error-msg">
+              {{ errors.new_contractor_name }}
+            </span>
           </div>
 
           <div class="bfp-field bfp-field-half">
@@ -622,6 +650,7 @@ export default {
       },
       currentPage: 1,
       perPage: 6,
+      contractors: [],
       filters: { name: "", code: "", location: "", status: "", phase: "" },
       locations: ["Cagayan", "Isabela", "Nueva Vizcaya", "Quirino"],
       phases: ["Planning", "Foundation", "Construction", "Finishing", "Post-Eval"],
@@ -647,7 +676,8 @@ export default {
         code: "",
         name: "",
         location: "",
-        contractor: "",
+        contractor_id: "",
+        new_contractor_name: "",
         startDate: "",
         endDate: "",
         budget: "",
@@ -661,6 +691,7 @@ export default {
   },
 
   mounted() {
+    this.fetchProjectOptions();
     this.fetchProjects(1);
   },
 
@@ -803,6 +834,34 @@ export default {
   },
 
   methods: {
+    emptyForm() {
+      return {
+        id: null,
+        code: "",
+        name: "",
+        location: "",
+        contractor_id: "",
+        new_contractor_name: "",
+        startDate: "",
+        endDate: "",
+        budget: "",
+        phase: "",
+        status: "",
+        progress: 0,
+        notes: "",
+      };
+    },
+
+    async fetchProjectOptions() {
+      try {
+        const response = await projectService.getProjectOptions();
+        this.contractors = response.data.contractors || [];
+      } catch (e) {
+        // The project list can still render if options fail; save validation will catch it.
+        this.contractors = [];
+      }
+    },
+
     async fetchProjects(page = 1) {
       this.currentPage = page;
       this.loading = true;
@@ -857,20 +916,7 @@ export default {
     openCreateModal() {
       this.modalError = null;
       this.errors = {};
-      this.form = {
-        id: null,
-        code: "",
-        name: "",
-        location: "",
-        contractor: "",
-        startDate: "",
-        endDate: "",
-        budget: "",
-        phase: "",
-        status: "",
-        progress: 0,
-        notes: "",
-      };
+      this.form = this.emptyForm();
       this.showModal = true;
     },
 
@@ -878,20 +924,7 @@ export default {
       this.showModal = false;
       this.modalError = null;
       this.errors = {};
-      this.form = {
-        id: null,
-        code: "",
-        name: "",
-        location: "",
-        contractor: "",
-        startDate: "",
-        endDate: "",
-        budget: "",
-        phase: "",
-        status: "",
-        progress: 0,
-        notes: "",
-      };
+      this.form = this.emptyForm();
     },
 
     validateForm() {
@@ -899,7 +932,10 @@ export default {
       if (!this.form.code.trim()) e.code = "Project code is required.";
       if (!this.form.name.trim()) e.name = "Project name is required.";
       if (!this.form.location) e.location = "Please select a province.";
-      if (!this.form.contractor?.trim()) e.contractor = "Contractor / firm is required.";
+      if (!this.form.contractor_id) e.contractor_id = "Please select a contractor.";
+      if (this.form.contractor_id === "__new" && !this.form.new_contractor_name.trim()) {
+        e.new_contractor_name = "New contractor name is required.";
+      }
       if (!this.form.phase) e.phase = "Please select a phase.";
       if (!this.form.status) e.status = "Please select a status.";
       this.errors = e;
@@ -932,11 +968,13 @@ export default {
       this.errors = {};
 
       try {
+        const isNewContractor = this.form.contractor_id === "__new";
         const payload = {
           code: this.form.code.trim(),
           name: this.form.name.trim(),
           location: this.form.location,
-          contractor: this.form.contractor?.trim() || null,
+          contractor_id: isNewContractor ? null : this.form.contractor_id,
+          new_contractor_name: isNewContractor ? this.form.new_contractor_name.trim() : null,
           startDate: this.form.startDate || null,
           endDate: this.form.endDate || null,
           budget: this.parseBudget(this.form.budget),
@@ -953,6 +991,7 @@ export default {
         }
 
         this.closeModal();
+        await this.fetchProjectOptions();
         await this.fetchProjects(this.currentPage);
       } catch (e) {
         const response = e.response?.data || {};
@@ -983,12 +1022,15 @@ export default {
 
       this.modalError = null;
       this.errors = {};
+      const existingContractorId = project.contractor_id || this.contractorIdByName(project.contractor);
+      const contractorName = project.contractor === "-" ? "" : project.contractor;
       this.form = {
         id: project.id,
         code: project.code,
         name: project.name,
         location: project.location,
-        contractor: project.contractor === "-" ? "" : project.contractor,
+        contractor_id: existingContractorId || (contractorName ? "__new" : ""),
+        new_contractor_name: existingContractorId ? "" : contractorName,
         startDate: project.start_date,
         endDate: project.end_date,
         budget: project.budget,
@@ -998,6 +1040,18 @@ export default {
         notes: project.notes || "",
       };
       this.showModal = true;
+    },
+
+    contractorIdByName(name) {
+      if (!name || name === "-") {
+        return "";
+      }
+
+      const contractor = this.contractors.find(
+        (item) => String(item.company_name).toLowerCase() === String(name).toLowerCase()
+      );
+
+      return contractor ? contractor.id : "";
     },
 
     statusLabel(status) {
