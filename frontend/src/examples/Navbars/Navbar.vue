@@ -218,23 +218,31 @@ export default {
 .contrack-profile {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
   padding-left: 1.35rem;
   border-left: 1px solid #e6c9c9;
   position: relative;
+  min-width: 0;
 }
 
 .contrack-profile__text {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   line-height: 1.15;
+  min-width: 150px;
+  max-width: 220px;
+  text-align: left;
 }
 
 .contrack-profile__text strong {
   color: #1f140f;
   font-size: 0.95rem;
   font-weight: 800;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .contrack-profile__text span {
@@ -242,7 +250,7 @@ export default {
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  max-width: 180px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

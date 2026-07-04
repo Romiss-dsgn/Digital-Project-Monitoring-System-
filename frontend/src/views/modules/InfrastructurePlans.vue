@@ -9,10 +9,6 @@
           </p>
         </div>
         <div class="col-auto infra-header-actions">
-          <button class="btn btn-outline-secondary btn-sm infra-ghost-btn" type="button" @click="showFilterModal = true">
-            <i class="material-icons-round">tune</i>
-            Apply Filters
-          </button>
           <button
             v-if="canCreate"
             class="btn btn-primary btn-sm infra-primary-btn"
@@ -46,7 +42,6 @@
       <div class="card inventory-card shadow-sm border-0 mb-4">
         <div class="inventory-header">
           <div>
-            <p class="section-kicker mb-1">Project Inventory</p>
             <h5 class="mb-0">Project Inventory</h5>
           </div>
           <div class="inventory-toolbar">
@@ -62,10 +57,6 @@
                 {{ tab.label }}
               </button>
             </div>
-            <button class="btn btn-outline-secondary btn-sm infra-toolbar-btn" type="button" @click="showFilterModal = true">
-              <i class="material-icons-round">filter_alt</i>
-              Filters
-            </button>
           </div>
         </div>
 
@@ -80,7 +71,7 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Progress %</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Phase</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 inventory-actions-head">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -105,12 +96,14 @@
                   <span class="project-code">{{ project.code }}</span>
                 </td>
                 <td class="align-middle text-sm">
-                  <div class="project-name">{{ project.name }}</div>
+                  <div class="project-name" :title="project.name">{{ project.name }}</div>
                 </td>
                 <td class="align-middle text-sm">
-                  <div class="project-location">{{ project.location }}</div>
+                  <div class="project-location" :title="project.location">{{ project.location }}</div>
                 </td>
-                <td class="align-middle text-sm">{{ project.contractor }}</td>
+                <td class="align-middle text-sm">
+                  <div class="project-contractor" :title="project.contractor">{{ project.contractor }}</div>
+                </td>
                 <td class="align-middle text-sm">
                   <div class="d-flex align-items-center gap-2 progress-group">
                     <div class="progress progress-sm flex-grow-1">
@@ -132,33 +125,49 @@
                     {{ statusLabel(project.status) }}
                   </span>
                 </td>
-                <td class="align-middle text-end">
-                  <div class="dropdown">
+                <td class="align-middle inventory-actions-cell">
+                  <div class="inventory-actions-menu">
                     <button
-                      class="btn btn-sm btn-icon btn-light text-secondary"
+                      class="btn btn-sm btn-icon btn-light text-secondary inventory-action-btn"
                       type="button"
                       :disabled="!canEdit && !canDelete"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
+                      :aria-expanded="openActionMenuId === project.id"
                       :title="canEdit || canDelete ? 'Project actions' : 'No actions available'"
+                      @click.stop="toggleActionMenu(project.id, $event)"
                     >
                       <i class="material-icons-round">more_vert</i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                      <li v-if="canEdit">
-                        <a class="dropdown-item" href="#" @click.prevent="editProject(project)">
-                          <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
-                          Edit
-                        </a>
-                      </li>
-                      <li v-if="canEdit && canDelete"><hr class="dropdown-divider" /></li>
-                      <li v-if="canDelete">
-                        <a class="dropdown-item text-danger" href="#" @click.prevent="deleteProject(project)">
-                          <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
-                          Delete
-                        </a>
-                      </li>
-                    </ul>
+                    <div
+                      v-if="openActionMenuId === project.id"
+                      class="inventory-action-menu"
+                      :style="{
+                        top: `${actionMenuPosition.top}px`,
+                        left: `${actionMenuPosition.left}px`,
+                      }"
+                      role="menu"
+                      @click.stop
+                    >
+                      <button
+                        v-if="canEdit"
+                        class="inventory-action-menu-item"
+                        type="button"
+                        role="menuitem"
+                        @click="handleEditProject(project)"
+                      >
+                        <i class="material-icons-round dropdown-icon edit-icon">edit</i>
+                        Edit
+                      </button>
+                      <button
+                        v-if="canDelete"
+                        class="inventory-action-menu-item danger"
+                        type="button"
+                        role="menuitem"
+                        @click="handleDeleteProject(project)"
+                      >
+                        <i class="material-icons-round dropdown-icon">delete</i>
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -213,10 +222,6 @@
                 <h5 class="mb-0">Regional Distribution</h5>
                 <p class="section-subtext mb-0">Projects mapped by geographical cluster</p>
               </div>
-              <button class="analytics-link" type="button" @click="showFilterModal = true">
-                View Filters
-                <i class="material-icons-round">chevron_right</i>
-              </button>
             </div>
 
             <div class="regional-grid">
@@ -627,6 +632,11 @@ export default {
       error: null,
       modalError: null,
       isSubmitting: false,
+      openActionMenuId: null,
+      actionMenuPosition: {
+        top: 0,
+        left: 0,
+      },
       permissions: {
         can_create: false,
         can_edit: false,
@@ -693,6 +703,15 @@ export default {
   mounted() {
     this.fetchProjectOptions();
     this.fetchProjects(1);
+    document.addEventListener("click", this.closeActionMenu);
+    window.addEventListener("resize", this.closeActionMenu);
+    window.addEventListener("scroll", this.closeActionMenu, true);
+  },
+
+  beforeUnmount() {
+    document.removeEventListener("click", this.closeActionMenu);
+    window.removeEventListener("resize", this.closeActionMenu);
+    window.removeEventListener("scroll", this.closeActionMenu, true);
   },
 
   computed: {
@@ -911,6 +930,52 @@ export default {
 
     setFilterStatus(status) {
       this.filters.status = status || "";
+    },
+
+    toggleActionMenu(projectId, event) {
+      if (!this.canEdit && !this.canDelete) {
+        return;
+      }
+
+      if (this.openActionMenuId === projectId) {
+        this.closeActionMenu();
+        return;
+      }
+
+      this.positionActionMenu(event.currentTarget);
+      this.openActionMenuId = projectId;
+    },
+
+    positionActionMenu(trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const menuWidth = 132;
+      const menuHeight = 92;
+      const margin = 8;
+      const viewportPadding = 8;
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      );
+      const opensUp = rect.bottom + menuHeight + margin > window.innerHeight;
+
+      this.actionMenuPosition = {
+        top: opensUp ? Math.max(viewportPadding, rect.top - menuHeight - margin) : rect.bottom + margin,
+        left,
+      };
+    },
+
+    closeActionMenu() {
+      this.openActionMenuId = null;
+    },
+
+    handleEditProject(project) {
+      this.closeActionMenu();
+      this.editProject(project);
+    },
+
+    handleDeleteProject(project) {
+      this.closeActionMenu();
+      this.deleteProject(project);
     },
 
     openCreateModal() {
@@ -1174,12 +1239,24 @@ export default {
     linear-gradient(180deg, #f7f8fc 0%, #f5f6fa 100%);
 }
 
+.infra-page {
+  --infra-content-pad-x: 1.35rem;
+  --infra-card-radius: 1rem;
+  font-size: 0.92rem;
+}
+
+.infra-page :deep(.container-fluid) {
+  padding-left: var(--infra-content-pad-x) !important;
+  padding-right: var(--infra-content-pad-x) !important;
+}
+
 .infra-page-header {
-  min-height: 52px;
+  min-height: 46px;
+  margin-bottom: 1.25rem !important;
 }
 
 .infra-page-header h4 {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #111827;
   line-height: 1.2;
@@ -1202,9 +1279,9 @@ export default {
 .infra-ghost-btn,
 .infra-primary-btn,
 .infra-toolbar-btn {
-  min-height: 42px;
-  border-radius: 0.95rem;
-  padding-inline: 1rem;
+  min-height: 38px;
+  border-radius: 0.85rem;
+  padding-inline: 0.9rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -1216,25 +1293,25 @@ export default {
 }
 
 .stat-card {
-  border-radius: 1.25rem;
+  border-radius: var(--infra-card-radius);
   background: #fff;
 }
 
 .stat-card .card-body {
-  padding: 1.25rem 1.35rem 1.15rem;
+  padding: 1rem 1.15rem;
 }
 
 .stat-card-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.7rem;
 }
 
 .stat-icon {
-  width: 2.7rem;
-  height: 2.7rem;
-  border-radius: 0.9rem;
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 0.8rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1303,7 +1380,7 @@ export default {
 }
 
 .stat-value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
   line-height: 1;
   color: #111827;
@@ -1311,10 +1388,14 @@ export default {
 
 .stat-note {
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
 }
 
-.inventory-card,
+.inventory-card {
+  border-radius: 8px;
+  overflow: visible;
+}
+
 .analytics-card {
   border-radius: 8px;
   overflow: hidden;
@@ -1326,12 +1407,13 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1.35rem 1.45rem;
+  padding: 1.1rem 1.25rem;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .inventory-header {
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .inventory-toolbar {
@@ -1340,15 +1422,58 @@ export default {
   gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+  margin-left: auto;
 }
 
 .inventory-table-shell {
   overflow-x: auto;
   overflow-y: visible;
+  scrollbar-gutter: stable;
 }
 
 .inventory-table {
-  min-width: 1120px;
+  min-width: 1180px;
+  table-layout: fixed;
+}
+
+.inventory-table th:nth-child(1),
+.inventory-table td:nth-child(1) {
+  width: 150px;
+}
+
+.inventory-table th:nth-child(2),
+.inventory-table td:nth-child(2) {
+  width: 265px;
+}
+
+.inventory-table th:nth-child(3),
+.inventory-table td:nth-child(3) {
+  width: 145px;
+}
+
+.inventory-table th:nth-child(4),
+.inventory-table td:nth-child(4) {
+  width: 220px;
+}
+
+.inventory-table th:nth-child(5),
+.inventory-table td:nth-child(5) {
+  width: 180px;
+}
+
+.inventory-table th:nth-child(6),
+.inventory-table td:nth-child(6) {
+  width: 130px;
+}
+
+.inventory-table th:nth-child(7),
+.inventory-table td:nth-child(7) {
+  width: 150px;
+}
+
+.inventory-table th:nth-child(8),
+.inventory-table td:nth-child(8) {
+  width: 78px;
 }
 
 .inventory-tabs {
@@ -1379,12 +1504,14 @@ export default {
 .inventory-table thead th {
   background: #fff;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  padding: 0.95rem 1.1rem;
+  padding: 0.78rem 0.9rem;
+  vertical-align: middle;
 }
 
 .inventory-table tbody td {
-  padding: 1.02rem 1.1rem;
+  padding: 0.82rem 0.9rem;
   border-color: rgba(15, 23, 42, 0.07);
+  vertical-align: middle;
 }
 
 .project-code {
@@ -1399,14 +1526,22 @@ export default {
 .project-name {
   font-weight: 700;
   color: #1f2937;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.project-location {
+.project-location,
+.project-contractor {
   color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .progress-group {
-  min-width: 160px;
+  min-width: 130px;
 }
 
 .progress {
@@ -1457,7 +1592,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0.35rem 0.8rem;
+  padding: 0.3rem 0.65rem;
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 800;
@@ -1529,8 +1664,8 @@ export default {
 }
 
 .btn-icon {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -1538,26 +1673,77 @@ export default {
   border-radius: 8px;
 }
 
-.dropdown-menu {
+.inventory-actions-head,
+.inventory-actions-cell {
+  text-align: center !important;
+}
+
+.inventory-actions-cell {
+  padding-left: 0.45rem !important;
+  padding-right: 0.45rem !important;
+}
+
+.inventory-actions-menu {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.inventory-action-btn {
+  margin: 0 auto;
+  color: #64748b !important;
+  background: #f5f7fb !important;
+  border: 1px solid transparent !important;
+}
+
+.inventory-action-btn .material-icons-round {
+  font-size: 1.05rem;
+}
+
+.inventory-action-btn:hover:not(:disabled),
+.inventory-action-btn:focus-visible {
+  color: #8b0000 !important;
+  background: #fff !important;
+  border-color: rgba(139, 0, 0, 0.16) !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.inventory-action-menu {
+  position: fixed;
+  min-width: 132px;
+  padding: 0.35rem;
+  background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+  z-index: 1060;
 }
 
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
+.inventory-action-menu-item {
   display: flex;
   align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: left;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
 }
 
-.dropdown-item:hover {
+.inventory-action-menu-item:hover {
   background: #f3f4f6;
 }
 
-.dropdown-item.text-danger:hover {
+.inventory-action-menu-item.danger {
+  color: #c62828;
+}
+
+.inventory-action-menu-item.danger:hover {
   background: #fef2f2;
 }
 
