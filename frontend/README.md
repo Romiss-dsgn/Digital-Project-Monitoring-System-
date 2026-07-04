@@ -92,9 +92,9 @@ frontend/src/views/modules/ContractorPerformance.vue
 | Profile | Connected to backend `/me` profile endpoints. |
 | Layout | ConTrackPro header/sidebar branding applied. Shared ConTrackPro footer is enabled for authenticated module pages. |
 | Dashboard | Designed as the system overview. Some summary values may still be static or partially connected. |
-| Infrastructure Plans | Project-based work in progress. Uses project service and backend project routes. |
+| Infrastructure Plans | Connected to DB-backed project API. Create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header are active. |
 | Contract Management | Connected to DB-backed contract API. Create/update/archive, summary, filters, document workflow. |
-| Engineering Plans | Connected to DB-backed engineering plans API for list, stats, pagination, project dropdown, and upload. Review/download/archive still pending. |
+| Engineering Plans | Connected to DB-backed engineering plans API for list, stats, pagination, project dropdown, upload, download, review status changes, and archive actions. |
 | Project Accomplishments | Connected to DB-backed accomplishments API. Create/update/archive/validate, summary, documents. |
 | User Management | Frontend module is active work. Backend admin endpoints exist. |
 | Cashflows | UI exists; backend integration pending. |

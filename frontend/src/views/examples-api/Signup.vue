@@ -223,7 +223,6 @@
 
 <script>
 import showSwal from "@/mixins/showSwal";
-import { mapMutations } from "vuex";
 import * as Yup from "yup";
 import logo from "@/assets/img/system-logo/logo.jpg";
 import bgImage from "@/assets/img/bg.png";
@@ -272,16 +271,7 @@ export default {
             return `linear-gradient(175deg, rgba(180, 14, 26, 0.84) 0%, rgba(120, 10, 20, 0.80) 35%, rgba(28, 34, 58, 0.82) 100%), url(${this.bgImage})`;
         },
     },
-    beforeMount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
-    beforeUnmount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
     methods: {
-        ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
         async handleSignup() {
             try {
                 await this.schema.validate(

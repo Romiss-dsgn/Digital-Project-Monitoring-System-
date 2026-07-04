@@ -178,7 +178,6 @@
 
 <script>
 import showSwal from "@/mixins/showSwal";
-import { mapMutations } from "vuex";
 import logo from "@/assets/img/BFP 11.png";
 import bgImage from "@/assets/img/bg.png";
 
@@ -202,16 +201,7 @@ export default {
             return this.$store.state.auth.loggedIn;
         }
     },
-    beforeMount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
-    beforeUnmount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
     methods: {
-        ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
         async handleLogin() {
             if (!this.user.email || !this.user.password) {
                 showSwal.methods.showSwal({

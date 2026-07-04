@@ -83,7 +83,6 @@
 
 <script>
 import showSwal from "@/mixins/showSwal";
-import { mapMutations } from "vuex";
 import bgImage from "@/assets/img/bg.png";
 
 export default {
@@ -101,16 +100,7 @@ export default {
             return `linear-gradient(180deg, rgba(200,17,32,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
         },
     },
-    beforeMount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
-    beforeUnmount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
     methods: {
-        ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
         async handleSubmit() {
             if (!this.email) {
                 showSwal.methods.showSwal({

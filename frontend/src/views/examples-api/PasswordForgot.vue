@@ -71,7 +71,6 @@
 
 <script>
 import showSwal from "@/mixins/showSwal";
-import { mapMutations } from "vuex";
 import * as Yup from "yup";
 import logo from "@/assets/img/BFP 11.png";
 import bgImage from "@/assets/img/bg.png";
@@ -95,16 +94,7 @@ export default {
             return `linear-gradient(180deg, rgba(200,17,32,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
         },
     },
-    beforeMount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
-    beforeUnmount() {
-        this.toggleEveryDisplay();
-        this.toggleHideConfig();
-    },
     methods: {
-        ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
         async handleReset() {
             try {
                 await this.schema.validate(

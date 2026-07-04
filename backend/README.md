@@ -48,7 +48,7 @@ backend/
 | Projects / Infrastructure Plans | Project model, seeder, policy, controller, and admin routes are present. Infrastructure Plans owns project creation. |
 | Contract Management | Contracts CRUD/archive, document upload/download/status/archive, summary/options endpoints, audit logging, tests. |
 | Project Accomplishments | Accomplishment CRUD/archive/validation, document upload/download, project progress sync, summary/options endpoints, tests. |
-| Engineering Plans | DB-backed list/stats endpoint, request validation, file service, project-linked upload/store endpoint, and seeder exist. Review/download/archive API still pending. |
+| Engineering Plans | DB-backed list/stats/show endpoints, request validation, file service, project-linked upload/store endpoint, authenticated download, review status update, archive, audit logging, and seeder exist. |
 | Cashflows | Tables/models exist. Controller/API work pending. |
 | Variation Orders | Tables/models exist. Controller/API work pending. |
 | Reports | Tables/models foundation exists through source modules. Report controller/API pending. |

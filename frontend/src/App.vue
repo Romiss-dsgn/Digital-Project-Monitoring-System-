@@ -16,7 +16,7 @@ Coded by www.creative-tim.com
   <sidenav
     :custom_class="color"
     :class="[isRTL ? 'fixed-end' : 'fixed-start']"
-    v-if="showSidenav"
+    v-if="showAppShell && showSidenav"
   />
   <main
     class="main-content position-relative max-height-vh-100 h-100 overflow-x-hidden"
@@ -26,10 +26,10 @@ Coded by www.creative-tim.com
       :class="[isNavFixed ? navbarFixed : '', isAbsolute ? absolute : '']"
       :color="isAbsolute ? 'text-white opacity-8' : ''"
       :minNav="navbarMinimize"
-      v-if="showNavbar"
+      v-if="showAppShell && showNavbar"
     />
     <router-view />
-    <app-footer v-if="showFooter" />
+    <app-footer v-if="showAppShell && showFooter" />
   </main>
 </template>
 <script>
@@ -59,7 +59,10 @@ export default {
       "showSidenav",
       "showNavbar",
       "showFooter"
-    ])
+    ]),
+    showAppShell() {
+      return !this.$route.matched.some((record) => record.meta.hideAppShell);
+    }
   },
   beforeMount() {
     this.$store.state.isTransparent = "bg-transparent";

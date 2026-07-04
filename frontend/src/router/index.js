@@ -69,31 +69,37 @@ const routes = [
     path: "/sign-in",
     name: "SignIn",
     component: SignIn,
+    meta: { public: true, hideAppShell: true },
   },
   {
     path: "/sign-up",
     name: "SignUp",
     component: SignUp,
+    meta: { public: true, hideAppShell: true },
   },
   {
     path: "/login",
     name: "Login",
-    component: Login
+    component: Login,
+    meta: { public: true, hideAppShell: true },
   },
   {
     path: "/signup",
     name: "Signup",
-    component: Signup
+    component: Signup,
+    meta: { public: true, hideAppShell: true },
   },
   {
     path: "/password-forgot",
     name: "Password Forgot",
-    component: PasswordForgot
+    component: PasswordForgot,
+    meta: { public: true, hideAppShell: true },
   },
   {
     path: "/password-reset",
     name: "Password Reset",
-    component: PasswordReset
+    component: PasswordReset,
+    meta: { public: true, hideAppShell: true },
   },
   {
     path: "/user-profile",
@@ -174,6 +180,25 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
   linkActiveClass: "active",
+});
+
+// Keep protected pages from rendering before auth is known.
+// Auth pages declare `hideAppShell`, so the sidebar/navbar never flash before redirect.
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("user_free");
+  const isPublic = to.matched.some((record) => record.meta.public);
+
+  if (!isPublic && !token) {
+    next({ name: "Login", query: { redirect: to.fullPath } });
+    return;
+  }
+
+  if (isPublic && token && ["Login", "Signup", "SignIn", "SignUp"].includes(to.name)) {
+    next({ name: "Dashboard" });
+    return;
+  }
+
+  next();
 });
 
 export default router;

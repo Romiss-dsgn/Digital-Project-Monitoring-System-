@@ -20,8 +20,8 @@ This repository contains:
 | Docker | Backend, MySQL 8, and phpMyAdmin are containerized for local development. |
 | Contract Management | DB-backed MVP with contracts CRUD/archive, document upload/download/review/archive, summary cards, seed data, audit logging, and tests. |
 | Project Accomplishments | DB-backed MVP with accomplishments CRUD/archive/validation, document upload/download, project progress sync, summary cards, seed data, and tests. |
-| Infrastructure Plans | DB-backed project register foundation is active. This module owns project creation and baseline project data. |
-| Engineering Plans | DB-backed MVP for list, summary cards, pagination, project dropdown, and upload. Review/download/archive workflow is still pending. |
+| Infrastructure Plans | DB-backed MVP with project create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header. This module owns project creation and baseline project data. |
+| Engineering Plans | DB-backed MVP with list, summary cards, pagination, project dropdown, upload, authenticated download, review status updates, archive, and audit logging. |
 | Cashflows | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
 | Variation Orders | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
 | Reports and Audit Logs | Frontend modules exist. Audit log table/service exists. Full reporting module is still pending. |

@@ -203,6 +203,10 @@ These endpoints are DB-backed for the current Engineering Plans MVP. Engineering
 | --- | --- | --- |
 | GET | `/admin/engineering-plans` | Paginated/filterable engineering plan document list with summary stats. |
 | POST | `/admin/engineering-plans` | Upload/store engineering plan record and file. |
+| GET | `/admin/engineering-plans/{engineeringPlan}` | Show one engineering plan record. |
+| GET | `/admin/engineering-plans/{engineeringPlan}/download` | Authenticated download for the stored plan file. |
+| PATCH | `/admin/engineering-plans/{engineeringPlan}/status` | Update review status, reviewer, review timestamp, and remarks. |
+| DELETE | `/admin/engineering-plans/{engineeringPlan}` | Archive an engineering plan record. |
 
 Use `multipart/form-data` for engineering plan uploads.
 
@@ -233,9 +237,11 @@ Current frontend behavior:
 - Loads rows and stats from `GET /admin/engineering-plans`.
 - Loads project options from the project API.
 - Requires an existing project before upload.
-- Refreshes the list from the database after upload.
-
-Pending work should add show, authenticated download, review/status update, archive, and audit logging.
+- Uploads plan files through `POST /admin/engineering-plans`.
+- Downloads stored files through the authenticated download endpoint.
+- Updates review status from the row actions.
+- Archives records instead of hard-deleting them.
+- Refreshes the list from the database after write actions.
 
 ### JSON:API User Resource
 
