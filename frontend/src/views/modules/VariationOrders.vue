@@ -397,7 +397,7 @@
       confirm-text="Close"
       confirm-icon="close"
       :show-cancel="false"
-      @close="showDetailModal = false"
+      @close="closeDetailModal"
     >
       <div v-if="detailOrder" class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">assignment</i> Order Information</div>
@@ -448,6 +448,57 @@
       </div>
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Supporting Documents</div>
+        <div v-if="permissions.can_create" class="document-upload-panel mb-3">
+          <div class="bfp-form-grid">
+            <div class="bfp-field-half">
+              <label class="bfp-label">Document Title</label>
+              <div class="bfp-input-wrap">
+                <i class="material-icons-round bfp-input-icon">badge</i>
+                <input
+                  class="bfp-input"
+                  type="text"
+                  v-model="documentUpload.document_title"
+                  placeholder="Optional document title"
+                />
+              </div>
+            </div>
+            <div class="bfp-field-half">
+              <label class="bfp-label">File</label>
+              <div class="bfp-input-wrap">
+                <input
+                  ref="documentFileInput"
+                  class="bfp-input"
+                  type="file"
+                  accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png"
+                  @change="handleDocumentFileChange"
+                />
+              </div>
+            </div>
+            <div class="bfp-field-full">
+              <label class="bfp-label">Remarks</label>
+              <div class="bfp-input-wrap">
+                <textarea
+                  class="bfp-input bfp-textarea"
+                  rows="2"
+                  v-model="documentUpload.remarks"
+                  placeholder="Optional remarks"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 d-flex justify-content-end">
+            <button
+              type="button"
+              class="btn btn-sm btn-primary"
+              :disabled="uploadingDocument || !documentUpload.file"
+              @click="uploadDetailDocument"
+            >
+              <span v-if="uploadingDocument" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <i v-else class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle;">upload</i>
+              {{ uploadingDocument ? 'Uploading...' : 'Upload Document' }}
+            </button>
+          </div>
+        </div>
         <div v-if="detailOrder.documents && detailOrder.documents.length" class="document-list">
           <div v-for="doc in detailOrder.documents" :key="doc.id" class="document-row">
             <div class="document-info">
@@ -524,7 +575,12 @@ export default {
       monthlyBreakdown: [],
       showDetailModal: false,
       detailOrder: null,
-      uploadingDocument: null,
+      uploadingDocument: false,
+      documentUpload: {
+        file: null,
+        document_title: '',
+        remarks: '',
+      },
       errorMessage: '',
     };
   },
@@ -624,12 +680,14 @@ async loadSummary() {
     },
 
     calculateMonthlyGrowth() {
-      const months = this.monthlyBreakdown || [];
+      const months = (this.summary?.monthly_breakdown || this.monthlyBreakdown || []).filter(Boolean);
       if (months.length < 2) return 0;
-      const latest = months[months.length - 1].amount || 0;
-      const previous = months[months.length - 2].amount || 0;
-      if (previous === 0) return latest > 0 ? 100 : 0;
-      return Math.round(((latest - previous) / previous) * 100);
+
+      const latestAmount = Number(months[months.length - 1]?.amount || 0);
+      const previousAmount = Number(months[months.length - 2]?.amount || 0);
+
+      if (previousAmount === 0) return latestAmount > 0 ? 100 : 0;
+      return Math.round(((latestAmount - previousAmount) / previousAmount) * 100);
     },
 
     calculateContingencyUtilization() {
@@ -765,9 +823,57 @@ async loadSummary() {
           console.warn('[VariationOrders] Unexpected detail response shape', response);
         }
         this.detailOrder = data;
+        this.resetDocumentUpload();
         this.showDetailModal = true;
       } catch (error) {
         this.showError(error);
+      }
+    },
+
+    closeDetailModal() {
+      this.showDetailModal = false;
+      this.detailOrder = null;
+      this.resetDocumentUpload();
+    },
+
+    handleDocumentFileChange(event) {
+      const file = event?.target?.files?.[0] || null;
+      this.documentUpload.file = file;
+    },
+
+    resetDocumentUpload() {
+      this.documentUpload = {
+        file: null,
+        document_title: '',
+        remarks: '',
+      };
+
+      if (this.$refs.documentFileInput) {
+        this.$refs.documentFileInput.value = '';
+      }
+    },
+
+    async uploadDetailDocument() {
+      if (!this.detailOrder || !this.documentUpload.file) return;
+
+      try {
+        this.uploadingDocument = true;
+        const uploaded = await variationOrderService.uploadDocument(
+          this.detailOrder.id,
+          this.documentUpload.file,
+          this.documentUpload.document_title,
+          this.documentUpload.remarks
+        );
+
+        this.detailOrder = {
+          ...this.detailOrder,
+          documents: [uploaded, ...(this.detailOrder.documents || [])],
+        };
+        this.resetDocumentUpload();
+      } catch (error) {
+        this.showError(error);
+      } finally {
+        this.uploadingDocument = false;
       }
     },
 
@@ -989,6 +1095,17 @@ async loadSummary() {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.document-upload-panel {
+  padding: 1rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.document-upload-panel .bfp-input[type="file"] {
+  padding-left: 12px;
 }
 
 .document-row {

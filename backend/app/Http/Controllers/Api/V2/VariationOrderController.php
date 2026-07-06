@@ -157,6 +157,8 @@ class VariationOrderController extends Controller
 
     public function update(Request $request, VariationOrder $order): JsonResponse
     {
+        $request->request->remove('status');
+
         $validated = $request->validate([
             'contract_id' => [
                 'sometimes',
