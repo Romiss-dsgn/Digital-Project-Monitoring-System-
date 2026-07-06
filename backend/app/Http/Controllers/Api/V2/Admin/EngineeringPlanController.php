@@ -17,12 +17,16 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EngineeringPlanController extends Controller
 {
+    private const MODULE = 'engineering_plans';
+
     public function __construct(
         private readonly EngineeringPlanFileService $fileService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->canModule(self::MODULE, 'view'), 403, 'You do not have permission to view engineering plans.');
+
         $baseQuery = EngineeringPlan::query()
             ->with([
                 'project:id,project_code,project_name',
@@ -71,6 +75,8 @@ class EngineeringPlanController extends Controller
 
     public function store(StoreEngineeringPlanRequest $request): JsonResponse
     {
+        abort_unless($request->user()?->canModule(self::MODULE, 'create'), 403, 'You do not have permission to upload engineering plans.');
+
         $validated = $request->validated();
         $fileInfo = null;
 
@@ -128,8 +134,9 @@ class EngineeringPlanController extends Controller
         }
     }
 
-    public function show(EngineeringPlan $engineeringPlan): JsonResponse
+    public function show(Request $request, EngineeringPlan $engineeringPlan): JsonResponse
     {
+        abort_unless($request->user()?->canModule(self::MODULE, 'view'), 403, 'You do not have permission to view engineering plans.');
         abort_if($engineeringPlan->is_archived, 404);
 
         return response()->json([
@@ -139,6 +146,7 @@ class EngineeringPlanController extends Controller
 
     public function updateStatus(Request $request, EngineeringPlan $engineeringPlan): JsonResponse
     {
+        abort_unless($request->user()?->canModule(self::MODULE, 'approve'), 403, 'You do not have permission to review engineering plans.');
         abort_if($engineeringPlan->is_archived, 404);
 
         $validated = $request->validate([
@@ -174,6 +182,7 @@ class EngineeringPlanController extends Controller
 
     public function destroy(Request $request, EngineeringPlan $engineeringPlan): JsonResponse
     {
+        abort_unless($request->user()?->canModule(self::MODULE, 'delete'), 403, 'You do not have permission to archive engineering plans.');
         abort_if($engineeringPlan->is_archived, 404);
 
         $oldValues = $engineeringPlan->toArray();
@@ -194,8 +203,9 @@ class EngineeringPlanController extends Controller
         ]);
     }
 
-    public function download(EngineeringPlan $engineeringPlan): StreamedResponse
+    public function download(Request $request, EngineeringPlan $engineeringPlan): StreamedResponse
     {
+        abort_unless($request->user()?->canModule(self::MODULE, 'view'), 403, 'You do not have permission to view engineering plans.');
         abort_if($engineeringPlan->is_archived, 404);
         abort_unless(Storage::disk('public')->exists($engineeringPlan->file_path), 404, 'Stored file was not found.');
 
