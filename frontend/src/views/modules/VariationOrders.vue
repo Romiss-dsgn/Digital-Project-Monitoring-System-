@@ -102,7 +102,7 @@
                       <td><strong>{{ formatCurrency(order.amount_change) }}</strong></td>
                       <td>{{ order.time_impact_days || '-' }}</td>
                       <td>
-                        <div class="date-req">Req: {{ formatDate(order.submitted_at) }}</div>
+                        <div class="date-req">Req: {{ formatDate(order.submitted_at || order.created_at) }}</div>
                         <div class="date-app" v-if="order.approved_at">App: {{ formatDate(order.approved_at) }}</div>
                         <div class="date-app muted" v-else>{{ getStatusDateLabel(order) }}</div>
                       </td>
@@ -117,39 +117,39 @@
                           >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                            <li>
-                              <a class="dropdown-item" href="#" @click.prevent="viewOrder(order)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
-                                View
-                              </a>
-                            </li>
-                            <li v-if="order.status === 'Draft'">
-                              <a class="dropdown-item" href="#" @click.prevent="submitOrder(order)" :disabled="!permissions.can_create">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">send</i>
-                                Submit
-                              </a>
-                            </li>
-                            <li v-if="order.status === 'Submitted' || order.status === 'Under Review'">
-                              <a class="dropdown-item" href="#" @click.prevent="openReviewModal(order)" :disabled="!permissions.can_approve">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">rate_review</i>
-                                Review
-                              </a>
-                            </li>
-                            <li v-if="order.status !== 'Draft' && order.status !== 'Approved' && order.status !== 'Rejected'">
-                              <a class="dropdown-item" href="#" @click.prevent="editOrder(order)" :disabled="!permissions.can_edit">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
-                                Edit
-                              </a>
-                            </li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li>
-                              <a class="dropdown-item text-danger" href="#" @click.prevent="archiveOrder(order)" :disabled="!permissions.can_delete">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i>
-                                Archive
-                              </a>
-                            </li>
-                          </ul>
+                           <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                             <li>
+                               <a class="dropdown-item" href="#" @click.prevent="viewOrder(order)">
+                                 <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
+                                 View
+                               </a>
+                             </li>
+                             <li v-if="order.status === 'Draft'">
+                               <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_create }" href="#" @click.prevent="submitOrder(order)">
+                                 <i class="material-icons-round align-middle me-2 dropdown-icon">send</i>
+                                 Submit
+                               </a>
+                             </li>
+                             <li v-if="order.status === 'Submitted' || order.status === 'Under Review'">
+                               <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_approve }" href="#" @click.prevent="openReviewModal(order)">
+                                 <i class="material-icons-round align-middle me-2 dropdown-icon">rate_review</i>
+                                 Review
+                               </a>
+                             </li>
+                             <li v-if="order.status !== 'Draft' && order.status !== 'Approved' && order.status !== 'Rejected'">
+                               <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_edit }" href="#" @click.prevent="editOrder(order)">
+                                 <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
+                                 Edit
+                               </a>
+                             </li>
+                             <li><hr class="dropdown-divider" /></li>
+                             <li>
+                               <a class="dropdown-item text-danger" :class="{ 'disabled-link': !permissions.can_delete }" href="#" @click.prevent="archiveOrder(order)">
+                                 <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i>
+                                 Archive
+                               </a>
+                             </li>
+                           </ul>
                         </div>
                       </td>
                     </tr>
@@ -388,6 +388,83 @@
         </div>
       </div>
     </BfpModal>
+
+    <!-- View Order Detail Modal -->
+    <BfpModal
+      :show="showDetailModal"
+      :title="'VO Details - ' + (detailOrder?.vo_number || '')"
+      stripe="VARIATION ORDER DETAIL"
+      confirm-text="Close"
+      confirm-icon="close"
+      :show-cancel="false"
+      @close="showDetailModal = false"
+    >
+      <div v-if="detailOrder" class="bfp-section">
+        <div class="bfp-section-label"><i class="material-icons-round">assignment</i> Order Information</div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field-half">
+            <label class="bfp-label">VO Number</label>
+            <div class="bfp-input-wrap">
+              <input class="bfp-input" type="text" :value="detailOrder.vo_number" readonly />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Contract</label>
+            <div class="bfp-input-wrap">
+              <input class="bfp-input" type="text" :value="detailOrder.contract_number || detailOrder.contract_title" readonly />
+            </div>
+          </div>
+          <div class="bfp-field-full">
+            <label class="bfp-label">Description</label>
+            <div class="bfp-input-wrap">
+              <textarea class="bfp-input bfp-textarea" rows="3" :value="detailOrder.description" readonly></textarea>
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Amount Change</label>
+            <div class="bfp-input-wrap">
+              <input class="bfp-input" type="text" :value="formatCurrency(detailOrder.amount_change)" readonly />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Time Impact (Days)</label>
+            <div class="bfp-input-wrap">
+              <input class="bfp-input" type="text" :value="detailOrder.time_impact_days || '-'" readonly />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Status</label>
+            <div class="bfp-input-wrap">
+              <input class="bfp-input" type="text" :value="detailOrder.status" readonly />
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Approval Remarks</label>
+            <div class="bfp-input-wrap">
+              <input class="bfp-input" type="text" :value="detailOrder.approval_remarks || '-'" readonly />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bfp-section">
+        <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Supporting Documents</div>
+        <div v-if="detailOrder.documents && detailOrder.documents.length" class="document-list">
+          <div v-for="doc in detailOrder.documents" :key="doc.id" class="document-row">
+            <div class="document-info">
+              <i class="material-icons-round">description</i>
+              <div>
+                <div class="document-title">{{ doc.document_title || doc.file_name }}</div>
+                <div class="document-meta">{{ doc.file_type || 'File' }} · Uploaded by {{ doc.uploaded_by }} on {{ formatDate(doc.uploaded_at) }}</div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" @click.prevent="downloadDoc(doc)">
+              <i class="material-icons-round">download</i> Download
+            </button>
+          </div>
+        </div>
+        <div v-else class="text-secondary small text-center py-3">No documents uploaded</div>
+      </div>
+    </BfpModal>
   </div>
 </template>
 
@@ -444,7 +521,11 @@ export default {
       selectedOrder: null,
       reviewAction: 'Approved',
       approvalRemarks: '',
-      monthlyBreakdown: []
+      monthlyBreakdown: [],
+      showDetailModal: false,
+      detailOrder: null,
+      uploadingDocument: null,
+      errorMessage: '',
     };
   },
   computed: {
@@ -472,7 +553,15 @@ export default {
     async loadPermissions() {
       try {
         const options = await variationOrderService.getOptions();
-        this.permissions = options.permissions || this.permissions;
+        const raw = options.permissions || {};
+        this.permissions = {
+          can_view: raw.view ?? false,
+          can_create: raw.create ?? false,
+          can_edit: raw.edit ?? false,
+          can_delete: raw.delete ?? false,
+          can_approve: raw.approve ?? false,
+          can_export: raw.export ?? false,
+        };
         this.contracts = options.contracts || [];
       } catch (error) {
         console.error('Failed to load variation order permissions:', error);
@@ -535,7 +624,12 @@ async loadSummary() {
     },
 
     calculateMonthlyGrowth() {
-      return 5;
+      const months = this.monthlyBreakdown || [];
+      if (months.length < 2) return 0;
+      const latest = months[months.length - 1].amount || 0;
+      const previous = months[months.length - 2].amount || 0;
+      if (previous === 0) return latest > 0 ? 100 : 0;
+      return Math.round(((latest - previous) / previous) * 100);
     },
 
     calculateContingencyUtilization() {
@@ -587,7 +681,7 @@ async loadSummary() {
         this.loadOrders(1);
         this.loadSummary();
       } catch (error) {
-        console.error('Failed to create variation order:', error);
+        this.showError(error);
       }
     },
 
@@ -608,16 +702,17 @@ async loadSummary() {
         this.loadOrders(this.pagination.current_page);
         this.loadSummary();
       } catch (error) {
-        console.error('Failed to update variation order:', error);
+        this.showError(error);
       }
     },
 
     async submitOrder(order) {
+      if (!confirm(`Are you sure you want to submit variation order ${order.vo_number}?`)) return;
       try {
         await variationOrderService.submitVariationOrder(order.id);
         this.loadOrders(this.pagination.current_page);
       } catch (error) {
-        console.error('Failed to submit variation order:', error);
+        this.showError(error);
       }
     },
 
@@ -631,6 +726,12 @@ async loadSummary() {
     async reviewOrder() {
       if (!this.selectedOrder) return;
 
+      const confirmMessage = this.reviewAction === 'Rejected'
+        ? `Are you sure you want to reject variation order ${this.selectedOrder.vo_number}?`
+        : `Are you sure you want to ${this.reviewAction.toLowerCase()} variation order ${this.selectedOrder.vo_number}?`;
+
+      if (!confirm(confirmMessage)) return;
+
       try {
         await variationOrderService.reviewVariationOrder(
           this.selectedOrder.id,
@@ -642,23 +743,45 @@ async loadSummary() {
         this.loadOrders(this.pagination.current_page);
         this.loadSummary();
       } catch (error) {
-        console.error('Failed to review variation order:', error);
+        this.showError(error);
       }
     },
 
     async archiveOrder(order) {
-      if (confirm(`Are you sure you want to archive variation order ${order.vo_number}?`)) {
-        try {
-          await variationOrderService.archiveVariationOrder(order.id);
-          this.loadOrders(this.pagination.current_page);
-        } catch (error) {
-          console.error('Failed to archive variation order:', error);
-        }
+      if (!confirm(`Are you sure you want to archive variation order ${order.vo_number}?`)) return;
+      try {
+        await variationOrderService.archiveVariationOrder(order.id);
+        this.loadOrders(this.pagination.current_page);
+      } catch (error) {
+        this.showError(error);
       }
     },
 
-    viewOrder(order) {
-      alert(`View order ${order.vo_number}`);
+    async viewOrder(order) {
+      try {
+        const response = await variationOrderService.getVariationOrder(order.id);
+        const data = response?.data?.data || response?.data || {};
+        if (!data.id) {
+          console.warn('[VariationOrders] Unexpected detail response shape', response);
+        }
+        this.detailOrder = data;
+        this.showDetailModal = true;
+      } catch (error) {
+        this.showError(error);
+      }
+    },
+
+    async downloadDoc(doc) {
+      try {
+        await variationOrderService.downloadDocument(doc);
+      } catch (error) {
+        this.showError(error);
+      }
+    },
+
+    showError(error) {
+      const message = error?.response?.data?.message || error.message || 'Something went wrong.';
+      alert(message);
     },
 
     editOrder(order) {
@@ -704,6 +827,11 @@ async loadSummary() {
 }
 .dropdown-item:hover { background: #f3f4f6; }
 .dropdown-item.text-danger:hover { background: #fef2f2; }
+
+.disabled-link {
+  opacity: 0.5;
+  pointer-events: none;
+}
 
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
@@ -855,5 +983,43 @@ async loadSummary() {
 .monthly-bar {
   height: 8px;
   border-radius: 4px;
+}
+
+.document-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.document-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: #f7fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e0e5ee;
+}
+
+.document-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.document-info i {
+  color: #7b1113;
+  font-size: 1.5rem;
+}
+
+.document-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1f2633;
+}
+
+.document-meta {
+  font-size: 0.75rem;
+  color: #5a6270;
 }
 </style>

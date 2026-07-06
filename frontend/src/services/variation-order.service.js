@@ -20,6 +20,14 @@ export default {
     return response.data;
   },
 
+  async getVariationOrder(id) {
+    const response = await axios.get(`${API_URL}/variation-orders/${id}`, {
+      headers: authHeader(),
+    });
+
+    return response;
+  },
+
   async getSummary() {
     const response = await axios.get(`${API_URL}/variation-orders/summary`, {
       headers: authHeader(),
