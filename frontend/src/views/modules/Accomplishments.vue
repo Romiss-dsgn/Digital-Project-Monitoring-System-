@@ -17,8 +17,8 @@
           <button
             v-if="permissions.create"
             class="btn btn-primary btn-sm"
-            :disabled="isLoading || projects.length === 0"
-            :title="projects.length === 0 ? 'All projects already have an accomplishment report' : ''"
+            :disabled="isLoading || allProjectsCount === 0"
+            :title="allProjectsCount === 0 ? 'Create a project first before adding accomplishment reports' : ''"
             @click="openCreateModal"
           >
             <i class="material-icons-round">upload</i> Upload Report
@@ -133,8 +133,8 @@
                   </thead>
                   <tbody>
                     <tr v-if="isLoading"><td colspan="7" class="text-center py-4">Loading accomplishments...</td></tr>
-                    <tr v-else-if="filteredAccomplishments.length === 0"><td colspan="7" class="text-center py-4 text-secondary">No milestone records found.</td></tr>
-                    <tr v-for="milestone in displayedAccomplishments" :key="milestone.id">
+                    <tr v-else-if="accomplishments.length === 0"><td colspan="7" class="text-center py-4 text-secondary">No milestone records found.</td></tr>
+                    <tr v-for="milestone in accomplishments" :key="milestone.id">
                       <td>
                         <div class="fw-semibold">{{ milestone.project_name }}</div>
                         <div class="text-secondary small">{{ milestone.project_location }}</div>
@@ -182,9 +182,9 @@
               </div>
               <!-- Pagination -->
               <div class="d-flex justify-content-between align-items-center mt-3 px-1">
-                <span class="text-secondary small">Showing {{ paginationFrom }} to {{ paginationTo }} of {{ filteredAccomplishments.length }} milestones</span>
+                <span class="text-secondary small">Showing {{ paginationFrom }} to {{ paginationTo }} of {{ paginationTotal }} milestones</span>
                 <div class="d-flex align-items-center gap-1">
-                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === 1" @click="currentPage--">
+                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === 1" @click="setPage(currentPage - 1)">
                     <i class="material-icons-round">chevron_left</i>
                   </button>
                   <button
@@ -192,9 +192,9 @@
                     :key="page"
                     class="btn btn-sm btn-pagination"
                     :class="{ active: page === currentPage }"
-                    @click="currentPage = page"
+                    @click="setPage(page)"
                   >{{ page }}</button>
-                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === totalPages" @click="currentPage++">
+                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === totalPages" @click="setPage(currentPage + 1)">
                     <i class="material-icons-round">chevron_right</i>
                   </button>
                 </div>
@@ -495,6 +495,14 @@ export default {
       // include_project_id so the record's current project still appears
       // as a selectable (and pre-selected) option.
       modalProjects: [],
+      paginationMeta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0,
+        from: 0,
+        to: 0,
+      },
       statusOptions: ["Not Started", "In Progress", "Delayed", "Completed"],
       accomplishmentForm: emptyAccomplishmentForm(),
       filters: {
@@ -523,26 +531,17 @@ export default {
   },
 
   computed: {
-    filteredAccomplishments() {
-      return this.accomplishments.filter((item) => {
-        if (this.filters.statuses.length && !this.filters.statuses.includes(item.status)) return false;
-        if (this.filters.target_from && item.target_date < this.filters.target_from) return false;
-        if (this.filters.target_to && item.target_date > this.filters.target_to) return false;
-        return true;
-      });
-    },
     totalPages() {
-      return Math.max(1, Math.ceil(this.filteredAccomplishments.length / this.rowsPerPage));
-    },
-    displayedAccomplishments() {
-      const start = (this.currentPage - 1) * this.rowsPerPage;
-      return this.filteredAccomplishments.slice(start, start + this.rowsPerPage);
+      return Math.max(1, this.paginationMeta.last_page || 1);
     },
     paginationFrom() {
-      return this.filteredAccomplishments.length ? (this.currentPage - 1) * this.rowsPerPage + 1 : 0;
+      return this.paginationMeta.from || 0;
     },
     paginationTo() {
-      return Math.min(this.currentPage * this.rowsPerPage, this.filteredAccomplishments.length);
+      return this.paginationMeta.to || 0;
+    },
+    paginationTotal() {
+      return this.paginationMeta.total || 0;
     },
   },
 
@@ -556,37 +555,45 @@ export default {
         alert("Create a project first in Infrastructure Plans before adding accomplishment reports.");
         return;
       }
-      if (!this.projects.length) {
-        alert("Every active project already has an accomplishment report. Edit an existing record instead.");
-        return;
-      }
       this.accomplishmentForm = emptyAccomplishmentForm();
       this.modalProjects = this.projects;
       this.showUploadReportModal = true;
     },
 
-    async loadAccomplishments() {
+    accomplishmentQueryParams(page = this.currentPage) {
+      const params = {
+        page,
+        per_page: this.rowsPerPage,
+      };
+
+      if (this.filters.statuses.length) params.statuses = this.filters.statuses;
+      if (this.filters.target_from) params.target_from = this.filters.target_from;
+      if (this.filters.target_to) params.target_to = this.filters.target_to;
+
+      return params;
+    },
+
+    async loadAccomplishments(page = this.currentPage) {
       this.isLoading = true;
       this.apiError = "";
 
       try {
         const [records, summary, options] = await Promise.all([
-          accomplishmentService.getAccomplishments(),
+          accomplishmentService.getAccomplishments(this.accomplishmentQueryParams(page)),
           accomplishmentService.getSummary(),
           accomplishmentService.getOptions(),
         ]);
 
         this.accomplishments = records.data || [];
+        this.paginationMeta = records.meta || this.paginationMeta;
         this.summary = summary;
-        // `options.projects` already excludes projects that have an active
-        // accomplishment report (filtered server-side).
         this.projects = options.projects || [];
         this.allProjectsCount = typeof options.all_projects_count === "number"
           ? options.all_projects_count
           : this.projects.length;
         this.statusOptions = options.statuses || this.statusOptions;
         this.permissions = options.permissions || summary.permissions || this.permissions;
-        this.currentPage = 1;
+        this.currentPage = this.paginationMeta.current_page || page;
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to load accomplishment records.");
       } finally {
@@ -616,7 +623,7 @@ export default {
 
         this.showUploadReportModal = false;
         this.accomplishmentForm = emptyAccomplishmentForm();
-        await this.loadAccomplishments();
+        await this.loadAccomplishments(this.currentPage);
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to save accomplishment.");
       } finally {
@@ -624,41 +631,37 @@ export default {
       }
     },
 
-    async editAccomplishment(item) {
-      this.accomplishmentForm = {
-        id: item.id,
-        project_id: item.project_id,
-        milestone_title: item.milestone_title,
-        description: item.description || "",
-        target_date: item.target_date || "",
-        completion_date: item.completion_date || "",
-        percent_complete: item.percent_complete,
-        status: item.status,
-        remarks: item.remarks || "",
-        attachment: null,
-      };
+       async editAccomplishment(item) {
+        this.accomplishmentForm = {
+          id: item.id,
+          project_id: item.project_id,
+          milestone_title: item.milestone_title,
+          description: item.description || "",
+          target_date: item.target_date || "",
+          completion_date: item.completion_date || "",
+          percent_complete: item.percent_complete,
+          status: item.status,
+          remarks: item.remarks || "",
+          attachment: null,
+        };
 
-      this.showUploadReportModal = true;
-      this.isLoadingModalProjects = true;
+          this.showUploadReportModal = true;
+          this.isLoadingModalProjects = true;
 
-      try {
-        // Re-fetch with include_project_id so this record's own project
-        // still shows up as a selectable option, even though it already
-        // "has" a report (this one).
-        const options = await accomplishmentService.getOptions({ include_project_id: item.project_id });
-        this.modalProjects = options.projects || [];
-      } catch (error) {
-        // Fall back to whatever we already have rather than blocking edit.
-        this.modalProjects = this.projects;
-      } finally {
-        this.isLoadingModalProjects = false;
-      }
-    },
+          try {
+            const options = await accomplishmentService.getOptions();
+            this.modalProjects = options.projects || [];
+          } catch (error) {
+            this.modalProjects = this.projects;
+          } finally {
+            this.isLoadingModalProjects = false;
+          }
+        },
 
     async validateAccomplishment(item) {
       try {
         await accomplishmentService.validateAccomplishment(item.id);
-        await this.loadAccomplishments();
+        await this.loadAccomplishments(this.currentPage);
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to validate accomplishment.");
       }
@@ -669,7 +672,7 @@ export default {
 
       try {
         await accomplishmentService.archiveAccomplishment(item.id);
-        await this.loadAccomplishments();
+        await this.loadAccomplishments(this.currentPage);
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to archive accomplishment.");
       }
@@ -680,8 +683,13 @@ export default {
     },
 
     applyFilters() {
-      this.currentPage = 1;
       this.showFilterModal = false;
+      this.loadAccomplishments(1);
+    },
+
+    setPage(page) {
+      if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+      this.loadAccomplishments(page);
     },
 
     getProgressClass(status) {
@@ -715,8 +723,11 @@ export default {
     },
 
     exportCsv() {
+      // FIX: this used to reference this.filteredAccomplishments, which
+      // was never defined anywhere and threw a runtime error on click.
+      // Uses the currently loaded/filtered records instead.
       const headers = ["Project", "Milestone", "Target Date", "Progress", "Status", "Remarks"];
-      const rows = this.filteredAccomplishments.map((item) => [
+      const rows = this.accomplishments.map((item) => [
         item.project_name,
         item.milestone_title,
         item.target_date,

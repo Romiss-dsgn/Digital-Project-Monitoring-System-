@@ -477,7 +477,7 @@ export default {
 
      planPermissions() {
     const profile = this.$store.getters["profile/getUserProfile"];
-    if (profile?.role === "Engineer - Monitoring") {
+    if (profile?.role === "Engineer - Planning") {
       return { can_view: true, can_create: true, can_edit: true, can_delete: true, can_approve: true, can_export: true };
     }
     return profile?.module_permissions?.engineering_plans || {};
