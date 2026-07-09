@@ -32,6 +32,9 @@ export default {
         "delayed":                  "Delayed",
         "active":                   "Active",
         "paid":                     "Paid",
+        "within_budget":            "Within Budget",
+        "over_budget":              "Over Budget",
+        "under_budget":             "Under Budget",
         "ongoing":                  "Ongoing",
         "planning":                 "Planning",
         "suspended":                "Suspended",
@@ -86,7 +89,8 @@ export default {
 .badge-on_track,
 .badge-approved,
 .badge-active,
-.badge-paid {
+.badge-paid,
+.badge-within_budget {
   background: rgba(88, 207, 151, 0.15);
   color: #1d7a3f;
 }
@@ -94,7 +98,8 @@ export default {
 .badge-on_track .badge-dot,
 .badge-approved .badge-dot,
 .badge-active .badge-dot,
-.badge-paid .badge-dot {
+.badge-paid .badge-dot,
+.badge-within_budget .badge-dot {
   background: #1d7a3f;
 }
 
@@ -172,6 +177,24 @@ export default {
 .badge-rejected .badge-dot,
 .badge-revision .badge-dot {
   background: #c62828;
+}
+
+/* â”€â”€ Amber/blue â€” under budget â”€â”€ */
+.badge-under_budget {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+.badge-under_budget .badge-dot {
+  background: #2563eb;
+}
+
+/* â”€â”€ Red â€” over budget â”€â”€ */
+.badge-over_budget {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+.badge-over_budget .badge-dot {
+  background: #dc2626;
 }
 
 /* ── Purple — suspended ── */

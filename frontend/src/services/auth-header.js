@@ -5,8 +5,8 @@ export default function authHeader() {
   if (token) {
     return {
       Authorization: 'Bearer ' + token,
-      'Accept': 'application/vnd.api+json',
-      'Content-Type': 'application/vnd.api+json',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
     };
   } else {
     return {};

@@ -10,6 +10,14 @@ function multipartHeaders() {
   return headers;
 }
 
+function jsonHeaders() {
+  return {
+    ...authHeader(),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+}
+
 export default {
   async getVariationOrders(params = {}) {
     const response = await axios.get(`${API_URL}/variation-orders`, {
@@ -48,7 +56,7 @@ export default {
     const response = await axios.post(
       `${API_URL}/variation-orders`,
       payload,
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -58,7 +66,7 @@ export default {
     const response = await axios.patch(
       `${API_URL}/variation-orders/${id}`,
       payload,
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -68,7 +76,7 @@ export default {
     const response = await axios.patch(
       `${API_URL}/variation-orders/${id}/submit`,
       {},
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -78,7 +86,7 @@ export default {
     const response = await axios.patch(
       `${API_URL}/variation-orders/${id}/review`,
       { review_action: reviewAction, approval_remarks: approvalRemarks },
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
