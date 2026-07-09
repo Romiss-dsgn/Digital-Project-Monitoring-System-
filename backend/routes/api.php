@@ -84,13 +84,13 @@ Route::prefix("v2")->middleware("json.api")->group(function () {
             ->middleware('permission:cashflow_periods,view');
         Route::post('/cashflow-periods', [CashflowPeriodController::class, 'store'])
             ->middleware('permission:cashflow_periods,create');
-        Route::get('/cashflow-periods/{cashflowPeriod}', [CashflowPeriodController::class, 'show'])
+        Route::get('/cashflow-periods/{period}', [CashflowPeriodController::class, 'show'])
             ->middleware('permission:cashflow_periods,view');
-        Route::patch('/cashflow-periods/{cashflowPeriod}', [CashflowPeriodController::class, 'update'])
+        Route::patch('/cashflow-periods/{period}', [CashflowPeriodController::class, 'update'])
             ->middleware('permission:cashflow_periods,edit');
-        Route::delete('/cashflow-periods/{cashflowPeriod}', [CashflowPeriodController::class, 'destroy'])
+        Route::delete('/cashflow-periods/{period}', [CashflowPeriodController::class, 'destroy'])
             ->middleware('permission:cashflow_periods,delete');
-        Route::get('/cashflow-periods/{cashflowPeriod}/invoices', [CashflowPeriodController::class, 'getInvoices'])
+        Route::get('/cashflow-periods/{period}/invoices', [CashflowPeriodController::class, 'getInvoices'])
             ->middleware('permission:invoices,view');
 
         // Invoices

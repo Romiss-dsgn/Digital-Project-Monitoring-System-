@@ -25,6 +25,7 @@ class CashflowPeriodController extends Controller
                 'contract:id,contract_number,contract_title',
                 'creator:id,name',
             ])
+            ->where('is_archived', false)
             ->whereHas('contract', fn (Builder $query) => $query->where('is_archived', false))
             ->when($request->string('search')->toString(), function (Builder $query, string $search) {
                 $query->where(function (Builder $nested) use ($search) {
@@ -49,10 +50,15 @@ class CashflowPeriodController extends Controller
     public function summary(Request $request): JsonResponse
     {
         $query = CashflowPeriod::query()
+            ->where('is_archived', false)
             ->whereHas('contract', fn (Builder $query) => $query->where('is_archived', false));
 
         $totalPlanned = (clone $query)->sum('planned_amount');
         $totalActual = (clone $query)->sum('actual_amount');
+        $revisedContractAmount = Contract::query()
+            ->whereIn('id', (clone $query)->distinct()->pluck('contract_id'))
+            ->sum('revised_contract_amount');
+        $budgetStatus = $this->determineBudgetStatus((float) $totalPlanned, (float) $totalActual);
 
         $monthlyData = $this->getMonthlyBreakdown($query);
 
@@ -60,8 +66,10 @@ class CashflowPeriodController extends Controller
             'data' => [
                 'planned_total' => (float) $totalPlanned,
                 'actual_total' => (float) $totalActual,
+                'revised_contract_amount' => (float) $revisedContractAmount,
                 'remaining_total' => (float) ($totalPlanned - $totalActual),
                 'variance_total' => (float) ((clone $query)->sum('variance')),
+                'budget_status' => $budgetStatus,
                 'on_track_count' => (clone $query)->where('status', 'On Track')->count(),
                 'at_risk_count' => (clone $query)->where('status', 'At Risk')->count(),
                 'delayed_count' => (clone $query)->where('status', 'Delayed')->count(),
@@ -111,6 +119,18 @@ class CashflowPeriodController extends Controller
         return $monthlyData;
     }
 
+    private function determineBudgetStatus(float $plannedAmount, float $actualAmount): string
+    {
+        $variance = $actualAmount - $plannedAmount;
+        $tolerance = abs($plannedAmount) * 0.01;
+
+        if (abs($variance) <= $tolerance) {
+            return 'Within Budget';
+        }
+
+        return $variance > 0 ? 'Over Budget' : 'Under Budget';
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -128,8 +148,10 @@ class CashflowPeriodController extends Controller
             $period = CashflowPeriod::create($validated + [
                 'created_by' => $request->user()->id,
                 'status' => 'On Track',
+                'is_archived' => false,
             ]);
 
+            $period->syncFinancials();
             AuditLogger::record(
                 $request,
                 'created',
@@ -145,12 +167,13 @@ class CashflowPeriodController extends Controller
 
         return response()->json([
             'message' => 'Cashflow period created successfully.',
-            'data' => $this->formatPeriod($period->load('contract')),
+            'data' => $this->formatPeriod($period->fresh(['contract', 'creator'])),
         ], 201);
     }
 
     public function show(CashflowPeriod $period): JsonResponse
     {
+        abort_if($period->is_archived, 404);
         $period->load(['contract:id,contract_number,contract_title', 'creator:id,name']);
 
         return response()->json(['data' => $this->formatPeriod($period)]);
@@ -158,6 +181,8 @@ class CashflowPeriodController extends Controller
 
     public function update(Request $request, CashflowPeriod $period): JsonResponse
     {
+        abort_if($period->is_archived, 404);
+
         $validated = $request->validate([
             'period_label' => ['sometimes', 'string', 'max:255'],
             'period_start' => ['sometimes', 'nullable', 'date'],
@@ -170,6 +195,7 @@ class CashflowPeriodController extends Controller
 
         DB::transaction(function () use ($request, $period, $validated, $oldValues) {
             $period->update($validated);
+            $period->syncFinancials();
 
             AuditLogger::record(
                 $request,
@@ -184,33 +210,38 @@ class CashflowPeriodController extends Controller
 
         return response()->json([
             'message' => 'Cashflow period updated successfully.',
-            'data' => $this->formatPeriod($period->fresh(['contract'])),
+            'data' => $this->formatPeriod($period->fresh(['contract', 'creator'])),
         ]);
     }
 
     public function destroy(Request $request, CashflowPeriod $period): JsonResponse
     {
+        abort_if($period->is_archived, 404);
+
         $oldValues = $period->toArray();
 
         DB::transaction(function () use ($request, $period, $oldValues) {
-            $period->delete();
+            // Archive instead of deleting records needed by reports and audit history.
+            $period->update(['is_archived' => true]);
 
             AuditLogger::record(
                 $request,
-                'deleted',
+                'archived',
                 'cashflow_periods',
                 $period->id,
                 $period->period_label,
                 $oldValues,
-                null
+                $period->fresh()->toArray()
             );
         });
 
-        return response()->json(['message' => 'Cashflow period deleted successfully.']);
+        return response()->json(['message' => 'Cashflow period archived successfully.']);
     }
 
     public function getInvoices(CashflowPeriod $period): JsonResponse
     {
+        abort_if($period->is_archived, 404);
+
         $invoices = Invoice::query()
             ->where('cashflow_period_id', $period->id)
             ->with(['contract:id,contract_number', 'verifier:id,name', 'approver:id,name', 'creator:id,name'])
@@ -224,9 +255,8 @@ class CashflowPeriodController extends Controller
 
     private function formatPeriod(CashflowPeriod $period): array
     {
-        $planned = (float) $period->planned_amount;
-        $actual = (float) $period->actual_amount;
-        $variance = $planned - $actual;
+        $plannedAmount = (float) $period->planned_amount;
+        $actualAmount = (float) $period->actual_amount;
 
         return [
             'id' => $period->id,
@@ -236,10 +266,12 @@ class CashflowPeriodController extends Controller
             'period_label' => $period->period_label,
             'period_start' => optional($period->period_start)->format('Y-m-d'),
             'period_end' => optional($period->period_end)->format('Y-m-d'),
-            'planned_amount' => $planned,
-            'actual_amount' => $actual,
-            'variance' => $variance,
+            'planned_amount' => $plannedAmount,
+            'actual_amount' => $actualAmount,
+            'variance' => (float) $period->variance,
+            'budget_status' => $this->determineBudgetStatus($plannedAmount, $actualAmount),
             'status' => $period->status,
+            'is_archived' => (bool) $period->is_archived,
             'created_by' => $period->creator?->name,
             'created_at' => optional($period->created_at)->format('Y-m-d H:i:s'),
             'updated_at' => optional($period->updated_at)->format('Y-m-d H:i:s'),

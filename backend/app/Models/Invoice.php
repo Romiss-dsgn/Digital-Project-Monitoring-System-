@@ -30,6 +30,21 @@ class Invoice extends Model
         });
     }
 
+    protected static function booted(): void
+    {
+        static::saved(function (Invoice $invoice) {
+            if (! $invoice->wasRecentlyCreated && ! $invoice->wasChanged(['status', 'cashflow_period_id'])) {
+                return;
+            }
+
+            $invoice->syncCashflowPeriods();
+        });
+
+        static::deleted(function (Invoice $invoice) {
+            $invoice->syncCashflowPeriods($invoice->getOriginal('cashflow_period_id'));
+        });
+    }
+
     public function contract()
     {
         return $this->belongsTo(Contract::class);
@@ -63,5 +78,15 @@ class Invoice extends Model
     public function documents()
     {
         return $this->hasMany(InvoiceDocument::class);
+    }
+
+    public function syncCashflowPeriods(?int $originalPeriodId = null): void
+    {
+        collect([$this->cashflow_period_id, $originalPeriodId])
+            ->filter()
+            ->unique()
+            ->each(function (int $periodId) {
+                CashflowPeriod::find($periodId)?->syncFinancials();
+            });
     }
 }

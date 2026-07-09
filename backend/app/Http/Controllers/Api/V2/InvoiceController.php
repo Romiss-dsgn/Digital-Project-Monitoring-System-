@@ -31,6 +31,7 @@ class InvoiceController extends Controller
                 'approver:id,name',
                 'creator:id,name',
             ])
+            ->withSum('payments as payments_sum_amount_paid', 'amount_paid')
             ->whereHas('contract', fn (Builder $query) => $query->where('is_archived', false))
             ->when($request->string('search')->toString(), function (Builder $query, string $search) {
                 $query->where(function (Builder $nested) use ($search) {
@@ -125,7 +126,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'message' => 'Invoice created successfully.',
-            'data' => $this->formatInvoice($invoice->load(['contract', 'cashflowPeriod'])),
+            'data' => $this->formatInvoice($invoice->load(['contract', 'cashflowPeriod'])->loadSum('payments', 'amount_paid')),
         ], 201);
     }
 
@@ -139,6 +140,7 @@ class InvoiceController extends Controller
             'creator:id,name',
             'documents',
         ]);
+        $invoice->loadSum('payments', 'amount_paid');
 
         return response()->json(['data' => $this->formatInvoice($invoice)]);
     }
@@ -180,7 +182,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'message' => 'Invoice updated successfully.',
-            'data' => $this->formatInvoice($invoice->fresh(['contract', 'cashflowPeriod'])),
+            'data' => $this->formatInvoice($invoice->fresh(['contract', 'cashflowPeriod'])->loadSum('payments', 'amount_paid')),
         ]);
     }
 
@@ -206,7 +208,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'message' => 'Invoice verified successfully.',
-            'data' => $this->formatInvoice($invoice->fresh(['contract', 'cashflowPeriod'])),
+            'data' => $this->formatInvoice($invoice->fresh(['contract', 'cashflowPeriod'])->loadSum('payments', 'amount_paid')),
         ]);
     }
 
@@ -234,7 +236,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'message' => 'Invoice approved successfully.',
-            'data' => $this->formatInvoice($invoice->fresh(['contract', 'cashflowPeriod'])),
+            'data' => $this->formatInvoice($invoice->fresh(['contract', 'cashflowPeriod'])->loadSum('payments', 'amount_paid')),
         ]);
     }
 
@@ -321,6 +323,8 @@ class InvoiceController extends Controller
             'invoice_amount' => (float) $invoice->invoice_amount,
             'invoice_date' => optional($invoice->invoice_date)->format('Y-m-d'),
             'due_date' => optional($invoice->due_date)->format('Y-m-d'),
+            'paid_amount' => (float) ($invoice->payments_sum_amount_paid ?? 0),
+            'remaining_balance' => max(0, (float) $invoice->invoice_amount - (float) ($invoice->payments_sum_amount_paid ?? 0)),
             'status' => $invoice->status,
             'verified_by' => $invoice->verifier?->name,
             'verified_at' => optional($invoice->verified_at)->format('Y-m-d H:i:s'),
