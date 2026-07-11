@@ -155,6 +155,15 @@
                         class="engineering-action-menu-item"
                         type="button"
                         role="menuitem"
+                        @click="handlePreviewDocument(doc)"
+                      >
+                          <i class="material-icons-round align-middle me-2 dropdown-icon preview-icon">visibility</i>
+                          Preview
+                      </button>
+                      <button
+                        class="engineering-action-menu-item"
+                        type="button"
+                        role="menuitem"
                         @click="handleDownloadDocument(doc)"
                       >
                           <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">download</i>
@@ -398,6 +407,62 @@
       </div>
     </BfpModal>
 
+    <BfpModal
+      :show="showPreviewModal"
+      :title="previewDocument?.filename || 'Engineering Plan Preview'"
+      stripe="DOCUMENT PREVIEW"
+      :show-footer="false"
+      width="min(1100px, 96vw)"
+      @close="closePreviewModal"
+    >
+      <div class="engineering-preview-shell">
+        <div class="engineering-preview-toolbar">
+          <div class="engineering-preview-meta">
+            <span>{{ previewDocument?.project || "Linked project" }}</span>
+            <span>{{ previewDocument?.file_type || "File" }}</span>
+          </div>
+          <button
+            class="btn btn-sm btn-outline-secondary engineering-toolbar-btn"
+            type="button"
+            :disabled="!previewUrl"
+            @click="downloadPreviewFile"
+          >
+            <i class="material-icons-round">download</i>
+            Download
+          </button>
+        </div>
+
+        <div v-if="isPreviewLoading" class="engineering-preview-state">
+          <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+          Loading preview...
+        </div>
+
+        <div v-else-if="previewError" class="engineering-preview-state text-danger">
+          {{ previewError }}
+        </div>
+
+        <template v-else-if="previewUrl">
+          <img
+            v-if="previewKind === 'image'"
+            class="engineering-preview-image"
+            :src="previewUrl"
+            :alt="previewDocument?.filename || 'Engineering plan preview'"
+          />
+          <iframe
+            v-else-if="previewKind === 'pdf'"
+            class="engineering-preview-frame"
+            :src="previewUrl"
+            title="Engineering plan preview"
+          ></iframe>
+          <div v-else class="engineering-preview-state">
+            <i class="material-icons-round engineering-preview-empty-icon">visibility_off</i>
+            <p class="mb-1 fw-bold">Preview is not available for this file type.</p>
+            <p class="mb-0 text-secondary">Download the file to view it in a compatible application.</p>
+          </div>
+        </template>
+      </div>
+    </BfpModal>
+
   </div>
 </template>
 
@@ -428,9 +493,16 @@ export default {
       activeTab: "All Documents",
       showUploadPlanModal: false,
       showFilterModal: false,
+      showPreviewModal: false,
       planUploadDragOver: false,
       selectedPlanFiles: [],
       busyPlanId: null,
+      previewDocument: null,
+      previewUrl: "",
+      previewKind: "",
+      previewMimeType: "",
+      previewError: "",
+      isPreviewLoading: false,
       openActionMenuId: null,
       actionMenuPosition: {
         top: 0,
@@ -493,7 +565,7 @@ export default {
 
     planPermissions() {
       const profile = this.$store.getters["profile/getUserProfile"];
-      const fullAccessRoles = ["System Administrator", "Engineer - Monitoring"];
+      const fullAccessRoles = ["System Administrator"];
 
       if (fullAccessRoles.includes(profile?.role)) {
         return { can_view: true, can_create: true, can_edit: true, can_delete: true, can_approve: true, can_export: true };
@@ -584,6 +656,7 @@ export default {
     document.removeEventListener("click", this.closeActionMenu);
     window.removeEventListener("resize", this.closeActionMenu);
     window.removeEventListener("scroll", this.closeActionMenu, true);
+    this.revokePreviewUrl();
   },
 
   methods: {
@@ -626,6 +699,11 @@ export default {
     handleDownloadDocument(doc) {
       this.closeActionMenu();
       this.downloadDocument(doc);
+    },
+
+    handlePreviewDocument(doc) {
+      this.closeActionMenu();
+      this.previewDocumentFile(doc);
     },
 
     handleUpdateDocumentStatus(doc, status) {
@@ -884,6 +962,88 @@ export default {
         hour: "2-digit",
         minute: "2-digit",
       });
+    },
+
+    inferPreviewMimeType(doc, responseMimeType = "") {
+      const normalizedMime = responseMimeType.split(";")[0].trim().toLowerCase();
+
+      if (normalizedMime && normalizedMime !== "application/octet-stream") {
+        return normalizedMime;
+      }
+
+      const fileType = (doc.file_type || "").toUpperCase();
+      const extension = (doc.filename || "").split(".").pop()?.toLowerCase();
+
+      if (fileType === "PDF" || extension === "pdf") return "application/pdf";
+      if (fileType === "PNG" || extension === "png") return "image/png";
+      if (fileType === "DOCX" || extension === "docx") {
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      }
+      if (fileType === "DWG" || extension === "dwg") return "application/dwg";
+
+      return normalizedMime || "application/octet-stream";
+    },
+
+    previewKindForMimeType(mimeType) {
+      if (mimeType === "application/pdf") return "pdf";
+      if (mimeType.startsWith("image/")) return "image";
+      return "unsupported";
+    },
+
+    revokePreviewUrl() {
+      if (this.previewUrl) {
+        window.URL.revokeObjectURL(this.previewUrl);
+      }
+
+      this.previewUrl = "";
+    },
+
+    closePreviewModal() {
+      this.showPreviewModal = false;
+      this.previewDocument = null;
+      this.previewKind = "";
+      this.previewMimeType = "";
+      this.previewError = "";
+      this.isPreviewLoading = false;
+      this.revokePreviewUrl();
+    },
+
+    async previewDocumentFile(doc) {
+      if (this.busyPlanId) return;
+
+      this.closePreviewModal();
+      this.previewDocument = doc;
+      this.showPreviewModal = true;
+      this.isPreviewLoading = true;
+      this.busyPlanId = doc.id;
+
+      try {
+        const response = await EngineeringPlanService.download(doc.id);
+        const mimeType = this.inferPreviewMimeType(doc, response.headers["content-type"] || "");
+        const blob = new Blob([response.data], { type: mimeType });
+
+        this.previewMimeType = mimeType;
+        this.previewKind = this.previewKindForMimeType(mimeType);
+        this.previewUrl = window.URL.createObjectURL(blob);
+      } catch (error) {
+        this.previewError = error.response?.status === 404
+          ? "The stored file was not found. Seeded demo rows may not have a physical file yet."
+          : "Failed to load engineering plan preview.";
+      } finally {
+        this.isPreviewLoading = false;
+        this.busyPlanId = null;
+      }
+    },
+
+    downloadPreviewFile() {
+      if (!this.previewUrl) return;
+
+      const link = document.createElement("a");
+      link.href = this.previewUrl;
+      link.download = this.previewDocument?.filename || "engineering-plan";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     },
 
     async downloadDocument(doc) {
@@ -1325,7 +1485,78 @@ export default {
 .dropdown-item.text-danger:hover { background: #fef2f2; }
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
+.preview-icon { color: #0f766e; }
 .edit-icon { color: #d97706; }
+
+.engineering-preview-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.engineering-preview-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.engineering-preview-meta {
+  color: #6b7280;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 8px;
+  min-width: 0;
+}
+
+.engineering-preview-meta span {
+  background: #f3f4f6;
+  border-radius: 999px;
+  max-width: 420px;
+  overflow: hidden;
+  padding: 6px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.engineering-preview-frame,
+.engineering-preview-image,
+.engineering-preview-state {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  min-height: 62vh;
+}
+
+.engineering-preview-frame {
+  height: 68vh;
+  width: 100%;
+}
+
+.engineering-preview-image {
+  max-height: 68vh;
+  object-fit: contain;
+  padding: 12px;
+  width: 100%;
+}
+
+.engineering-preview-state {
+  align-items: center;
+  color: #475569;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.engineering-preview-empty-icon {
+  color: #94a3b8;
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
 
 .bfp-upload-panel.drag-over {
   background: rgba(192, 57, 43, 0.04);
