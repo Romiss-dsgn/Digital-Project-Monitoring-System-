@@ -459,11 +459,14 @@ export default {
     // Expected shape: { can_view, can_create, can_edit, can_delete, can_approve, can_export }
 
     planPermissions() {
-    const profile = this.$store.getters["profile/getUserProfile"];
-    if (profile?.role === "System Administrator") {
-      return { can_view: true, can_create: true, can_edit: true, can_delete: true, can_approve: true, can_export: true };
-    }
-    return profile?.module_permissions?.engineering_plans || {};
+      const profile = this.$store.getters["profile/getUserProfile"];
+      const fullAccessRoles = ["System Administrator", "Engineer - Monitoring"];
+
+      if (fullAccessRoles.includes(profile?.role)) {
+        return { can_view: true, can_create: true, can_edit: true, can_delete: true, can_approve: true, can_export: true };
+      }
+
+      return profile?.module_permissions?.engineering_plans || {};
     },
     canCreate() {
       return !!this.planPermissions.can_create;
@@ -474,25 +477,6 @@ export default {
     canDelete() {
       return !!this.planPermissions.can_delete;
     },
-
-     planPermissions() {
-    const profile = this.$store.getters["profile/getUserProfile"];
-    if (profile?.role === "Engineer - Monitoring") {
-      return { can_view: true, can_create: true, can_edit: true, can_delete: true, can_approve: true, can_export: true };
-    }
-    return profile?.module_permissions?.engineering_plans || {};
-    },
-    canCreate() {
-      return !!this.planPermissions.can_create;
-    },
-    canApprove() {
-      return !!this.planPermissions.can_approve;
-    },
-    canDelete() {
-      return !!this.planPermissions.can_delete;
-    },
-
-
     filteredDocuments() {
       if (this.activeTab === "All Documents") return this.documents;
       return this.documents.filter((item) => normalisePlanType(item.type) === normalisePlanType(this.activeTab));
