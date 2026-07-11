@@ -150,29 +150,6 @@ class ProjectController extends Controller
         ];
     }
 
-    /**
-     * Ensure a Contractor record exists for the given free-text company name,
-     * so it becomes selectable in modules like Contract Management that read
-     * from the `contractors` table (e.g. New Contract dropdown).
-     *
-     * Matching is case-insensitive because the `company_name` column uses the
-     * utf8mb4_unicode_ci collation by default, so "ABC Builders" and
-     * "abc builders" are treated as the same contractor.
-     */
-    private function syncContractorFromName(?string $contractorName): void
-    {
-        $name = trim((string) $contractorName);
-
-        if ($name === '') {
-            return;
-        }
-
-        Contractor::firstOrCreate(
-            ['company_name' => $name],
-            ['is_active' => true]
-        );
-    }
-
     private function logAction(User $user, string $action, string $module, ?int $recordId, ?string $recordCode, ?array $oldValues = null, ?array $newValues = null): void
     {
         AuditLog::create([
