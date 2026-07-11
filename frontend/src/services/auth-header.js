@@ -1,6 +1,7 @@
+import { getStoredAuthToken } from "./auth-token";
+
 export default function authHeader() {
-  // user_free stores the raw access_token string directly (set by auth.service.js)
-  const token = JSON.parse(localStorage.getItem('user_free'));
+  const token = getStoredAuthToken();
 
   if (token) {
     return {

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import authHeader from './auth-header';
 import apiBaseUrl from './api-base';
+import { clearStoredAuthToken, getStoredAuthToken, storeAuthToken } from './auth-token';
 
 const API_URL = apiBaseUrl()
 const BASE_URL = process.env.VUE_APP_BASE_URL
@@ -8,6 +9,7 @@ const BASE_URL = process.env.VUE_APP_BASE_URL
 export default {
 
   async login(user) {
+    clearStoredAuthToken();
     var response = await axios.post(API_URL + '/login', {
       email: user.email,
       password: user.password
@@ -20,14 +22,19 @@ export default {
       }
     });
     if (response.data.access_token) {
-      localStorage.setItem('user_free', JSON.stringify(response.data.access_token));
+      storeAuthToken(response.data.access_token);
     }
     return response.data;
   },
 
   async logout() {
-    await axios.post(API_URL + "/logout", {}, { headers: authHeader() })
-    localStorage.removeItem('user_free');
+    try {
+      if (getStoredAuthToken()) {
+        await axios.post(API_URL + "/logout", {}, { headers: authHeader() })
+      }
+    } finally {
+      clearStoredAuthToken();
+    }
   },
 
   async register(user) {
@@ -47,7 +54,7 @@ export default {
       }
     });
     if (response.data.access_token) {
-      localStorage.setItem('user_free', JSON.stringify(response.data.access_token));
+      storeAuthToken(response.data.access_token);
     }
     return response.data;
   },

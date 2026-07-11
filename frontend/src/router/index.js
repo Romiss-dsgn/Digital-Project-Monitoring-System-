@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
+import ProfileService from "@/services/profile.service";
+import { clearStoredAuthToken, hasStoredAuthToken } from "@/services/auth-token";
 
 // Lazy route imports keep module screens out of the initial bundle.
 // This makes the login/dashboard load lighter while each module is still loaded on demand.
@@ -182,20 +184,63 @@ const router = createRouter({
   linkActiveClass: "active",
 });
 
+const authPageNames = ["Login", "Signup", "SignIn", "SignUp"];
+
+async function clearLocalSession() {
+  clearStoredAuthToken();
+
+  try {
+    const { default: store } = await import("@/store");
+    await store.dispatch("auth/clearLocalSession");
+  } catch (error) {
+    void error;
+  }
+}
+
+async function loadAuthenticatedProfile() {
+  const { default: store } = await import("@/store");
+  const cachedProfile = store.getters["profile/getUserProfile"];
+
+  if (cachedProfile?.id) {
+    return true;
+  }
+
+  try {
+    const userProfile = await ProfileService.getProfile();
+    store.commit("profile/success", userProfile);
+    return true;
+  } catch (error) {
+    if (error.response?.status === 401) {
+      await clearLocalSession();
+    }
+
+    return false;
+  }
+}
+
 // Keep protected pages from rendering before auth is known.
 // Auth pages declare `hideAppShell`, so the sidebar/navbar never flash before redirect.
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem("user_free");
+router.beforeEach(async (to, from, next) => {
+  const hasToken = hasStoredAuthToken();
   const isPublic = to.matched.some((record) => record.meta.public);
 
-  if (!isPublic && !token) {
+  if (!isPublic && !hasToken) {
     next({ name: "Login", query: { redirect: to.fullPath } });
     return;
   }
 
-  if (isPublic && token && ["Login", "Signup", "SignIn", "SignUp"].includes(to.name)) {
-    next({ name: "Dashboard" });
-    return;
+  if (!isPublic && hasToken) {
+    if (!(await loadAuthenticatedProfile())) {
+      next({ name: "Login", query: { redirect: to.fullPath } });
+      return;
+    }
+  }
+
+  if (isPublic && hasToken && authPageNames.includes(to.name)) {
+    if (await loadAuthenticatedProfile()) {
+      next({ name: "Dashboard" });
+      return;
+    }
   }
 
   next();

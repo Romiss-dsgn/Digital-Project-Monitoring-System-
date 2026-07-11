@@ -9,37 +9,40 @@
         </div>
         <div class="col-lg-6 d-flex justify-content-end align-items-center gap-2">
           <!-- Export Report Dropdown -->
-          <div class="dropdown">
+          <div class="cashflow-actions-menu">
             <button
               class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
               type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
+              :aria-expanded="showExportMenu"
+              @click.stop="toggleExportMenu($event)"
             >
               <i class="material-icons-round" style="font-size: 1rem;">download</i>
               Export Report
               <i class="material-icons-round" style="font-size: 1rem;">expand_more</i>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-              <li>
-                <a class="dropdown-item" href="#" @click.prevent="exportReport('pdf')">
-                  <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #e53935;">picture_as_pdf</i>
-                  Export as PDF
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="#" @click.prevent="exportReport('excel')">
-                  <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #2e7d32;">grid_on</i>
-                  Export as Excel
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="#" @click.prevent="exportReport('csv')">
-                  <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #1565c0;">table_chart</i>
-                  Export as CSV
-                </a>
-              </li>
-            </ul>
+            <div
+              v-if="showExportMenu"
+              class="cashflow-action-menu cashflow-export-menu"
+              :style="{
+                top: `${exportMenuPosition.top}px`,
+                left: `${exportMenuPosition.left}px`,
+              }"
+              role="menu"
+              @click.stop
+            >
+              <button class="cashflow-action-menu-item" type="button" role="menuitem" @click="handleExportReport('pdf')">
+                <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #e53935;">picture_as_pdf</i>
+                Export as PDF
+              </button>
+              <button class="cashflow-action-menu-item" type="button" role="menuitem" @click="handleExportReport('excel')">
+                <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #2e7d32;">grid_on</i>
+                Export as Excel
+              </button>
+              <button class="cashflow-action-menu-item" type="button" role="menuitem" @click="handleExportReport('csv')">
+                <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #1565c0;">table_chart</i>
+                Export as CSV
+              </button>
+            </div>
           </div>
 
           <!-- Disburse Funds Button -->
@@ -242,55 +245,70 @@
                       <td>{{ formatCurrency(invoice.invoice_amount) }}</td>
                       <td>{{ invoice.billing_period }}</td>
                       <td><status-badge :status="invoice.status" /></td>
-                      <td class="align-middle text-end">
-                        <div class="dropdown d-inline">
+                      <td class="align-middle text-end cashflow-actions-cell">
+                        <div class="cashflow-actions-menu">
                           <button
-                            class="btn btn-sm btn-icon btn-light text-secondary"
+                            class="btn btn-sm btn-icon btn-light text-secondary cashflow-action-btn"
                             type="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
+                            :aria-expanded="openInvoiceActionMenuId === invoice.id"
+                            title="Invoice actions"
+                            @click.stop="toggleInvoiceActionMenu(invoice.id, $event)"
                           >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                            <li>
-                              <a class="dropdown-item" href="#" @click.prevent="viewInvoice(invoice)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
-                                View
-                              </a>
-                            </li>
-                            <li>
-                              <a class="dropdown-item" href="#" @click.prevent="editInvoice(invoice)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
-                                Edit
-                              </a>
-                            </li>
-                            <li v-if="invoice.status === 'Pending'">
-                              <a class="dropdown-item" href="#" @click.prevent="verifyInvoice(invoice)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">verified</i>
-                                Verify
-                              </a>
-                            </li>
-                            <li v-if="invoice.status === 'For Review'">
-                              <a class="dropdown-item" href="#" @click.prevent="approveInvoice(invoice)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">check_circle</i>
-                                Approve
-                              </a>
-                            </li>
-                            <li v-if="invoice.status === 'Approved' && Number(invoice.remaining_balance || 0) > 0">
-                              <a class="dropdown-item" href="#" @click.prevent="markPaid(invoice)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">payments</i>
-                                Mark as Paid
-                              </a>
-                            </li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li>
-                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteInvoice(invoice)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
-                                Delete
-                              </a>
-                            </li>
-                          </ul>
+                          <div
+                            v-if="openInvoiceActionMenuId === invoice.id"
+                            class="cashflow-action-menu"
+                            :style="{
+                              top: `${invoiceMenuPosition.top}px`,
+                              left: `${invoiceMenuPosition.left}px`,
+                            }"
+                            role="menu"
+                            @click.stop
+                          >
+                            <button class="cashflow-action-menu-item" type="button" role="menuitem" @click="handleViewInvoice(invoice)">
+                              <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
+                              View
+                            </button>
+                            <button class="cashflow-action-menu-item" type="button" role="menuitem" @click="handleEditInvoice(invoice)">
+                              <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
+                              Edit
+                            </button>
+                            <button
+                              v-if="invoice.status === 'Pending'"
+                              class="cashflow-action-menu-item"
+                              type="button"
+                              role="menuitem"
+                              @click="handleVerifyInvoice(invoice)"
+                            >
+                              <i class="material-icons-round align-middle me-2 dropdown-icon">verified</i>
+                              Verify
+                            </button>
+                            <button
+                              v-if="invoice.status === 'For Review'"
+                              class="cashflow-action-menu-item"
+                              type="button"
+                              role="menuitem"
+                              @click="handleApproveInvoice(invoice)"
+                            >
+                              <i class="material-icons-round align-middle me-2 dropdown-icon">check_circle</i>
+                              Approve
+                            </button>
+                            <button
+                              v-if="invoice.status === 'Approved' && Number(invoice.remaining_balance || 0) > 0"
+                              class="cashflow-action-menu-item"
+                              type="button"
+                              role="menuitem"
+                              @click="handleMarkPaid(invoice)"
+                            >
+                              <i class="material-icons-round align-middle me-2 dropdown-icon">payments</i>
+                              Mark as Paid
+                            </button>
+                            <button class="cashflow-action-menu-item danger" type="button" role="menuitem" @click="handleDeleteInvoice(invoice)">
+                              <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -705,6 +723,16 @@ export default {
   data() {
       return {
       showExportModal: false,
+      showExportMenu: false,
+      exportMenuPosition: {
+        top: 0,
+        left: 0,
+      },
+      openInvoiceActionMenuId: null,
+      invoiceMenuPosition: {
+        top: 0,
+        left: 0,
+      },
       showDisburseFundsModal: false,
       disbursementMode: "manual",
       activeTab: "invoices",
@@ -801,13 +829,97 @@ export default {
     this.loadPeriods();
     this.loadInvoices(1);
     this.initBudgetChart();
+    document.addEventListener("click", this.closeActionMenus);
+    window.addEventListener("resize", this.closeActionMenus);
+    window.addEventListener("scroll", this.closeActionMenus, true);
   },
   beforeUnmount() {
     if (this.budgetChart) {
       this.budgetChart.destroy();
     }
+    document.removeEventListener("click", this.closeActionMenus);
+    window.removeEventListener("resize", this.closeActionMenus);
+    window.removeEventListener("scroll", this.closeActionMenus, true);
   },
   methods: {
+    toggleExportMenu(event) {
+      if (this.showExportMenu) {
+        this.closeActionMenus();
+        return;
+      }
+
+      this.positionFloatingMenu(event.currentTarget, "exportMenuPosition", 190, 132);
+      this.openInvoiceActionMenuId = null;
+      this.showExportMenu = true;
+    },
+
+    toggleInvoiceActionMenu(invoiceId, event) {
+      if (this.openInvoiceActionMenuId === invoiceId) {
+        this.closeActionMenus();
+        return;
+      }
+
+      this.positionFloatingMenu(event.currentTarget, "invoiceMenuPosition", 180, 260);
+      this.showExportMenu = false;
+      this.openInvoiceActionMenuId = invoiceId;
+    },
+
+    positionFloatingMenu(trigger, positionKey, menuWidth, menuHeight) {
+      const rect = trigger.getBoundingClientRect();
+      const margin = 8;
+      const viewportPadding = 8;
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      );
+      const opensUp = rect.bottom + menuHeight + margin > window.innerHeight;
+
+      this[positionKey] = {
+        top: opensUp ? Math.max(viewportPadding, rect.top - menuHeight - margin) : rect.bottom + margin,
+        left,
+      };
+    },
+
+    closeActionMenus() {
+      this.showExportMenu = false;
+      this.openInvoiceActionMenuId = null;
+    },
+
+    handleExportReport(format) {
+      this.closeActionMenus();
+      this.exportReport(format);
+    },
+
+    handleViewInvoice(invoice) {
+      this.closeActionMenus();
+      this.viewInvoice(invoice);
+    },
+
+    handleEditInvoice(invoice) {
+      this.closeActionMenus();
+      this.editInvoice(invoice);
+    },
+
+    handleVerifyInvoice(invoice) {
+      this.closeActionMenus();
+      this.verifyInvoice(invoice);
+    },
+
+    handleApproveInvoice(invoice) {
+      this.closeActionMenus();
+      this.approveInvoice(invoice);
+    },
+
+    handleMarkPaid(invoice) {
+      this.closeActionMenus();
+      this.markPaid(invoice);
+    },
+
+    handleDeleteInvoice(invoice) {
+      this.closeActionMenus();
+      this.deleteInvoice(invoice);
+    },
+
     async loadPermissions() {
       try {
         const options = await cashflowService.getOptions();
@@ -837,6 +949,7 @@ export default {
     },
 
     async loadInvoices(pageOrPeriod = 1) {
+      this.closeActionMenus();
       try {
         if (pageOrPeriod && typeof pageOrPeriod !== 'number' && pageOrPeriod !== '') {
           const invoices = await cashflowService.getPeriodInvoices(pageOrPeriod);
@@ -1386,6 +1499,64 @@ exportReport(format) {
   border: none;
   border-radius: 1rem;
   box-shadow: 0 15px 35px rgba(15, 23, 42, 0.1);
+}
+
+.cashflow-actions-cell {
+  overflow: visible;
+}
+
+.cashflow-actions-menu {
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.cashflow-action-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.cashflow-action-menu {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 6px;
+  position: fixed;
+  z-index: 10060;
+}
+
+.cashflow-export-menu {
+  min-width: 190px;
+}
+
+.cashflow-action-menu-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #374151;
+  display: flex;
+  font-size: 0.84rem;
+  font-weight: 700;
+  gap: 8px;
+  padding: 9px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.cashflow-action-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.cashflow-action-menu-item.danger {
+  color: #dc2626;
+}
+
+.cashflow-action-menu-item.danger:hover {
+  background: #fef2f2;
 }
 
 .dropdown-menu {

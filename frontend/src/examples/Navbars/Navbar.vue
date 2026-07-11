@@ -75,6 +75,7 @@
 
 <script>
 import { mapMutations, mapState } from "vuex";
+import { hasStoredAuthToken } from "@/services/auth-token";
 
 export default {
   name: "navbar",
@@ -97,7 +98,7 @@ export default {
     },
   },
   async mounted() {
-    if (localStorage.getItem("user_free") && !this.profile.id) {
+    if (hasStoredAuthToken() && !this.profile.id) {
       try {
         await this.$store.dispatch("profile/getProfile");
       } catch (error) {

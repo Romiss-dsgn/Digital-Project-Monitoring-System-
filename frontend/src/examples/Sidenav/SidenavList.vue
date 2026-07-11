@@ -94,6 +94,7 @@
 </template>
 <script>
 import SidenavCollapse from "./SidenavCollapse.vue";
+import { hasStoredAuthToken } from "@/services/auth-token";
 
 export default {
   name: "SidenavList",
@@ -111,7 +112,7 @@ export default {
     SidenavCollapse
   },
   async mounted() {
-    if (localStorage.getItem("user_free") && !this.$store.getters["profile/getUserProfile"]) {
+    if (hasStoredAuthToken() && !this.$store.getters["profile/getUserProfile"]) {
       try {
         await this.$store.dispatch("profile/getProfile");
       } catch (error) {

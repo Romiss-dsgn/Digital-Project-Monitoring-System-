@@ -129,50 +129,78 @@
                 </td>
                 <td>{{ doc.version }}</td>
                 <td><status-badge :status="doc.status" /></td>
-                <td class="align-middle text-end">
-                  <div class="dropdown">
+                <td class="align-middle text-end engineering-actions-cell">
+                  <div class="engineering-actions-menu">
                     <button
-                      class="btn btn-sm btn-icon btn-light text-secondary"
+                      class="btn btn-sm btn-icon btn-light text-secondary engineering-action-btn"
                       type="button"
                       :disabled="busyPlanId === doc.id"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
+                      :aria-expanded="openActionMenuId === doc.id"
+                      title="Engineering plan actions"
+                      @click.stop="toggleActionMenu(doc.id, $event)"
                     >
                       <i class="material-icons-round">{{ busyPlanId === doc.id ? "hourglass_empty" : "more_vert" }}</i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                      <li>
-                        <a class="dropdown-item" href="#" @click.prevent="downloadDocument(doc)">
+                    <div
+                      v-if="openActionMenuId === doc.id"
+                      class="engineering-action-menu"
+                      :style="{
+                        top: `${actionMenuPosition.top}px`,
+                        left: `${actionMenuPosition.left}px`,
+                      }"
+                      role="menu"
+                      @click.stop
+                    >
+                      <button
+                        class="engineering-action-menu-item"
+                        type="button"
+                        role="menuitem"
+                        @click="handleDownloadDocument(doc)"
+                      >
                           <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">download</i>
                           Download
-                        </a>
-                      </li>
-                      <li v-if="canApprove && doc.status !== 'approved'">
-                        <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'approved')">
+                      </button>
+                      <button
+                        v-if="canApprove && doc.status !== 'approved'"
+                        class="engineering-action-menu-item"
+                        type="button"
+                        role="menuitem"
+                        @click="handleUpdateDocumentStatus(doc, 'approved')"
+                      >
                           <i class="material-icons-round align-middle me-2 dropdown-icon approve-icon">check_circle</i>
                           Mark Approved
-                        </a>
-                      </li>
-                      <li v-if="canApprove && doc.status !== 'revision'">
-                        <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'revision')">
+                      </button>
+                      <button
+                        v-if="canApprove && doc.status !== 'revision'"
+                        class="engineering-action-menu-item"
+                        type="button"
+                        role="menuitem"
+                        @click="handleUpdateDocumentStatus(doc, 'revision')"
+                      >
                           <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit_document</i>
                           Require Revision
-                        </a>
-                      </li>
-                      <li v-if="canApprove && doc.status !== 'for_review'">
-                        <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'for_review')">
+                      </button>
+                      <button
+                        v-if="canApprove && doc.status !== 'for_review'"
+                        class="engineering-action-menu-item"
+                        type="button"
+                        role="menuitem"
+                        @click="handleUpdateDocumentStatus(doc, 'for_review')"
+                      >
                           <i class="material-icons-round align-middle me-2 dropdown-icon review-icon">pending_actions</i>
                           Send to Review
-                        </a>
-                      </li>
-                      <li v-if="canDelete"><hr class="dropdown-divider" /></li>
-                      <li v-if="canDelete">
-                        <a class="dropdown-item text-danger" href="#" @click.prevent="archiveDocument(doc)">
+                      </button>
+                      <button
+                        v-if="canDelete"
+                        class="engineering-action-menu-item danger"
+                        type="button"
+                        role="menuitem"
+                        @click="handleArchiveDocument(doc)"
+                      >
                           <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
                           Archive
-                        </a>
-                      </li>
-                    </ul>
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -403,6 +431,11 @@ export default {
       planUploadDragOver: false,
       selectedPlanFiles: [],
       busyPlanId: null,
+      openActionMenuId: null,
+      actionMenuPosition: {
+        top: 0,
+        left: 0,
+      },
       maxPlanFileSizeMb: 25,
       allowedPlanExtensions: [".pdf", ".dwg", ".png", ".docx"],
       allowedPlanTypes: [
@@ -542,9 +575,69 @@ export default {
   mounted() {
     this.fetchProjects();
     this.fetchEngineeringPlans();
+    document.addEventListener("click", this.closeActionMenu);
+    window.addEventListener("resize", this.closeActionMenu);
+    window.addEventListener("scroll", this.closeActionMenu, true);
+  },
+
+  beforeUnmount() {
+    document.removeEventListener("click", this.closeActionMenu);
+    window.removeEventListener("resize", this.closeActionMenu);
+    window.removeEventListener("scroll", this.closeActionMenu, true);
   },
 
   methods: {
+    toggleActionMenu(planId, event) {
+      if (this.busyPlanId === planId) {
+        return;
+      }
+
+      if (this.openActionMenuId === planId) {
+        this.closeActionMenu();
+        return;
+      }
+
+      this.positionActionMenu(event.currentTarget);
+      this.openActionMenuId = planId;
+    },
+
+    positionActionMenu(trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const menuWidth = 190;
+      const menuHeight = 220;
+      const margin = 8;
+      const viewportPadding = 8;
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      );
+      const opensUp = rect.bottom + menuHeight + margin > window.innerHeight;
+
+      this.actionMenuPosition = {
+        top: opensUp ? Math.max(viewportPadding, rect.top - menuHeight - margin) : rect.bottom + margin,
+        left,
+      };
+    },
+
+    closeActionMenu() {
+      this.openActionMenuId = null;
+    },
+
+    handleDownloadDocument(doc) {
+      this.closeActionMenu();
+      this.downloadDocument(doc);
+    },
+
+    handleUpdateDocumentStatus(doc, status) {
+      this.closeActionMenu();
+      this.updateDocumentStatus(doc, status);
+    },
+
+    handleArchiveDocument(doc) {
+      this.closeActionMenu();
+      this.archiveDocument(doc);
+    },
+
     async fetchProjects() {
       this.isLoadingProjects = true;
       try {
@@ -558,6 +651,7 @@ export default {
     },
 
     async fetchEngineeringPlans(page = 1) {
+      this.closeActionMenu();
       this.isLoadingPlans = true;
       this.engineeringPlanError = "";
 
@@ -1058,6 +1152,60 @@ export default {
 .engineering-table th:nth-child(5) { width: 7%; }
 .engineering-table th:nth-child(6) { width: 9%; }
 .engineering-table th:nth-child(7) { width: 6%; }
+
+.engineering-actions-cell {
+  overflow: visible;
+}
+
+.engineering-actions-menu {
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.engineering-action-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.engineering-action-menu {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 6px;
+  position: fixed;
+  z-index: 10060;
+}
+
+.engineering-action-menu-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #374151;
+  display: flex;
+  font-size: 0.84rem;
+  font-weight: 700;
+  gap: 8px;
+  padding: 9px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.engineering-action-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.engineering-action-menu-item.danger {
+  color: #dc2626;
+}
+
+.engineering-action-menu-item.danger:hover {
+  background: #fef2f2;
+}
 
 .engineering-file-icon {
   flex: 0 0 auto;

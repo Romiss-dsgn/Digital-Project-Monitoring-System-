@@ -1,6 +1,7 @@
 import AuthService from '../services/auth.service';
-const user = JSON.parse(localStorage.getItem('user_free'));
-const initialState = user ? { loggedIn: true } : { loggedIn: false };
+import { clearStoredAuthToken, hasStoredAuthToken } from '../services/auth-token';
+
+const initialState = hasStoredAuthToken() ? { loggedIn: true } : { loggedIn: false };
 export const auth = {
   namespaced: true,
   state: initialState,
@@ -17,14 +18,20 @@ export const auth = {
     async logout({ commit, dispatch }) {
       try {
         await AuthService.logout();
-        commit('isLoggedIn', false);
       } catch(error) {
-        commit('isLoggedIn', true);
+        void error;
       } finally {
+        clearStoredAuthToken();
+        commit('isLoggedIn', false);
         await dispatch('profile/clearProfile', null, { root: true });
         const { default: router } = await import('@/router/index.js');
-        router.push('/login');
+        router.push('/login').catch(() => {});
       }
+    },
+    async clearLocalSession({ commit, dispatch }) {
+      clearStoredAuthToken();
+      commit('isLoggedIn', false);
+      await dispatch('profile/clearProfile', null, { root: true });
     },
     async register({ commit }, user) {
       try {
