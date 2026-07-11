@@ -99,12 +99,27 @@ class RolePermissionsSeeder extends Seeder
                 'dashboard',
                 'projects',
                 'contracts',
+                'engineering_plans',
                 'variation_orders',
                 'project_accomplishments',
                 'contractor_performance_ratings',
                 'notifications',
                 'reports',
             ],
+        ];
+
+        // Engineering Plans needs finer control than the generic "view implies create" rule below:
+        // only these roles may upload new plans or edit existing plan records.
+        $engineeringPlanCreators = [
+            'System Administrator',
+            'Engineer - Planning',
+        ];
+
+        // Reviewers who may change a plan's status (approve / require revision / send to review).
+        $engineeringPlanApprovers = [
+            'System Administrator',
+            'Engineer - Planning',
+            'Engineer - Supervision',
         ];
 
         foreach ($profiles as $roleName => $allowedModules) {
@@ -118,6 +133,27 @@ class RolePermissionsSeeder extends Seeder
                 $enabled = in_array($module, $allowedModules, true);
                 $isAdmin = $roleName === 'System Administrator';
 
+                if ($module === 'engineering_plans') {
+                    $canCreate = in_array($roleName, $engineeringPlanCreators, true);
+                    $canEdit = $canCreate;
+                    $canApprove = in_array($roleName, $engineeringPlanApprovers, true);
+                    $canDelete = $isAdmin || in_array($roleName, $engineeringPlanCreators, true);
+                } else {
+                    $canCreate = $isAdmin || $enabled;
+                    $canEdit = $isAdmin || $enabled;
+                    $canApprove = $isAdmin || in_array($module, [
+                        'access_requests',
+                        'contracts',
+                        'contract_documents',
+                        'project_documents',
+                        'invoices',
+                        'variation_orders',
+                        'contract_time_extensions',
+                        'project_accomplishments',
+                    ], true);
+                    $canDelete = $isAdmin;
+                }
+
                 RolePermission::updateOrCreate(
                     [
                         'role_id' => $role->id,
@@ -125,20 +161,10 @@ class RolePermissionsSeeder extends Seeder
                     ],
                     [
                         'can_view' => $enabled,
-                        'can_create' => $isAdmin || $enabled,
-                        'can_edit' => $isAdmin || $enabled,
-                        'can_delete' => $isAdmin,
-                        'can_approve' => $isAdmin || in_array($module, [
-                            'access_requests',
-                            'contracts',
-                            'contract_documents',
-                            'project_documents',
-                            'engineering_plans',
-                            'invoices',
-                            'variation_orders',
-                            'contract_time_extensions',
-                            'project_accomplishments',
-                        ], true),
+                        'can_create' => $canCreate,
+                        'can_edit' => $canEdit,
+                        'can_delete' => $canDelete,
+                        'can_approve' => $canApprove,
                         'can_export' => $enabled,
                     ]
                 );
