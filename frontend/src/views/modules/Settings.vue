@@ -68,19 +68,26 @@
               <strong>Password Update</strong>
               <span>Leave both password fields empty to keep the current password.</span>
             </div>
-            <div class="field-grid">
-              <label>
-                <span>New Password</span>
-                <input v-model="form.password" type="password" autocomplete="new-password" />
-                <small v-if="errors.password">{{ errors.password }}</small>
-              </label>
+              <div class="field-grid">
+                <label>
+                  <span>New Password</span>
+                  <input v-model="form.password" type="password" autocomplete="new-password" />
+                  <small v-if="errors.password">{{ errors.password }}</small>
+                </label>
 
-              <label>
-                <span>Confirm New Password</span>
-                <input v-model="form.password_confirmation" type="password" autocomplete="new-password" />
-              </label>
+                <label>
+                  <span>Confirm New Password</span>
+                  <input v-model="form.password_confirmation" type="password" autocomplete="new-password" />
+                  <small v-if="errors.password_confirmation">{{ errors.password_confirmation }}</small>
+                </label>
+
+                <label>
+                  <span>Current Password</span>
+                  <input v-model="form.current_password" type="password" autocomplete="current-password" />
+                  <small v-if="errors.current_password">{{ errors.current_password }}</small>
+                </label>
+              </div>
             </div>
-          </div>
 
           <div class="form-actions">
             <p v-if="statusMessage" :class="{ 'is-error': statusType === 'error' }">{{ statusMessage }}</p>
@@ -128,6 +135,7 @@ const EMPTY_FORM = {
   office_unit: "",
   password: "",
   password_confirmation: "",
+  current_password: "",
 };
 
 const PH_COUNTRY_CODE = "63";
@@ -206,6 +214,7 @@ export default {
           contact_number: this.stripCountryCode(profile.contact_number),
           position: profile.position || "",
           office_unit: profile.office_unit || "",
+          current_password: "",
         };
       } catch (error) {
         this.loadError = "Unable to load the signed-in profile. Please login again.";
@@ -238,6 +247,7 @@ export default {
       if (!payload.password && !payload.password_confirmation) {
         delete payload.password;
         delete payload.password_confirmation;
+        delete payload.current_password;
       }
 
       try {
@@ -249,33 +259,41 @@ export default {
           contact_number: this.stripCountryCode(profile.contact_number),
           password: "",
           password_confirmation: "",
+          current_password: "",
         };
         this.statusType = "success";
         this.statusMessage = "Profile settings saved successfully.";
       } catch (error) {
         this.statusType = "error";
-        this.statusMessage = "Unable to save profile settings.";
+        this.statusMessage = error?.response?.data?.message || "Unable to save profile settings.";
         this.errors = this.parseErrors(error);
       } finally {
         this.isSaving = false;
       }
     },
     parseErrors(error) {
-      const apiErrors = error?.response?.data?.errors;
+      const responseErrors = error?.response?.data?.errors;
 
-      if (!Array.isArray(apiErrors)) {
-        return {};
+      if (Array.isArray(responseErrors)) {
+        return responseErrors.reduce((fields, item) => {
+          const field = item?.source?.pointer?.split("/").pop();
+
+          if (field) {
+            fields[field] = item.detail;
+          }
+
+          return fields;
+        }, {});
       }
 
-      return apiErrors.reduce((fields, item) => {
-        const field = item?.source?.pointer?.split("/").pop();
+      if (responseErrors && typeof responseErrors === "object") {
+        return Object.entries(responseErrors).reduce((fields, [field, messages]) => {
+          fields[field] = Array.isArray(messages) ? messages[0] : messages;
+          return fields;
+        }, {});
+      }
 
-        if (field) {
-          fields[field] = item.detail;
-        }
-
-        return fields;
-      }, {});
+      return {};
     },
   },
 };

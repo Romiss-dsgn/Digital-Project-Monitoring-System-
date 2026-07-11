@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class MeController extends Controller
 {
@@ -72,6 +74,19 @@ class MeController extends Controller
         $input = $request->json()->all();
         $attributes = $input['data']['attributes'] ?? [];
 
+        $validated = Validator::make($attributes, [
+            'name' => ['sometimes', 'string'],
+            'email' => ['sometimes', 'email'],
+            'username' => ['sometimes', 'string'],
+            'badge_number' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'contact_number' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'position' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'office_unit' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'profile_image' => ['sometimes', 'nullable', 'string'],
+            'password' => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
+            'current_password' => ['required_with:password', 'string'],
+        ])->validate();
+
         $fillable = [
             'name',
             'email',
@@ -83,7 +98,24 @@ class MeController extends Controller
             'profile_image',
         ];
 
-        $updateData = array_intersect_key($attributes, array_flip($fillable));
+        $updateData = array_intersect_key($validated, array_flip($fillable));
+        $passwordChanged = false;
+
+        if (!empty($validated['password'])) {
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return response()->json([
+                    'message' => 'The current password is incorrect.',
+                    'errors' => [
+                        'current_password' => [
+                            'The current password is incorrect.',
+                        ],
+                    ],
+                ], 422);
+            }
+
+            $updateData['password'] = $validated['password'];
+            $passwordChanged = true;
+        }
 
         if (!empty($updateData)) {
             $user->update($updateData);
@@ -91,6 +123,12 @@ class MeController extends Controller
         }
 
         return response()->json([
+            'message' => $passwordChanged
+                ? 'Profile updated and password changed successfully.'
+                : 'Profile updated successfully.',
+            'meta' => [
+                'password_changed' => $passwordChanged,
+            ],
             'data' => [
                 'type'       => 'users',
                 'id'         => (string) $user->id,
