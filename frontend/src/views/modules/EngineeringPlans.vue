@@ -15,6 +15,7 @@
         </div>
         <div class="engineering-hero-actions">
           <button
+            v-if="canCreate"
             class="btn btn-primary btn-sm engineering-primary-btn"
             type="button"
             :disabled="isLoadingProjects || selectableProjects.length === 0"
@@ -27,7 +28,7 @@
         </div>
       </div>
 
-      <div v-if="!isLoadingProjects && selectableProjects.length === 0" class="alert alert-warning py-2 px-3 mb-4">
+      <div v-if="canCreate && !isLoadingProjects && selectableProjects.length === 0" class="alert alert-warning py-2 px-3 mb-4">
         Create a project first in Infrastructure Plans before uploading engineering plans.
       </div>
 
@@ -146,26 +147,26 @@
                           Download
                         </a>
                       </li>
-                      <li v-if="doc.status !== 'approved'">
+                      <li v-if="canApprove && doc.status !== 'approved'">
                         <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'approved')">
                           <i class="material-icons-round align-middle me-2 dropdown-icon approve-icon">check_circle</i>
                           Mark Approved
                         </a>
                       </li>
-                      <li v-if="doc.status !== 'revision'">
+                      <li v-if="canApprove && doc.status !== 'revision'">
                         <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'revision')">
                           <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit_document</i>
                           Require Revision
                         </a>
                       </li>
-                      <li v-if="doc.status !== 'for_review'">
+                      <li v-if="canApprove && doc.status !== 'for_review'">
                         <a class="dropdown-item" href="#" @click.prevent="updateDocumentStatus(doc, 'for_review')">
                           <i class="material-icons-round align-middle me-2 dropdown-icon review-icon">pending_actions</i>
                           Send to Review
                         </a>
                       </li>
-                      <li><hr class="dropdown-divider" /></li>
-                      <li>
+                      <li v-if="canDelete"><hr class="dropdown-divider" /></li>
+                      <li v-if="canDelete">
                         <a class="dropdown-item text-danger" href="#" @click.prevent="archiveDocument(doc)">
                           <i class="material-icons-round align-middle me-2 dropdown-icon">delete</i>
                           Archive
@@ -217,6 +218,7 @@
     </div>
 
     <BfpModal
+      v-if="canCreate"
       :show="showUploadPlanModal"
       title="Upload New Engineering Plan"
       stripe="PLAN DOCUMENT UPLOAD"
@@ -451,6 +453,30 @@ export default {
   },
 
   computed: {
+    // ── RBAC: reads module_permissions.engineering_plans from the logged-in user ──
+    // ADJUST THIS PATH to match where your Vuex/Pinia store keeps the logged-in
+    // user returned by GET /api/v2/me (see MeController@readProfile).
+    // Expected shape: { can_view, can_create, can_edit, can_delete, can_approve, can_export }
+
+    planPermissions() {
+      const profile = this.$store.getters["profile/getUserProfile"];
+      const fullAccessRoles = ["System Administrator", "Engineer - Monitoring"];
+
+      if (fullAccessRoles.includes(profile?.role)) {
+        return { can_view: true, can_create: true, can_edit: true, can_delete: true, can_approve: true, can_export: true };
+      }
+
+      return profile?.module_permissions?.engineering_plans || {};
+    },
+    canCreate() {
+      return !!this.planPermissions.can_create;
+    },
+    canApprove() {
+      return !!this.planPermissions.can_approve;
+    },
+    canDelete() {
+      return !!this.planPermissions.can_delete;
+    },
     filteredDocuments() {
       if (this.activeTab === "All Documents") return this.documents;
       return this.documents.filter((item) => normalisePlanType(item.type) === normalisePlanType(this.activeTab));
@@ -568,6 +594,11 @@ export default {
     async submitEngineeringPlan() {
       if (this.isSavingPlan) return;
 
+      if (!this.canCreate) {
+        alert("You do not have permission to upload engineering plans.");
+        return;
+      }
+
       if (!this.engineeringPlanForm.project_id) {
         alert("Create/select a project first in Infrastructure Plans.");
         return;
@@ -601,7 +632,9 @@ export default {
       } catch (error) {
         const status = error.response?.status;
 
-        if (status === 413) {
+        if (status === 403) {
+          alert(error.response?.data?.message || "You do not have permission to perform this action.");
+        } else if (status === 413) {
           alert("The selected file is too large for the server upload limit. Use a file below 25MB or rebuild the Docker backend with the updated PHP upload settings.");
         } else if (status === 422) {
           const errors = error.response.data.errors ?? {};
@@ -789,6 +822,11 @@ export default {
     async updateDocumentStatus(doc, status) {
       if (this.busyPlanId) return;
 
+      if (!this.canApprove) {
+        alert("You do not have permission to review engineering plans.");
+        return;
+      }
+
       const labels = {
         approved: "mark this plan as approved",
         revision: "require revision for this plan",
@@ -823,6 +861,12 @@ export default {
 
     async archiveDocument(doc) {
       if (this.busyPlanId) return;
+
+      if (!this.canDelete) {
+        alert("You do not have permission to archive engineering plans.");
+        return;
+      }
+
       if (!confirm(`Archive "${doc.filename}"?`)) return;
 
       this.busyPlanId = doc.id;
