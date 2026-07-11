@@ -181,7 +181,9 @@ Route::prefix("v2")->middleware("json.api")->group(function () {
         Route::delete("/projects/{project}",    [ProjectController::class, "destroy"])->middleware("permission:projects,delete");
 
         // Reports
+        Route::get("/reports/{reportType}/export", [ReportController::class, "export"])->middleware("permission:reports,export");
         Route::get("/reports/project-status",   [ReportController::class, "projectStatus"])->middleware("permission:reports,view");
+        Route::get("/reports/{reportType}", [ReportController::class, "show"])->middleware("permission:reports,view");
 
         // Audit Logs
         Route::get("/audit-logs",               [AuditLogController::class, "index"])->middleware("permission:audit_logs,view");

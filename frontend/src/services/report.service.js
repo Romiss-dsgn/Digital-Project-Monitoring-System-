@@ -2,15 +2,15 @@ import axios from "axios";
 import apiBaseUrl from "./api-base";
 import authHeader from "./auth-header";
 
-const BASE = `${apiBaseUrl()}/admin`;
+const BASE = `${apiBaseUrl()}/admin/reports`;
 
-const ReportService = {
-  getProjectStatus(params = {}) {
-    return axios.get(`${BASE}/reports/project-status`, {
-      headers: authHeader(),
-      params,
+export default {
+  getReport(reportType, params = {}) {
+    return axios.get(`${BASE}/${reportType}`, { headers: authHeader(), params });
+  },
+  exportReport(reportType, format, params = {}) {
+    return axios.get(`${BASE}/${reportType}/export`, {
+      headers: authHeader(), params: { ...params, format }, responseType: "blob",
     });
   },
 };
-
-export default ReportService;
