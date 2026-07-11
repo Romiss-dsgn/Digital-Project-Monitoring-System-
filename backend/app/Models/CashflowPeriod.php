@@ -17,6 +17,7 @@ class CashflowPeriod extends Model
         'planned_amount' => 'decimal:2',
         'actual_amount' => 'decimal:2',
         'variance' => 'decimal:2',
+        'is_archived' => 'boolean',
     ];
 
     public function contract()
@@ -32,5 +33,19 @@ class CashflowPeriod extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function syncFinancials(): void
+    {
+        $actualAmount = (float) Payment::query()
+            ->whereHas('invoice', fn ($query) => $query->where('cashflow_period_id', $this->id))
+            ->sum('amount_paid');
+
+        $plannedAmount = (float) $this->planned_amount;
+
+        $this->forceFill([
+            'actual_amount' => $actualAmount,
+            'variance' => $plannedAmount - $actualAmount,
+        ])->saveQuietly();
     }
 }

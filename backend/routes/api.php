@@ -84,13 +84,13 @@ Route::prefix("v2")->middleware("json.api")->group(function () {
             ->middleware('permission:cashflow_periods,view');
         Route::post('/cashflow-periods', [CashflowPeriodController::class, 'store'])
             ->middleware('permission:cashflow_periods,create');
-        Route::get('/cashflow-periods/{cashflowPeriod}', [CashflowPeriodController::class, 'show'])
+        Route::get('/cashflow-periods/{period}', [CashflowPeriodController::class, 'show'])
             ->middleware('permission:cashflow_periods,view');
-        Route::patch('/cashflow-periods/{cashflowPeriod}', [CashflowPeriodController::class, 'update'])
+        Route::patch('/cashflow-periods/{period}', [CashflowPeriodController::class, 'update'])
             ->middleware('permission:cashflow_periods,edit');
-        Route::delete('/cashflow-periods/{cashflowPeriod}', [CashflowPeriodController::class, 'destroy'])
+        Route::delete('/cashflow-periods/{period}', [CashflowPeriodController::class, 'destroy'])
             ->middleware('permission:cashflow_periods,delete');
-        Route::get('/cashflow-periods/{cashflowPeriod}/invoices', [CashflowPeriodController::class, 'getInvoices'])
+        Route::get('/cashflow-periods/{period}/invoices', [CashflowPeriodController::class, 'getInvoices'])
             ->middleware('permission:invoices,view');
 
         // Invoices
@@ -130,17 +130,17 @@ Route::prefix("v2")->middleware("json.api")->group(function () {
             ->middleware('permission:variation_orders,view');
         Route::post('/variation-orders', [VariationOrderController::class, 'store'])
             ->middleware('permission:variation_orders,create');
-        Route::get('/variation-orders/{variationOrder}', [VariationOrderController::class, 'show'])
+        Route::get('/variation-orders/{order}', [VariationOrderController::class, 'show'])
             ->middleware('permission:variation_orders,view');
-        Route::patch('/variation-orders/{variationOrder}', [VariationOrderController::class, 'update'])
+        Route::patch('/variation-orders/{order}', [VariationOrderController::class, 'update'])
             ->middleware('permission:variation_orders,edit');
-        Route::patch('/variation-orders/{variationOrder}/submit', [VariationOrderController::class, 'submit'])
+        Route::patch('/variation-orders/{order}/submit', [VariationOrderController::class, 'submit'])
             ->middleware('permission:variation_orders,create');
-        Route::patch('/variation-orders/{variationOrder}/review', [VariationOrderController::class, 'review'])
+        Route::patch('/variation-orders/{order}/review', [VariationOrderController::class, 'review'])
             ->middleware('permission:variation_orders,approve');
-        Route::delete('/variation-orders/{variationOrder}', [VariationOrderController::class, 'destroy'])
+        Route::delete('/variation-orders/{order}', [VariationOrderController::class, 'destroy'])
             ->middleware('permission:variation_orders,delete');
-        Route::post('/variation-orders/{variationOrder}/documents', [VariationOrderController::class, 'uploadDocument'])
+        Route::post('/variation-orders/{order}/documents', [VariationOrderController::class, 'uploadDocument'])
             ->middleware('permission:variation_orders,create');
         Route::get('/variation-order-documents/{document}/download', [VariationOrderController::class, 'downloadDocument'])
             ->middleware('permission:variation_orders,view');

@@ -10,6 +10,14 @@ function multipartHeaders() {
   return headers;
 }
 
+function jsonHeaders() {
+  return {
+    ...authHeader(),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+}
+
 export default {
   async getCashflowPeriods(params = {}) {
     const response = await axios.get(`${API_URL}/cashflow-periods`, {
@@ -40,7 +48,7 @@ export default {
     const response = await axios.post(
       `${API_URL}/cashflow-periods`,
       payload,
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -50,8 +58,16 @@ export default {
     const response = await axios.patch(
       `${API_URL}/cashflow-periods/${id}`,
       payload,
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
+
+    return response.data.data;
+  },
+
+  async getCashflowPeriod(id) {
+    const response = await axios.get(`${API_URL}/cashflow-periods/${id}`, {
+      headers: authHeader(),
+    });
 
     return response.data.data;
   },
@@ -71,6 +87,14 @@ export default {
     return response.data;
   },
 
+  async getPeriodInvoices(periodId) {
+    const response = await axios.get(`${API_URL}/cashflow-periods/${periodId}/invoices`, {
+      headers: authHeader(),
+    });
+
+    return response.data.data;
+  },
+
   async getInvoice(id) {
     const response = await axios.get(`${API_URL}/invoices/${id}`, {
       headers: authHeader(),
@@ -83,7 +107,7 @@ export default {
     const response = await axios.post(
       `${API_URL}/invoices`,
       payload,
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -93,7 +117,7 @@ export default {
     const response = await axios.patch(
       `${API_URL}/invoices/${id}`,
       payload,
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -103,7 +127,7 @@ export default {
     const response = await axios.patch(
       `${API_URL}/invoices/${id}/verify`,
       {},
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -113,7 +137,7 @@ export default {
     const response = await axios.patch(
       `${API_URL}/invoices/${id}/approve`,
       {},
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;
@@ -157,7 +181,7 @@ export default {
     const response = await axios.post(
       `${API_URL}/payments`,
       payload,
-      { headers: authHeader() }
+      { headers: jsonHeaders() }
     );
 
     return response.data.data;

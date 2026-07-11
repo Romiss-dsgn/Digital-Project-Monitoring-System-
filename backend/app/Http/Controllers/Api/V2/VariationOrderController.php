@@ -119,8 +119,7 @@ class VariationOrderController extends Controller
 
         $order = DB::transaction(function () use ($request, $validated) {
             $order = VariationOrder::create($validated + [
-                'submitted_by' => $request->user()->id,
-                'submitted_at' => now(),
+                'status' => 'Draft',
                 'is_archived' => false,
             ]);
 
@@ -158,6 +157,8 @@ class VariationOrderController extends Controller
 
     public function update(Request $request, VariationOrder $order): JsonResponse
     {
+        $request->request->remove('status');
+
         $validated = $request->validate([
             'contract_id' => [
                 'sometimes',
@@ -171,28 +172,12 @@ class VariationOrderController extends Controller
             'reason' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'amount_change' => ['sometimes', 'numeric', 'min:0', 'max:9999999999999.99'],
             'time_impact_days' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'status' => ['sometimes', Rule::in(self::STATUSES)],
             'approval_remarks' => ['sometimes', 'nullable', 'string', 'max:5000'],
         ]);
 
         $oldValues = $order->toArray();
 
         DB::transaction(function () use ($request, $order, $validated, $oldValues) {
-            if (isset($validated['status'])) {
-                if ($validated['status'] === 'Submitted' && !$order->submitted_at) {
-                    $order->submitted_by = $request->user()->id;
-                    $order->submitted_at = now();
-                }
-                if ($validated['status'] === 'Under Review' && !$order->reviewed_at) {
-                    $order->reviewed_by = $request->user()->id;
-                    $order->reviewed_at = now();
-                }
-                if ($validated['status'] === 'Approved' && !$order->approved_at) {
-                    $order->approved_by = $request->user()->id;
-                    $order->approved_at = now();
-                }
-            }
-
             $order->update($validated);
 
             AuditLogger::record(
@@ -250,19 +235,29 @@ class VariationOrderController extends Controller
             'approval_remarks' => ['nullable', 'string', 'max:5000'],
         ]);
 
+        abort_if($validated['review_action'] === 'Approved' && $order->status === 'Approved', 422, 'This variation order has already been approved.');
+
         $oldValues = $order->toArray();
 
         DB::transaction(function () use ($request, $order, $validated, $oldValues) {
-            $order->update([
+            $updatePayload = [
                 'status' => $validated['review_action'],
-                'reviewed_by' => $request->user()->id,
-                'reviewed_at' => now(),
-            ]);
+                'reviewed_by' => $order->reviewed_by ?: $request->user()->id,
+                'reviewed_at' => $order->reviewed_at ?: now(),
+            ];
 
             if ($validated['review_action'] === 'Approved') {
-                $order->update([
-                    'approved_by' => $request->user()->id,
-                    'approved_at' => now(),
+                $updatePayload['approved_by'] = $request->user()->id;
+                $updatePayload['approved_at'] = now();
+            }
+
+            $order->update($updatePayload);
+
+            if ($validated['review_action'] === 'Approved') {
+                $contract = $order->contract()->lockForUpdate()->first();
+                $baseAmount = $contract->revised_contract_amount ?? $contract->original_contract_amount ?? 0;
+                $contract->update([
+                    'revised_contract_amount' => (float) $baseAmount + (float) $order->amount_change,
                 ]);
             }
 
@@ -290,6 +285,7 @@ class VariationOrderController extends Controller
         $oldValues = $order->toArray();
 
         $order->update(['is_archived' => true]);
+        $newValues = $order->toArray();
 
         AuditLogger::record(
             $request,
@@ -298,7 +294,7 @@ class VariationOrderController extends Controller
             $order->id,
             $order->vo_number,
             $oldValues,
-            $order->fresh()->toArray()
+            $newValues
         );
 
         return response()->json(['message' => 'Variation order archived successfully.']);
