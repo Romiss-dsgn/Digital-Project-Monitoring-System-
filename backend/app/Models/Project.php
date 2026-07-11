@@ -45,4 +45,9 @@ class Project extends Model
     {
         return $this->hasMany(ProjectAccomplishment::class);
     }
+
+    public function contractor()
+    {
+        return $this->belongsTo(Contractor::class);
+    }
 }

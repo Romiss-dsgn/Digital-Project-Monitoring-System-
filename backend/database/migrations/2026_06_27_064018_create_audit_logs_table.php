@@ -24,6 +24,6 @@ return new class extends Migration
     }
     public function down(): void
     {
-        Schema::dropIfExists("audit_logs");
+        // No-op: audit_logs belongs to the finalized base schema migration.
     }
 };

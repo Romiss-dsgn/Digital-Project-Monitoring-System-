@@ -12,6 +12,12 @@ const ProjectService = {
     });
   },
 
+  getProjectOptions() {
+    return axios.get(`${BASE}/projects/options`, {
+      headers: authHeader(),
+    });
+  },
+
   createProject(data) {
     return axios.post(`${BASE}/projects`, data, {
       headers: {
