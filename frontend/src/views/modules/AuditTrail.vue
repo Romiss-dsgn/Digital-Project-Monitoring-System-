@@ -392,26 +392,6 @@
               <input class="bfp-input" readonly :value="selectedLog.remarks || '-'" />
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">IP Address</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">router</i>
-              <input class="bfp-input" readonly :value="selectedLog.ip_address || '-'" />
-            </div>
-          </div>
-        </div>
-        <div v-if="selectedLog.new_values" class="mt-3">
-          <div class="bfp-section-label"><i class="material-icons-round">difference</i> Changes</div>
-          <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0; font-size:0.8rem;">
-            <div v-if="selectedLog.old_values" class="mb-2">
-              <strong class="text-danger">Before:</strong>
-              <pre class="mb-0 mt-1" style="font-size:0.75rem;">{{ JSON.stringify(selectedLog.old_values, null, 2) }}</pre>
-            </div>
-            <div>
-              <strong class="text-success">After:</strong>
-              <pre class="mb-0 mt-1" style="font-size:0.75rem;">{{ JSON.stringify(selectedLog.new_values, null, 2) }}</pre>
-            </div>
-          </div>
         </div>
       </div>
     </BfpModal>

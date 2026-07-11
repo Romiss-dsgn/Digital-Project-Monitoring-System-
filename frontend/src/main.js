@@ -5,6 +5,7 @@ import router from "./router";
 import "./assets/css/nucleo-icons.css";
 import "./assets/css/nucleo-svg.css";
 import MaterialDashboard from "./material-dashboard";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const appInstance = createApp(App);
 appInstance.use(store);

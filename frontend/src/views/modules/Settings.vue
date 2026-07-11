@@ -33,7 +33,20 @@
 
             <label>
               <span>Contact Number</span>
-              <input v-model.trim="form.contact_number" type="text" autocomplete="tel" />
+              <div class="phone-input" :class="{ 'phone-input--error': errors.contact_number }">
+                <span class="phone-prefix">+63</span>
+                <input
+                  v-model="form.contact_number"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="tel-national"
+                  placeholder="9171234567"
+                  maxlength="11"
+                  @input="handleContactNumberInput"
+                  @keypress="blockNonDigitKeys"
+                  @paste="handleContactNumberPaste"
+                />
+              </div>
               <small v-if="errors.contact_number">{{ errors.contact_number }}</small>
             </label>
 
@@ -117,6 +130,9 @@ const EMPTY_FORM = {
   password_confirmation: "",
 };
 
+const PH_COUNTRY_CODE = "63";
+const CONTACT_NUMBER_MAX_LENGTH = 11;
+
 export default {
   name: "Settings",
   data() {
@@ -145,6 +161,35 @@ export default {
     await this.loadProfile();
   },
   methods: {
+    // Strips any existing "63", "+63", or "0" trunk prefix so the input
+    // only ever displays the local digits after the fixed +63 badge.
+    stripCountryCode(value) {
+      let digits = String(value || "").replace(/\D/g, "");
+
+      if (digits.startsWith(PH_COUNTRY_CODE)) {
+        digits = digits.slice(PH_COUNTRY_CODE.length);
+      } else if (digits.startsWith("0")) {
+        digits = digits.slice(1);
+      }
+
+      return digits.slice(0, CONTACT_NUMBER_MAX_LENGTH);
+    },
+    // Blocks letters/symbols from ever being typed, not just filtered after the fact.
+    blockNonDigitKeys(event) {
+      if (!/[0-9]/.test(event.key)) {
+        event.preventDefault();
+      }
+    },
+    handleContactNumberInput(event) {
+      const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, CONTACT_NUMBER_MAX_LENGTH);
+      this.form.contact_number = digitsOnly;
+      event.target.value = digitsOnly;
+    },
+    handleContactNumberPaste(event) {
+      event.preventDefault();
+      const pasted = (event.clipboardData || window.clipboardData).getData("text");
+      this.form.contact_number = this.stripCountryCode(pasted);
+    },
     async loadProfile() {
       this.isLoading = true;
       this.loadError = "";
@@ -158,7 +203,7 @@ export default {
           name: profile.name || "",
           email: profile.email || "",
           badge_number: profile.badge_number || "",
-          contact_number: profile.contact_number || "",
+          contact_number: this.stripCountryCode(profile.contact_number),
           position: profile.position || "",
           office_unit: profile.office_unit || "",
         };
@@ -173,7 +218,22 @@ export default {
       this.errors = {};
       this.statusMessage = "";
 
-      const payload = { ...this.form };
+      const localDigits = this.stripCountryCode(this.form.contact_number);
+
+      if (localDigits && localDigits.length !== CONTACT_NUMBER_MAX_LENGTH) {
+        this.isSaving = false;
+        this.statusType = "error";
+        this.statusMessage = "Please double-check the contact number.";
+        this.errors = {
+          contact_number: `Contact number must be ${CONTACT_NUMBER_MAX_LENGTH} digits.`,
+        };
+        return;
+      }
+
+      const payload = {
+        ...this.form,
+        contact_number: localDigits ? `${PH_COUNTRY_CODE}${localDigits}` : "",
+      };
 
       if (!payload.password && !payload.password_confirmation) {
         delete payload.password;
@@ -186,6 +246,7 @@ export default {
         this.form = {
           ...this.form,
           ...profile,
+          contact_number: this.stripCountryCode(profile.contact_number),
           password: "",
           password_confirmation: "",
         };
@@ -319,6 +380,46 @@ export default {
 .settings-form small {
   color: #b91c1c;
   font-size: 0.72rem;
+}
+
+.phone-input {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #d8e0eb;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.phone-input:focus-within {
+  border-color: #850000;
+  box-shadow: 0 0 0 3px rgba(133, 0, 0, 0.12);
+}
+
+.phone-input--error {
+  border-color: #b91c1c;
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  background: #f1f4f9;
+  color: #374151;
+  font-weight: 800;
+  font-size: 0.88rem;
+  border-right: 1px solid #d8e0eb;
+  user-select: none;
+}
+
+.phone-input input {
+  border: 0;
+  border-radius: 0;
+  flex: 1;
+}
+
+.phone-input input:focus {
+  box-shadow: none;
 }
 
 .password-box {
