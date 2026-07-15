@@ -17,8 +17,8 @@
           <button
             v-if="permissions.create"
             class="btn btn-primary btn-sm"
-            :disabled="isLoading || allProjectsCount === 0"
-            :title="allProjectsCount === 0 ? 'Create a project first before adding accomplishment reports' : ''"
+            :disabled="isLoading || projects.length === 0"
+            :title="projects.length === 0 ? 'All projects already have an accomplishment report' : ''"
             @click="openCreateModal"
           >
             <i class="material-icons-round">upload</i> Upload Report
@@ -109,7 +109,7 @@
             <div class="card-header pb-0 d-flex align-items-center justify-content-between">
               <h6>Project Milestones &amp; Accomplishments</h6>
               <div class="d-flex gap-2">
-                <button v-if="permissions.export" class="btn btn-sm btn-icon btn-light text-secondary" @click="showExportModal = true">
+                <button v-if="permissions.export" class="btn btn-sm btn-icon btn-light text-secondary" @click="openExportModal">
                   <i class="material-icons-round">download</i>
                 </button>
                 <button class="btn btn-sm btn-icon btn-light text-secondary" @click="showPrintModal = true">
@@ -133,8 +133,8 @@
                   </thead>
                   <tbody>
                     <tr v-if="isLoading"><td colspan="7" class="text-center py-4">Loading accomplishments...</td></tr>
-                    <tr v-else-if="accomplishments.length === 0"><td colspan="7" class="text-center py-4 text-secondary">No milestone records found.</td></tr>
-                    <tr v-for="milestone in accomplishments" :key="milestone.id">
+                    <tr v-else-if="filteredAccomplishments.length === 0"><td colspan="7" class="text-center py-4 text-secondary">No milestone records found.</td></tr>
+                    <tr v-for="milestone in displayedAccomplishments" :key="milestone.id">
                       <td>
                         <div class="fw-semibold">{{ milestone.project_name }}</div>
                         <div class="text-secondary small">{{ milestone.project_location }}</div>
@@ -182,9 +182,9 @@
               </div>
               <!-- Pagination -->
               <div class="d-flex justify-content-between align-items-center mt-3 px-1">
-                <span class="text-secondary small">Showing {{ paginationFrom }} to {{ paginationTo }} of {{ paginationTotal }} milestones</span>
+                <span class="text-secondary small">Showing {{ paginationFrom }} to {{ paginationTo }} of {{ filteredAccomplishments.length }} milestones</span>
                 <div class="d-flex align-items-center gap-1">
-                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === 1" @click="setPage(currentPage - 1)">
+                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === 1" @click="currentPage--">
                     <i class="material-icons-round">chevron_left</i>
                   </button>
                   <button
@@ -192,9 +192,9 @@
                     :key="page"
                     class="btn btn-sm btn-pagination"
                     :class="{ active: page === currentPage }"
-                    @click="setPage(page)"
+                    @click="currentPage = page"
                   >{{ page }}</button>
-                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === totalPages" @click="setPage(currentPage + 1)">
+                  <button class="btn btn-sm btn-icon btn-light text-secondary" :disabled="currentPage === totalPages" @click="currentPage++">
                     <i class="material-icons-round">chevron_right</i>
                   </button>
                 </div>
@@ -420,10 +420,10 @@
       :show="showExportModal"
       title="Export Accomplishments"
       stripe="MILESTONE EXPORT"
-      confirm-text="Export"
+      :confirm-text="isExporting ? 'Exporting...' : 'Export'"
       confirm-icon="download"
       @close="showExportModal = false"
-      @confirm="exportCsv"
+      @confirm="exportReport"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
@@ -432,12 +432,31 @@
             <label class="bfp-label">Format</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">file_download</i>
-              <select class="bfp-input bfp-select">
-                <option>CSV</option>
+              <select v-model="exportFormat" class="bfp-input bfp-select">
+                <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
+                <option value="xlsx">Excel (XLSX)</option>
               </select>
             </div>
           </div>
-          <p class="text-secondary small bfp-field-full mb-0">CSV exports include the currently filtered milestone records.</p>
+
+          <!-- Month filter -->
+          <div class="bfp-field-half">
+            <label class="bfp-label">Month</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">calendar_month</i>
+              <select v-model="exportMonth" class="bfp-input bfp-select">
+                <option value="">All months</option>
+                <option v-for="month in availableExportMonths" :key="month.value" :value="month.value">
+                  {{ month.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <p class="text-secondary small bfp-field-full mb-0">
+            {{ exportMonth ? 'Exports records with a target date in the selected month.' : 'Exports include the currently filtered milestone records, formatted like the standard Contract Summary Report.' }}
+          </p>
         </div>
       </div>
     </BfpModal>
@@ -448,6 +467,9 @@
 import StatusBadge from "@/components/StatusBadge.vue";
 import BfpModal from "@/components/BfpModal.vue";
 import accomplishmentService from "@/services/accomplishment.service";
+import jsPDF from "jspdf/dist/jspdf.umd.min.js";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const emptyAccomplishmentForm = () => ({
   id: null,
@@ -478,9 +500,12 @@ export default {
       isLoading: false,
       isSaving: false,
       isLoadingModalProjects: false,
+      isExporting: false,
       apiError: "",
       currentPage: 1,
       rowsPerPage: 10,
+      exportFormat: "csv",
+      exportMonth: "", // "YYYY-MM" or "" for all
       accomplishments: [],
       // Projects without an active accomplishment report yet — used as the
       // dropdown source when creating a *new* report, and to gate the
@@ -495,14 +520,6 @@ export default {
       // include_project_id so the record's current project still appears
       // as a selectable (and pre-selected) option.
       modalProjects: [],
-      paginationMeta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 10,
-        total: 0,
-        from: 0,
-        to: 0,
-      },
       statusOptions: ["Not Started", "In Progress", "Delayed", "Completed"],
       accomplishmentForm: emptyAccomplishmentForm(),
       filters: {
@@ -531,17 +548,51 @@ export default {
   },
 
   computed: {
+    filteredAccomplishments() {
+      return this.accomplishments.filter((item) => {
+        if (this.filters.statuses.length && !this.filters.statuses.includes(item.status)) return false;
+        if (this.filters.target_from && item.target_date < this.filters.target_from) return false;
+        if (this.filters.target_to && item.target_date > this.filters.target_to) return false;
+        return true;
+      });
+    },
     totalPages() {
-      return Math.max(1, this.paginationMeta.last_page || 1);
+      return Math.max(1, Math.ceil(this.filteredAccomplishments.length / this.rowsPerPage));
+    },
+    displayedAccomplishments() {
+      const start = (this.currentPage - 1) * this.rowsPerPage;
+      return this.filteredAccomplishments.slice(start, start + this.rowsPerPage);
     },
     paginationFrom() {
-      return this.paginationMeta.from || 0;
+      return this.filteredAccomplishments.length ? (this.currentPage - 1) * this.rowsPerPage + 1 : 0;
     },
     paginationTo() {
-      return this.paginationMeta.to || 0;
+      return Math.min(this.currentPage * this.rowsPerPage, this.filteredAccomplishments.length);
     },
-    paginationTotal() {
-      return this.paginationMeta.total || 0;
+
+    // Distinct months present in the table's target dates, newest first
+    availableExportMonths() {
+      const seen = new Map();
+      this.accomplishments.forEach((item) => {
+        if (!item.target_date) return;
+        const key = item.target_date.slice(0, 7); // "YYYY-MM"
+        if (!seen.has(key)) {
+          const label = new Intl.DateTimeFormat("en-PH", { month: "long", year: "numeric" })
+            .format(new Date(`${key}-01T00:00:00`));
+          seen.set(key, label);
+        }
+      });
+      return Array.from(seen.entries())
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .map(([value, label]) => ({ value, label }));
+    },
+
+    // What actually gets exported: table filters + month filter combined
+    exportRows() {
+      if (!this.exportMonth) return this.filteredAccomplishments;
+      return this.filteredAccomplishments.filter(
+        (item) => item.target_date && item.target_date.slice(0, 7) === this.exportMonth
+      );
     },
   },
 
@@ -555,45 +606,37 @@ export default {
         alert("Create a project first in Infrastructure Plans before adding accomplishment reports.");
         return;
       }
+      if (!this.projects.length) {
+        alert("Every active project already has an accomplishment report. Edit an existing record instead.");
+        return;
+      }
       this.accomplishmentForm = emptyAccomplishmentForm();
       this.modalProjects = this.projects;
       this.showUploadReportModal = true;
     },
 
-    accomplishmentQueryParams(page = this.currentPage) {
-      const params = {
-        page,
-        per_page: this.rowsPerPage,
-      };
-
-      if (this.filters.statuses.length) params.statuses = this.filters.statuses;
-      if (this.filters.target_from) params.target_from = this.filters.target_from;
-      if (this.filters.target_to) params.target_to = this.filters.target_to;
-
-      return params;
-    },
-
-    async loadAccomplishments(page = this.currentPage) {
+    async loadAccomplishments() {
       this.isLoading = true;
       this.apiError = "";
 
       try {
         const [records, summary, options] = await Promise.all([
-          accomplishmentService.getAccomplishments(this.accomplishmentQueryParams(page)),
+          accomplishmentService.getAccomplishments(),
           accomplishmentService.getSummary(),
           accomplishmentService.getOptions(),
         ]);
 
         this.accomplishments = records.data || [];
-        this.paginationMeta = records.meta || this.paginationMeta;
         this.summary = summary;
+        // `options.projects` already excludes projects that have an active
+        // accomplishment report (filtered server-side).
         this.projects = options.projects || [];
         this.allProjectsCount = typeof options.all_projects_count === "number"
           ? options.all_projects_count
           : this.projects.length;
         this.statusOptions = options.statuses || this.statusOptions;
         this.permissions = options.permissions || summary.permissions || this.permissions;
-        this.currentPage = this.paginationMeta.current_page || page;
+        this.currentPage = 1;
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to load accomplishment records.");
       } finally {
@@ -623,7 +666,7 @@ export default {
 
         this.showUploadReportModal = false;
         this.accomplishmentForm = emptyAccomplishmentForm();
-        await this.loadAccomplishments(this.currentPage);
+        await this.loadAccomplishments();
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to save accomplishment.");
       } finally {
@@ -631,37 +674,41 @@ export default {
       }
     },
 
-       async editAccomplishment(item) {
-        this.accomplishmentForm = {
-          id: item.id,
-          project_id: item.project_id,
-          milestone_title: item.milestone_title,
-          description: item.description || "",
-          target_date: item.target_date || "",
-          completion_date: item.completion_date || "",
-          percent_complete: item.percent_complete,
-          status: item.status,
-          remarks: item.remarks || "",
-          attachment: null,
-        };
+    async editAccomplishment(item) {
+      this.accomplishmentForm = {
+        id: item.id,
+        project_id: item.project_id,
+        milestone_title: item.milestone_title,
+        description: item.description || "",
+        target_date: item.target_date || "",
+        completion_date: item.completion_date || "",
+        percent_complete: item.percent_complete,
+        status: item.status,
+        remarks: item.remarks || "",
+        attachment: null,
+      };
 
-          this.showUploadReportModal = true;
-          this.isLoadingModalProjects = true;
+      this.showUploadReportModal = true;
+      this.isLoadingModalProjects = true;
 
-          try {
-            const options = await accomplishmentService.getOptions();
-            this.modalProjects = options.projects || [];
-          } catch (error) {
-            this.modalProjects = this.projects;
-          } finally {
-            this.isLoadingModalProjects = false;
-          }
-        },
+      try {
+        // Re-fetch with include_project_id so this record's own project
+        // still shows up as a selectable option, even though it already
+        // "has" a report (this one).
+        const options = await accomplishmentService.getOptions({ include_project_id: item.project_id });
+        this.modalProjects = options.projects || [];
+      } catch (error) {
+        // Fall back to whatever we already have rather than blocking edit.
+        this.modalProjects = this.projects;
+      } finally {
+        this.isLoadingModalProjects = false;
+      }
+    },
 
     async validateAccomplishment(item) {
       try {
         await accomplishmentService.validateAccomplishment(item.id);
-        await this.loadAccomplishments(this.currentPage);
+        await this.loadAccomplishments();
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to validate accomplishment.");
       }
@@ -672,7 +719,7 @@ export default {
 
       try {
         await accomplishmentService.archiveAccomplishment(item.id);
-        await this.loadAccomplishments(this.currentPage);
+        await this.loadAccomplishments();
       } catch (error) {
         this.apiError = this.errorMessage(error, "Unable to archive accomplishment.");
       }
@@ -683,13 +730,8 @@ export default {
     },
 
     applyFilters() {
+      this.currentPage = 1;
       this.showFilterModal = false;
-      this.loadAccomplishments(1);
-    },
-
-    setPage(page) {
-      if (page < 1 || page > this.totalPages || page === this.currentPage) return;
-      this.loadAccomplishments(page);
     },
 
     getProgressClass(status) {
@@ -722,12 +764,36 @@ export default {
       window.print();
     },
 
+    openExportModal() {
+      this.exportMonth = "";
+      this.showExportModal = true;
+    },
+
+    // ── Export dispatcher ──────────────────────────────────────────────
+    async exportReport() {
+      if (this.isExporting) return;
+      this.isExporting = true;
+      this.apiError = "";
+
+      try {
+        if (this.exportFormat === "pdf") {
+          this.exportPdf();
+        } else if (this.exportFormat === "xlsx") {
+          this.exportExcel();
+        } else {
+          this.exportCsv();
+        }
+        this.showExportModal = false;
+      } catch (error) {
+        this.apiError = "Unable to generate export. Please try again.";
+      } finally {
+        this.isExporting = false;
+      }
+    },
+
     exportCsv() {
-      // FIX: this used to reference this.filteredAccomplishments, which
-      // was never defined anywhere and threw a runtime error on click.
-      // Uses the currently loaded/filtered records instead.
       const headers = ["Project", "Milestone", "Target Date", "Progress", "Status", "Remarks"];
-      const rows = this.accomplishments.map((item) => [
+      const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
         item.target_date,
@@ -740,10 +806,124 @@ export default {
       const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
       const link = window.document.createElement("a");
       link.href = url;
-      link.download = "project-accomplishments.csv";
+      link.download = "accomplishment-summary.csv";
       link.click();
       URL.revokeObjectURL(url);
-      this.showExportModal = false;
+    },
+
+    exportExcel() {
+      const headers = ["Project", "Milestone", "Target Date", "Progress %", "Status", "Remarks"];
+      const rows = this.exportRows.map((item) => [
+        item.project_name,
+        item.milestone_title,
+        item.target_date,
+        item.percent_complete,
+        item.status,
+        item.remarks || "",
+      ]);
+
+      const summaryRows = [
+        ["ACCOMPLISHMENT SUMMARY REPORT"],
+        [`Report ID: ${this.buildReportId()}`, "", `Generated: ${this.formatDateTime(new Date().toISOString())}`],
+        [],
+        ["Milestones", "Overall Progress", "Delayed Tasks"],
+        [
+          `${this.summary.milestones_completed} / ${this.summary.milestones_total}`,
+          `${this.summary.overall_progress}%`,
+          this.summary.delayed_tasks,
+        ],
+        [],
+        headers,
+        ...rows,
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(summaryRows);
+      worksheet["!cols"] = [
+        { wch: 28 },
+        { wch: 24 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 30 },
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Accomplishments");
+      XLSX.writeFile(workbook, "accomplishment-summary.xlsx");
+    },
+
+    exportPdf() {
+      const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      const maroon = [122, 22, 32]; // matches the sample Contract Summary Report header
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 40;
+
+      // Title
+      doc.setTextColor(...maroon);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("ACCOMPLISHMENT SUMMARY REPORT", margin, 50);
+
+      // Subheader line
+      doc.setTextColor(120, 120, 120);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(
+        `Report ID: ${this.buildReportId()}   |   Generated: ${this.formatDateTime(new Date().toISOString())}`,
+        margin,
+        68
+      );
+
+      // Summary boxes
+      const boxY = 90;
+      const boxW = (pageWidth - margin * 2 - 20) / 3;
+      const boxes = [
+        { label: "Milestones", value: `${this.summary.milestones_completed} / ${this.summary.milestones_total}` },
+        { label: "Overall Progress", value: `${this.summary.overall_progress}%` },
+        { label: "Delayed Tasks", value: `${this.summary.delayed_tasks}` },
+      ];
+
+      boxes.forEach((box, i) => {
+        const x = margin + i * (boxW + 10);
+        doc.setFillColor(245, 247, 250);
+        doc.rect(x, boxY, boxW, 55, "F");
+        doc.setTextColor(140, 140, 140);
+        doc.setFontSize(8);
+        doc.text(box.label, x + 12, boxY + 20);
+        doc.setTextColor(31, 38, 51);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(String(box.value), x + 12, boxY + 40);
+        doc.setFont("helvetica", "normal");
+      });
+
+      // Table
+      const headers = [["Project", "Milestone", "Target Date", "Progress", "Status"]];
+      const rows = this.exportRows.map((item) => [
+        item.project_name,
+        item.milestone_title,
+        this.formatDate(item.target_date),
+        `${item.percent_complete}%`,
+        item.status,
+      ]);
+
+      autoTable(doc, {
+        head: headers,
+        body: rows,
+        startY: boxY + 80,
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 6 },
+        headStyles: { fillColor: maroon, textColor: 255, fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+      });
+
+      doc.save("accomplishment-summary.pdf");
+    },
+
+    buildReportId() {
+      const now = new Date();
+      const stamp = now.toISOString().replace(/[-:T.]/g, "").slice(0, 14);
+      return `BFP-ACC-${stamp}`;
     },
 
     errorMessage(error, fallback) {
