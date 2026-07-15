@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V2\ProjectController;
 use App\Http\Controllers\Api\V2\ReportController;
 use App\Http\Controllers\Api\V2\Admin\EngineeringPlanController;
 use App\Http\Controllers\Api\V2\MeController;
+use App\Http\Controllers\Api\V2\Admin\DashboardController;
 use App\Http\Controllers\Api\AuditLogController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
@@ -163,6 +164,10 @@ Route::prefix("v2")->middleware("json.api")->group(function () {
         Route::delete("/users/{user}/reject",   [UserManagementController::class, "reject"])->middleware("permission:users,approve");
 
         Route::get("/roles",                    [UserManagementController::class, "roles"])->middleware("permission:roles,view");
+
+        // Dashboard
+        Route::get("/dashboard/summary",        [DashboardController::class, "summary"])->middleware("permission:dashboard,view");
+        Route::get("/dashboard/export",         [DashboardController::class, "export"])->middleware("permission:dashboard,export");
 
         Route::get("/projects/options",         [ProjectController::class, "options"])->middleware("permission:projects,view");
 

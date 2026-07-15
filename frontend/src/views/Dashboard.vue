@@ -1,29 +1,39 @@
 <template>
   <div class="dashboard-page">
     <div class="container-fluid py-4">
-      <!-- Page Header -->
+      <div v-if="loadError" class="alert alert-danger py-2 mb-4">
+        {{ loadError }}
+      </div>
+      <div
+        v-if="isLoading"
+        class="alert alert-info py-2 mb-4 d-flex align-items-center gap-2"
+      >
+        <span class="spinner-border spinner-border-sm"></span>
+        Loading dashboard data...
+      </div>
+
       <div class="row mb-4 align-items-center">
         <div class="col">
           <h4 class="mb-1">Regional Dashboard</h4>
-          <p class="text-muted mb-0">
-            Welcome back. Here is the overview for BFP Region II Contract
-            Progress.
-          </p>
+          <p class="text-muted mb-0">{{ dashboardSubtitle }}</p>
         </div>
         <div class="col-auto d-flex gap-2 align-items-center">
           <button class="fiscal-year-btn" @click="showFiscalYearModal = true">
             <i class="material-icons-round">calendar_today</i>
-            <span>Fiscal Year {{ selectedFiscalYear }}</span>
+            <span>Fiscal Year {{ fiscalYearLabel || "Loading" }}</span>
             <i class="material-icons-round chevron-icon">expand_more</i>
           </button>
-          <button class="btn-export" @click="showExportModal = true">
+          <button
+            class="btn-export"
+            :disabled="isLoading || !canExport"
+            @click="showExportModal = true"
+          >
             <i class="material-icons-round">download</i>
             Export Summary
           </button>
         </div>
       </div>
 
-      <!-- Fiscal Year Modal -->
       <transition name="modal-fade">
         <div
           v-if="showFiscalYearModal"
@@ -38,15 +48,10 @@
                 </div>
                 <div>
                   <h6 class="modal-title">Select Fiscal Year</h6>
-                  <p class="modal-subtitle">
-                    Filter dashboard data by fiscal year
-                  </p>
+                  <p class="modal-subtitle">Filter dashboard data by fiscal year</p>
                 </div>
               </div>
-              <button
-                class="modal-close-btn"
-                @click="showFiscalYearModal = false"
-              >
+              <button class="modal-close-btn" @click="showFiscalYearModal = false">
                 <i class="material-icons-round">close</i>
               </button>
             </div>
@@ -55,10 +60,7 @@
                 <button
                   v-for="fy in fiscalYears"
                   :key="fy.value"
-                  :class="[
-                    'fy-option',
-                    { 'fy-option-active': selectedFiscalYear === fy.value },
-                  ]"
+                  :class="['fy-option', { 'fy-option-active': fiscalYearLabel === fy.value }]"
                   @click="selectFiscalYear(fy.value)"
                 >
                   <div class="fy-option-left">
@@ -69,14 +71,11 @@
                     </div>
                   </div>
                   <div class="fy-option-right">
-                    <span v-if="fy.tag" :class="['fy-tag', fy.tagClass]">{{
-                      fy.tag
-                    }}</span>
+                    <span v-if="fy.tag" :class="['fy-tag', fy.tagClass]">{{ fy.tag }}</span>
                     <i
-                      v-if="selectedFiscalYear === fy.value"
+                      v-if="fiscalYearLabel === fy.value"
                       class="material-icons-round fy-check"
-                      >check_circle</i
-                    >
+                    >check_circle</i>
                   </div>
                 </button>
               </div>
@@ -85,7 +84,6 @@
         </div>
       </transition>
 
-      <!-- Export Summary Modal -->
       <transition name="modal-fade">
         <div
           v-if="showExportModal"
@@ -101,7 +99,7 @@
                 <div>
                   <h6 class="modal-title">Export Summary</h6>
                   <p class="modal-subtitle">
-                    FY{{ selectedFiscalYear }} — BFP Region II
+                    FY{{ fiscalYearLabel }} - {{ organizationLabel }}
                   </p>
                 </div>
               </div>
@@ -115,10 +113,7 @@
                 <button
                   v-for="fmt in exportFormats"
                   :key="fmt.value"
-                  :class="[
-                    'export-format-btn',
-                    { 'export-format-active': exportForm.format === fmt.value },
-                  ]"
+                  :class="['export-format-btn', { 'export-format-active': exportForm.format === fmt.value }]"
                   @click="exportForm.format = fmt.value"
                 >
                   <i class="material-icons-round">{{ fmt.icon }}</i>
@@ -133,8 +128,8 @@
                   class="scope-item"
                 >
                   <input
-                    type="checkbox"
                     v-model="exportForm.scopes"
+                    type="checkbox"
                     :value="scope.value"
                     class="scope-checkbox"
                   />
@@ -152,17 +147,17 @@
                 <div class="export-date-field">
                   <label class="date-label">From</label>
                   <input
-                    type="date"
                     v-model="exportForm.dateFrom"
+                    type="date"
                     class="date-input"
                   />
                 </div>
-                <div class="export-date-sep">—</div>
+                <div class="export-date-sep">-</div>
                 <div class="export-date-field">
                   <label class="date-label">To</label>
                   <input
-                    type="date"
                     v-model="exportForm.dateTo"
+                    type="date"
                     class="date-input"
                   />
                 </div>
@@ -174,175 +169,96 @@
               </button>
               <button
                 class="modal-btn-export"
+                :disabled="isExporting || exportForm.scopes.length === 0"
                 @click="confirmExport"
-                :disabled="exportForm.scopes.length === 0"
               >
                 <i class="material-icons-round">download</i>
-                Export {{ exportForm.format.toUpperCase() }}
+                {{ isExporting ? "Exporting..." : `Export ${exportForm.format.toUpperCase()}` }}
               </button>
             </div>
           </div>
         </div>
       </transition>
 
-      <!-- Stats Row 1 -->
       <div class="row mb-3">
-        <div class="col-lg-4 col-md-6 mb-3">
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-blue">
-              <i class="material-icons-round">assignment</i>
+        <div
+          v-for="card in topStats"
+          :key="card.key"
+          class="col-lg-4 col-md-6 mb-3"
+        >
+          <div :class="['stat-card', card.cardClass]">
+            <div :class="['stat-icon-wrap', card.iconClass]">
+              <i class="material-icons-round">{{ card.icon }}</i>
             </div>
             <div class="stat-info">
-              <div class="stat-badge text-info-badge">+2 this month</div>
-              <p class="stat-label">ACTIVE PROJECTS</p>
-              <h3 class="stat-value">24</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-3">
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-yellow">
-              <i class="material-icons-round">build</i>
-            </div>
-            <div class="stat-info">
-              <div class="stat-badge text-success-badge">85% On Track</div>
-              <p class="stat-label">ONGOING PROJECTS</p>
-              <h3 class="stat-value">18</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-12 mb-3">
-          <div class="stat-card stat-card-wide">
-            <div class="stat-icon-wrap stat-icon-teal">
-              <i class="material-icons-round">payments</i>
-            </div>
-            <div class="stat-info">
-              <div class="stat-badge text-muted-badge">
-                Disbursement Rate: 64.2%
-              </div>
-              <p class="stat-label">TOTAL PROJECT BUDGET (FY24)</p>
-              <h3 class="stat-value stat-value-lg">₱142,850,000.00</h3>
+              <div class="stat-badge" :class="card.badgeClass">{{ card.badge }}</div>
+              <p class="stat-label">{{ card.label }}</p>
+              <h3 :class="['stat-value', card.valueClass]">{{ card.value }}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Stats Row 2 -->
       <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-green">
-              <i class="material-icons-round">check_circle</i>
+        <div
+          v-for="card in bottomStats"
+          :key="card.key"
+          class="col-lg-3 col-md-6 mb-3"
+        >
+          <div :class="['stat-card', card.cardClass]">
+            <div :class="['stat-icon-wrap', card.iconClass]">
+              <i class="material-icons-round">{{ card.icon }}</i>
             </div>
             <div class="stat-info">
-              <div class="stat-badge text-success-badge">ANNUAL GOAL: 92%</div>
-              <p class="stat-label">COMPLETED PROJECTS</p>
-              <h3 class="stat-value">12</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-orange">
-              <i class="material-icons-round">edit_note</i>
-            </div>
-            <div class="stat-info">
-              <div class="stat-badge text-warning-badge">Needs Review</div>
-              <p class="stat-label">PENDING VOS</p>
-              <h3 class="stat-value">05</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-          <div class="stat-card stat-card-danger">
-            <div class="stat-icon-wrap stat-icon-red">
-              <i class="material-icons-round">warning</i>
-            </div>
-            <div class="stat-info">
-              <p class="stat-label">OVERDUE DOCUMENTS</p>
-              <h3 class="stat-value stat-value-danger">03</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-          <div class="stat-card">
-            <div class="stat-icon-wrap stat-icon-gray">
-              <i class="material-icons-round">notifications_none</i>
-            </div>
-            <div class="stat-info">
-              <div class="stat-badge text-muted-badge">All Systems Nominal</div>
-              <p class="stat-label">SYSTEM ALERTS</p>
-              <h3 class="stat-value">0</h3>
+              <div class="stat-badge" :class="card.badgeClass">{{ card.badge }}</div>
+              <p class="stat-label">{{ card.label }}</p>
+              <h3 :class="['stat-value', card.valueClass]">{{ card.value }}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Charts Row -->
       <div class="row mb-4">
-        <!-- Project Status Donut -->
         <div class="col-lg-5 mb-4">
           <div class="card h-100">
-            <div
-              class="card-header d-flex justify-content-between align-items-center"
-            >
+            <div class="card-header d-flex justify-content-between align-items-center">
               <h6>Project Status</h6>
               <button class="btn-icon">
                 <i class="material-icons-round">more_vert</i>
               </button>
             </div>
-            <div
-              class="card-body d-flex flex-column align-items-center justify-content-center"
-            >
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
               <div class="donut-wrapper">
                 <canvas ref="donutChart" width="220" height="220"></canvas>
                 <div class="donut-center">
-                  <span class="donut-total">54</span>
+                  <span class="donut-total">{{ projectStatusTotal }}</span>
                   <span class="donut-label">TOTAL</span>
                 </div>
               </div>
               <div class="donut-legend">
-                <div class="legend-item">
-                  <span class="legend-dot" style="background: #4a90d9"></span>
-                  <span>Planning (12)</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-dot" style="background: #7b6b3d"></span>
-                  <span>Ongoing (24)</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-dot" style="background: #3ebd7f"></span>
-                  <span>Completed (14)</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-dot" style="background: #e05c5c"></span>
-                  <span>Delayed (4)</span>
+                <div
+                  v-for="item in projectStatusLegend"
+                  :key="item.label"
+                  class="legend-item"
+                >
+                  <span class="legend-dot" :style="{ background: item.color }"></span>
+                  <span>{{ item.label }} ({{ item.value }})</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Budget vs Expenditure Bar Chart -->
         <div class="col-lg-7 mb-4">
           <div class="card h-100">
-            <div
-              class="card-header d-flex justify-content-between align-items-center"
-            >
+            <div class="card-header d-flex justify-content-between align-items-center">
               <div>
                 <h6>Budget vs Expenditure</h6>
-                <p class="card-subtitle">
-                  Comparison of allocated funds vs actual disbursements per
-                  quarter.
-                </p>
+                <p class="card-subtitle">{{ budgetChartSubtitle }}</p>
               </div>
               <div class="chart-legend">
-                <span class="legend-pill" style="background: #4a90d9"
-                  >Budget</span
-                >
-                <span class="legend-pill" style="background: #7b6b3d"
-                  >Expenditure</span
-                >
+                <span class="legend-pill legend-pill-budget">Budget</span>
+                <span class="legend-pill legend-pill-expenditure">Expenditure</span>
               </div>
             </div>
             <div class="card-body">
@@ -352,15 +268,16 @@
         </div>
       </div>
 
-      <!-- Recent Updates + Upcoming Deadlines -->
       <div class="row mb-4">
-        <!-- Recent Contract Updates -->
         <div class="col-lg-6 mb-4">
           <div class="card h-100">
             <div class="card-header">
               <h6>Recent Contract Updates</h6>
             </div>
             <div class="card-body p-0">
+              <div v-if="recentUpdates.length === 0" class="p-4 text-center text-secondary">
+                No recent activity for the selected fiscal year.
+              </div>
               <div
                 v-for="item in recentUpdates"
                 :key="item.id"
@@ -379,18 +296,22 @@
               </div>
             </div>
             <div class="card-footer text-center">
-              <button class="btn-link">View All Updates</button>
+              <button class="btn-link" @click="handleQuickAction('Reports')">
+                View All Updates
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Upcoming Deadlines -->
         <div class="col-lg-6 mb-4">
           <div class="card h-100">
             <div class="card-header">
               <h6>Upcoming Deadlines</h6>
             </div>
             <div class="card-body p-0">
+              <div v-if="upcomingDeadlines.length === 0" class="p-4 text-center text-secondary">
+                No upcoming deadlines found in the selected fiscal year.
+              </div>
               <div
                 v-for="deadline in upcomingDeadlines"
                 :key="deadline.id"
@@ -403,9 +324,7 @@
                 <div class="deadline-content">
                   <div class="d-flex justify-content-between align-items-start">
                     <p class="deadline-title">{{ deadline.title }}</p>
-                    <span v-if="deadline.urgent" class="badge-urgent"
-                      >URGENT</span
-                    >
+                    <span v-if="deadline.urgent" class="badge-urgent">URGENT</span>
                   </div>
                   <p class="deadline-desc">{{ deadline.description }}</p>
                 </div>
@@ -415,7 +334,6 @@
         </div>
       </div>
 
-      <!-- Administrative Quick Actions -->
       <div class="row mb-4">
         <div class="col-12">
           <div class="quick-actions-header">
@@ -424,7 +342,7 @@
           </div>
           <div class="quick-actions-grid">
             <button
-              v-for="action in quickActions"
+              v-for="action in visibleQuickActions"
               :key="action.id"
               class="quick-action-btn"
               @click="handleQuickAction(action.route)"
@@ -436,12 +354,10 @@
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="dashboard-footer">
-        <span
-          >© 2024 Bureau of Fire Protection - Region II. ConTrackPro v4.2.0. All
-          Rights Reserved.</span
-        >
+        <span>
+          &copy; {{ footerYear }} {{ organizationLabel }} - {{ organizationRegion }}. ConTrackPro {{ footerVersion }}. All Rights Reserved.
+        </span>
       </div>
     </div>
   </div>
@@ -449,205 +365,204 @@
 
 <script>
 import Chart from "chart.js/auto";
+import DashboardService from "@/services/dashboard.service";
+
+const DEFAULT_EXPORT_FORMATS = [
+  { value: "pdf", label: "PDF", icon: "picture_as_pdf" },
+  { value: "excel", label: "Excel", icon: "table_chart" },
+  { value: "csv", label: "CSV", icon: "grid_on" },
+];
 
 export default {
   name: "Dashboard",
-  components: {},
   data() {
     return {
-      selectedFiscalYear: "2024",
+      dashboard: null,
+      selectedFiscalYear: "",
       showFiscalYearModal: false,
       showExportModal: false,
+      isLoading: false,
+      isExporting: false,
+      loadError: null,
       donutChartInstance: null,
       barChartInstance: null,
-
-      fiscalYears: [
-        {
-          value: "2024",
-          range: "Jan 2024 – Dec 2024",
-          tag: "Current",
-          tagClass: "fy-tag-green",
-        },
-        {
-          value: "2023",
-          range: "Jan 2023 – Dec 2023",
-          tag: "Closed",
-          tagClass: "fy-tag-gray",
-        },
-        {
-          value: "2022",
-          range: "Jan 2022 – Dec 2022",
-          tag: "Closed",
-          tagClass: "fy-tag-gray",
-        },
-        {
-          value: "2021",
-          range: "Jan 2021 – Dec 2021",
-          tag: "Closed",
-          tagClass: "fy-tag-gray",
-        },
-      ],
-
-      exportFormats: [
-        { value: "pdf", label: "PDF", icon: "picture_as_pdf" },
-        { value: "excel", label: "Excel", icon: "table_chart" },
-        { value: "csv", label: "CSV", icon: "grid_on" },
-      ],
-
-      exportScopes: [
-        {
-          value: "contracts",
-          label: "Contract Summary",
-          desc: "All contracts and statuses",
-          icon: "description",
-        },
-        {
-          value: "cashflow",
-          label: "Cashflow Report",
-          desc: "Budget vs actual disbursements",
-          icon: "trending_up",
-        },
-        {
-          value: "variation_orders",
-          label: "Variation Orders",
-          desc: "Approved and pending VOs",
-          icon: "edit_document",
-        },
-        {
-          value: "accomplishments",
-          label: "Project Accomplishments",
-          desc: "Completion rates and milestones",
-          icon: "check_circle",
-        },
-        {
-          value: "audit",
-          label: "Audit Logs",
-          desc: "System activity and changes",
-          icon: "manage_search",
-        },
-      ],
-
+      dashboardAbortController: null,
+      dashboardRequestId: 0,
       exportForm: {
         format: "pdf",
-        scopes: ["contracts"],
-        dateFrom: "2024-01-01",
-        dateTo: "2024-12-31",
+        scopes: [],
+        dateFrom: "",
+        dateTo: "",
       },
-
-      recentUpdates: [
-        {
-          id: 1,
-          icon: "description",
-          iconBg: "icon-bg-red",
-          project: "Tuguegarao Fire Station Expansion",
-          time: "2h ago",
-          description: "Variation Order #3 approved by Regional Director.",
-        },
-        {
-          id: 2,
-          icon: "payments",
-          iconBg: "icon-bg-blue",
-          project: "Cauayan City Equipment Supply",
-          time: "5h ago",
-          description:
-            "Progress payment of ₱2.4M released to ABC Construction.",
-        },
-        {
-          id: 3,
-          icon: "history",
-          iconBg: "icon-bg-yellow",
-          project: "Santiago Sub-Station Repair",
-          time: "Yesterday",
-          description:
-            "New milestone added: Foundation structural works completed.",
-        },
-      ],
-
-      upcomingDeadlines: [
-        {
-          id: 1,
-          month: "OCT",
-          day: "28",
-          dateColor: "date-red",
-          title: "Submit Quarterly Audit Report",
-          description: "Submission to Central Office BFP.",
-          urgent: true,
-        },
-        {
-          id: 2,
-          month: "NOV",
-          day: "02",
-          dateColor: "date-blue",
-          title: "Ilagan Station Completion Date",
-          description: "Final inspection and turnover ceremony.",
-          urgent: false,
-        },
-        {
-          id: 3,
-          month: "NOV",
-          day: "05",
-          dateColor: "date-blue",
-          title: "Contract Renewal - Logistics",
-          description: "Bidding docs for vehicle maintenance.",
-          urgent: false,
-        },
-      ],
-
       quickActions: [
-        {
-          id: 1,
-          icon: "add_circle_outline",
-          label: "Add Project",
-          route: "infrastructure-plans",
-        },
-        {
-          id: 2,
-          icon: "upload_file",
-          label: "Upload Document",
-          route: "engineering-plans",
-        },
-        {
-          id: 3,
-          icon: "note_add",
-          label: "Add Contract",
-          route: "contract-management",
-        },
-        {
-          id: 4,
-          icon: "add_photo_alternate",
-          label: "Create VO",
-          route: "variation-orders",
-        },
-        {
-          id: 5,
-          icon: "bar_chart",
-          label: "Generate Report",
-          route: "Reports",
-        },
+        { id: 1, icon: "add_circle_outline", label: "Add Project", route: "infrastructure-plans" },
+        { id: 2, icon: "upload_file", label: "Upload Document", route: "engineering-plans" },
+        { id: 3, icon: "note_add", label: "Add Contract", route: "contract-management" },
+        { id: 4, icon: "add_photo_alternate", label: "Create VO", route: "variation-orders" },
+        { id: 5, icon: "bar_chart", label: "Generate Report", route: "Reports" },
       ],
     };
   },
+  computed: {
+    fiscalYearLabel() {
+      return this.selectedFiscalYear || this.dashboard?.fiscal_year || "";
+    },
+    fiscalYears() {
+      return this.dashboard?.fiscal_years || [];
+    },
+    exportFormats() {
+      return this.dashboard?.export?.formats || DEFAULT_EXPORT_FORMATS;
+    },
+    exportScopes() {
+      return this.dashboard?.export?.scopes || [];
+    },
+    footerYear() {
+      return this.dashboard?.footer_year || new Date().getFullYear();
+    },
+    organizationLabel() {
+      const organization = this.dashboard?.organization || {};
+      return organization.office_unit || organization.name || organization.region || "BFP Region II";
+    },
+    organizationRegion() {
+      return this.dashboard?.organization?.region || "Region II";
+    },
+    footerVersion() {
+      return this.dashboard?.footer_version || "v4.2.0";
+    },
+    dashboardSubtitle() {
+      return `Welcome back. Here is the overview for ${this.organizationLabel} Contract Progress.`;
+    },
+    canExport() {
+      return Boolean(this.dashboard) && this.dashboard?.permissions?.can_export !== false;
+    },
+    visibleQuickActions() {
+      const actions = this.dashboard?.quick_actions?.length ? this.dashboard.quick_actions : this.quickActions;
+      return actions.filter((action) => action.allowed !== false);
+    },
+    topStats() {
+      return (this.dashboard?.stats || []).slice(0, 3);
+    },
+    bottomStats() {
+      return (this.dashboard?.stats || []).slice(3);
+    },
+    projectStatusTotal() {
+      return this.dashboard?.charts?.project_status?.total || 0;
+    },
+    projectStatusLegend() {
+      const chart = this.dashboard?.charts?.project_status;
+      if (!chart) return [];
+
+      return (chart.labels || []).map((label, index) => ({
+        label,
+        value: chart.data?.[index] || 0,
+        color: chart.colors?.[index] || "#9ca3af",
+      }));
+    },
+    budgetChartSubtitle() {
+      return (
+        this.dashboard?.charts?.budget_vs_expenditure?.subtitle ||
+        "Comparison of allocated funds vs actual disbursements per quarter."
+      );
+    },
+    budgetChartData() {
+      return this.dashboard?.charts?.budget_vs_expenditure || {
+        labels: [],
+        budget: [],
+        expenditure: [],
+      };
+    },
+    recentUpdates() {
+      return this.dashboard?.recent_updates || [];
+    },
+    upcomingDeadlines() {
+      return this.dashboard?.upcoming_deadlines || [];
+    },
+  },
   mounted() {
-    this.$nextTick(() => {
-      this.initDonutChart();
-      this.initBarChart();
-    });
+    this.loadDashboard();
   },
   beforeUnmount() {
-    if (this.donutChartInstance) this.donutChartInstance.destroy();
-    if (this.barChartInstance) this.barChartInstance.destroy();
+    if (this.dashboardAbortController) {
+      this.dashboardAbortController.abort();
+      this.dashboardAbortController = null;
+    }
+    this.dashboardRequestId += 1;
+    this.destroyCharts();
   },
   methods: {
-    initDonutChart() {
-      if (!this.$refs.donutChart) return;
-      this.donutChartInstance = new Chart(this.$refs.donutChart, {
+    async loadDashboard() {
+      const requestId = ++this.dashboardRequestId;
+      if (this.dashboardAbortController) {
+        this.dashboardAbortController.abort();
+      }
+      this.dashboardAbortController = typeof AbortController !== "undefined" ? new AbortController() : null;
+      this.isLoading = true;
+      this.loadError = null;
+
+      try {
+        const response = await DashboardService.getSummary({
+          fiscal_year: this.selectedFiscalYear || undefined,
+        }, this.dashboardAbortController ? { signal: this.dashboardAbortController.signal } : {});
+        if (requestId !== this.dashboardRequestId) {
+          return;
+        }
+        const payload = response.data.data || {};
+        this.dashboard = payload;
+        this.selectedFiscalYear = String(payload.fiscal_year || this.selectedFiscalYear || "");
+
+        const defaults = payload.export?.defaults || {};
+        if (!this.exportForm.scopes.length) {
+          this.exportForm.scopes = defaults.scopes ? [...defaults.scopes] : [];
+        }
+        this.exportForm.format = this.exportForm.format || defaults.format || "pdf";
+        this.exportForm.dateFrom = defaults.date_from || this.exportForm.dateFrom;
+        this.exportForm.dateTo = defaults.date_to || this.exportForm.dateTo;
+
+        await this.$nextTick();
+        this.renderCharts();
+      } catch (error) {
+        if (error?.code === "ERR_CANCELED" || error?.name === "CanceledError" || requestId !== this.dashboardRequestId) {
+          return;
+        }
+        this.loadError = error.response?.data?.message || "Unable to load dashboard data.";
+      } finally {
+        if (requestId === this.dashboardRequestId) {
+          this.isLoading = false;
+          this.dashboardAbortController = null;
+        }
+      }
+    },
+
+    renderCharts() {
+      this.destroyCharts();
+      this.renderDonutChart();
+      this.renderBarChart();
+    },
+
+    destroyCharts() {
+      if (this.donutChartInstance) {
+        this.donutChartInstance.destroy();
+        this.donutChartInstance = null;
+      }
+      if (this.barChartInstance) {
+        this.barChartInstance.destroy();
+        this.barChartInstance = null;
+      }
+    },
+
+    renderDonutChart() {
+      const canvas = this.$refs.donutChart;
+      const chart = this.dashboard?.charts?.project_status;
+      if (!canvas || !chart) return;
+
+      this.donutChartInstance = new Chart(canvas, {
         type: "doughnut",
         data: {
-          labels: ["Planning", "Ongoing", "Completed", "Delayed"],
+          labels: chart.labels || [],
           datasets: [
             {
-              data: [12, 24, 14, 4],
-              backgroundColor: ["#4A90D9", "#7B6B3D", "#3EBD7F", "#E05C5C"],
+              data: chart.data || [],
+              backgroundColor: chart.colors || [],
               borderWidth: 3,
               borderColor: "#ffffff",
             },
@@ -668,23 +583,26 @@ export default {
       });
     },
 
-    initBarChart() {
-      if (!this.$refs.barChart) return;
-      this.barChartInstance = new Chart(this.$refs.barChart, {
+    renderBarChart() {
+      const canvas = this.$refs.barChart;
+      const chart = this.budgetChartData;
+      if (!canvas || !chart) return;
+
+      this.barChartInstance = new Chart(canvas, {
         type: "bar",
         data: {
-          labels: ["Q1", "Q2", "Q3", "Q4 (Proj)"],
+          labels: chart.labels || [],
           datasets: [
             {
               label: "Budget",
-              data: [35000000, 40000000, 38000000, 29850000],
+              data: chart.budget || [],
               backgroundColor: "#4A90D9",
               borderRadius: 4,
               barPercentage: 0.5,
             },
             {
               label: "Expenditure",
-              data: [28000000, 33000000, 25000000, 5700000],
+              data: chart.expenditure || [],
               backgroundColor: "#7B6B3D",
               borderRadius: 4,
               barPercentage: 0.5,
@@ -698,10 +616,7 @@ export default {
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: (ctx) =>
-                  ` ${ctx.dataset.label}: ₱${(ctx.parsed.y / 1000000).toFixed(
-                    1,
-                  )}M`,
+                label: (ctx) => ` ${ctx.dataset.label}: ${this.formatMoney(ctx.parsed.y)}`,
               },
             },
           },
@@ -715,7 +630,7 @@ export default {
               ticks: {
                 color: "#9ca3af",
                 font: { size: 12 },
-                callback: (val) => `₱${(val / 1000000).toFixed(0)}M`,
+                callback: (value) => this.formatMoneyShort(value),
               },
             },
           },
@@ -723,14 +638,69 @@ export default {
       });
     },
 
-    selectFiscalYear(value) {
-      this.selectedFiscalYear = value;
-      this.showFiscalYearModal = false;
+    formatMoney(value) {
+      return new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        maximumFractionDigits: 2,
+      }).format(Number(value || 0));
     },
 
-    confirmExport() {
-      if (this.exportForm.scopes.length === 0) return;
-      this.showExportModal = false;
+    formatMoneyShort(value) {
+      const amount = Number(value || 0);
+      if (amount >= 1000000) {
+        return `${this.formatMoney(amount / 1000000).replace(/\.00$/, "")}M`;
+      }
+      return this.formatMoney(amount);
+    },
+
+    selectFiscalYear(value) {
+      const nextValue = String(value);
+      if (nextValue === this.selectedFiscalYear) {
+        this.showFiscalYearModal = false;
+        return;
+      }
+
+      this.selectedFiscalYear = nextValue;
+      this.showFiscalYearModal = false;
+      this.loadDashboard();
+    },
+
+    async confirmExport() {
+      if (!this.exportForm.scopes.length || this.isExporting) {
+        return;
+      }
+
+      this.isExporting = true;
+      this.loadError = null;
+
+      try {
+        const response = await DashboardService.exportSummary({
+          fiscal_year: this.fiscalYearLabel || undefined,
+          format: this.exportForm.format,
+          scopes: this.exportForm.scopes,
+          date_from: this.exportForm.dateFrom || undefined,
+          date_to: this.exportForm.dateTo || undefined,
+        });
+
+        const ext = this.exportForm.format === "excel" ? "xlsx" : this.exportForm.format;
+        const blob = new Blob([response.data], {
+          type: response.headers["content-type"] || "application/octet-stream",
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `dashboard_summary_fy${this.fiscalYearLabel}.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        this.showExportModal = false;
+      } catch (error) {
+        this.loadError = error.response?.data?.message || "Unable to export the dashboard summary.";
+      } finally {
+        this.isExporting = false;
+      }
     },
 
     handleQuickAction(route) {
@@ -746,7 +716,6 @@ export default {
   min-height: 100vh;
 }
 
-/* Header */
 h4 {
   font-size: 1.5rem;
   font-weight: 700;
@@ -758,30 +727,39 @@ h4 {
   font-size: 0.875rem;
 }
 
-.fiscal-year-select {
+.fiscal-year-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   border: 1px solid #e0e5ee;
   border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   background: white;
   color: #1f2633;
   font-size: 0.875rem;
-}
-
-.fiscal-year-select select {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 0.875rem;
-  color: #1f2633;
+  font-weight: 500;
   cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.fiscal-year-select i {
-  font-size: 1.1rem;
+.fiscal-year-btn:hover {
+  border-color: #c82a3e;
+  box-shadow: 0 0 0 3px rgba(200, 42, 62, 0.08);
+}
+
+.fiscal-year-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fiscal-year-btn i {
+  font-size: 1rem;
   color: #6b7280;
+}
+
+.chevron-icon {
+  font-size: 1.1rem !important;
+  color: #9ca3af !important;
 }
 
 .btn-export {
@@ -803,11 +781,15 @@ h4 {
   background: #a41f30;
 }
 
+.btn-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-export i {
   font-size: 1.1rem;
 }
 
-/* Stat Cards */
 .stat-card {
   background: white;
   border: 1px solid #e0e5ee;
@@ -845,42 +827,55 @@ h4 {
 .stat-icon-blue {
   background: #dbeafe;
 }
+
 .stat-icon-blue i {
   color: #2563eb;
 }
+
 .stat-icon-yellow {
   background: #fef3c7;
 }
+
 .stat-icon-yellow i {
   color: #d97706;
 }
+
 .stat-icon-teal {
   background: #d1fae5;
 }
+
 .stat-icon-teal i {
   color: #059669;
 }
+
 .stat-icon-green {
   background: #dcfce7;
 }
+
 .stat-icon-green i {
   color: #16a34a;
 }
+
 .stat-icon-orange {
   background: #ffedd5;
 }
+
 .stat-icon-orange i {
   color: #ea580c;
 }
+
 .stat-icon-red {
   background: #fee2e2;
 }
+
 .stat-icon-red i {
   color: #dc2626;
 }
+
 .stat-icon-gray {
   background: #f1f5f9;
 }
+
 .stat-icon-gray i {
   color: #64748b;
 }
@@ -902,14 +897,17 @@ h4 {
   background: #dbeafe;
   color: #1d4ed8;
 }
+
 .text-success-badge {
   background: #dcfce7;
   color: #15803d;
 }
+
 .text-warning-badge {
   background: #fff7ed;
   color: #c2410c;
 }
+
 .text-muted-badge {
   background: #f1f5f9;
   color: #64748b;
@@ -940,7 +938,6 @@ h4 {
   color: #dc2626;
 }
 
-/* Card */
 .card {
   border: 1px solid #e0e5ee;
   border-radius: 0.875rem;
@@ -1010,7 +1007,6 @@ h4 {
   color: #1f2633;
 }
 
-/* Donut Chart */
 .donut-wrapper {
   position: relative;
   width: 220px;
@@ -1045,6 +1041,14 @@ h4 {
   margin-top: 0.2rem;
 }
 
+.legend-pill-budget {
+  background: #4a90d9;
+}
+
+.legend-pill-expenditure {
+  background: #7b6b3d;
+}
+
 .donut-legend {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1067,7 +1071,6 @@ h4 {
   flex-shrink: 0;
 }
 
-/* Chart legend pills */
 .chart-legend {
   display: flex;
   gap: 0.5rem;
@@ -1082,7 +1085,6 @@ h4 {
   font-weight: 600;
 }
 
-/* Recent Updates */
 .update-item {
   display: flex;
   gap: 0.875rem;
@@ -1112,18 +1114,23 @@ h4 {
 .icon-bg-red {
   background: #fee2e2;
 }
+
 .icon-bg-red i {
   color: #dc2626;
 }
+
 .icon-bg-blue {
   background: #dbeafe;
 }
+
 .icon-bg-blue i {
   color: #2563eb;
 }
+
 .icon-bg-yellow {
   background: #fef3c7;
 }
+
 .icon-bg-yellow i {
   color: #d97706;
 }
@@ -1153,7 +1160,6 @@ h4 {
   margin: 0;
 }
 
-/* Upcoming Deadlines */
 .deadline-item {
   display: flex;
   gap: 0.875rem;
@@ -1178,18 +1184,17 @@ h4 {
 .date-red {
   background: #fee2e2;
 }
-.date-red .deadline-month {
-  color: #dc2626;
-}
+
+.date-red .deadline-month,
 .date-red .deadline-day {
   color: #dc2626;
 }
+
 .date-blue {
   background: #dbeafe;
 }
-.date-blue .deadline-month {
-  color: #1d4ed8;
-}
+
+.date-blue .deadline-month,
 .date-blue .deadline-day {
   color: #1d4ed8;
 }
@@ -1235,7 +1240,6 @@ h4 {
   white-space: nowrap;
 }
 
-/* Quick Actions */
 .quick-actions-header {
   display: flex;
   justify-content: space-between;
@@ -1288,60 +1292,40 @@ h4 {
   font-size: 1.6rem;
 }
 
-/* Dashboard Footer */
 .dashboard-footer {
-  display: none;
+  display: block;
   text-align: center;
   padding: 1.5rem 0 0.5rem;
   font-size: 0.75rem;
   color: #9ca3af;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .quick-actions-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ── Fiscal Year Button ── */
-.fiscal-year-btn {
+.fiscal-year-select {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   border: 1px solid #e0e5ee;
   border-radius: 0.5rem;
-  padding: 0.5rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   background: white;
   color: #1f2633;
   font-size: 0.875rem;
-  font-weight: 500;
+}
+
+.fiscal-year-select select {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: #1f2633;
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.fiscal-year-btn:hover {
-  border-color: #c82a3e;
-  box-shadow: 0 0 0 3px rgba(200, 42, 62, 0.08);
-}
-
-.fiscal-year-btn i {
-  font-size: 1rem;
+.fiscal-year-select i {
+  font-size: 1.1rem;
   color: #6b7280;
 }
 
-.chevron-icon {
-  font-size: 1.1rem !important;
-  color: #9ca3af !important;
-}
-
-/* ── Modal Overlay ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1366,7 +1350,6 @@ h4 {
   max-width: 400px;
 }
 
-/* Modal Header */
 .modal-header-strip {
   display: flex;
   align-items: center;
@@ -1442,7 +1425,6 @@ h4 {
   font-size: 1.25rem;
 }
 
-/* Modal Body */
 .modal-body {
   padding: 1.25rem 1.5rem;
 }
@@ -1460,7 +1442,6 @@ h4 {
   margin-top: 1.25rem !important;
 }
 
-/* Modal Footer */
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -1514,7 +1495,6 @@ h4 {
   font-size: 1rem;
 }
 
-/* ── Fiscal Year Options ── */
 .fy-options {
   display: flex;
   flex-direction: column;
@@ -1601,7 +1581,6 @@ h4 {
   color: #c82a3e !important;
 }
 
-/* ── Export Format Grid ── */
 .export-format-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1649,7 +1628,6 @@ h4 {
   color: #c82a3e !important;
 }
 
-/* ── Export Scope List ── */
 .export-scope-list {
   display: flex;
   flex-direction: column;
@@ -1708,7 +1686,6 @@ h4 {
   color: #9ca3af;
 }
 
-/* ── Export Date Row ── */
 .export-date-row {
   display: flex;
   align-items: flex-end;
@@ -1750,7 +1727,6 @@ h4 {
   flex-shrink: 0;
 }
 
-/* ── Modal Transition ── */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.2s ease;
@@ -1770,5 +1746,17 @@ h4 {
 .modal-fade-leave-to .modal-box {
   transform: translateY(-12px);
   opacity: 0;
+}
+
+@media (max-width: 768px) {
+  .quick-actions-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

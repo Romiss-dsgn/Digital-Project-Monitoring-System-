@@ -1,7 +1,7 @@
 <template>
   <footer class="app-footer">
     <div class="container-fluid">
-      <span>© 2024 Bureau of Fire Protection - Region II. ConTrackPro v4.2.0. All Rights Reserved.</span>
+      <span>&copy; {{ footerYear }} Bureau of Fire Protection - Region II. ConTrackPro v4.2.0. All Rights Reserved.</span>
     </div>
   </footer>
 </template>
@@ -9,6 +9,11 @@
 <script>
 export default {
   name: "app-footer",
+  computed: {
+    footerYear() {
+      return new Date().getFullYear();
+    },
+  },
 };
 </script>
 
