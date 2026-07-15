@@ -5,18 +5,20 @@ import authHeader from "./auth-header";
 const BASE = `${apiBaseUrl()}/admin/dashboard`;
 
 export default {
-  getSummary(params = {}) {
+  getSummary(params = {}, config = {}) {
     return axios.get(`${BASE}/summary`, {
       headers: authHeader(),
       params,
+      ...config,
     });
   },
 
-  exportSummary(params = {}) {
+  exportSummary(params = {}, config = {}) {
     return axios.get(`${BASE}/export`, {
       headers: authHeader(),
       params,
       responseType: "blob",
+      ...config,
     });
   },
 };

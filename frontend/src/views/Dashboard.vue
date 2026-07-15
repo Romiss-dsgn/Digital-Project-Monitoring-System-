@@ -257,8 +257,8 @@
                 <p class="card-subtitle">{{ budgetChartSubtitle }}</p>
               </div>
               <div class="chart-legend">
-                <span class="legend-pill" style="background: #4a90d9">Budget</span>
-                <span class="legend-pill" style="background: #7b6b3d">Expenditure</span>
+                <span class="legend-pill legend-pill-budget">Budget</span>
+                <span class="legend-pill legend-pill-expenditure">Expenditure</span>
               </div>
             </div>
             <div class="card-body">
@@ -342,7 +342,7 @@
           </div>
           <div class="quick-actions-grid">
             <button
-              v-for="action in quickActions"
+              v-for="action in visibleQuickActions"
               :key="action.id"
               class="quick-action-btn"
               @click="handleQuickAction(action.route)"
@@ -356,7 +356,7 @@
 
       <div class="dashboard-footer">
         <span>
-          &copy; {{ footerYear }} Bureau of Fire Protection - Region II. ConTrackPro v4.2.0. All Rights Reserved.
+          &copy; {{ footerYear }} {{ organizationLabel }} - {{ organizationRegion }}. ConTrackPro {{ footerVersion }}. All Rights Reserved.
         </span>
       </div>
     </div>
@@ -386,6 +386,8 @@ export default {
       loadError: null,
       donutChartInstance: null,
       barChartInstance: null,
+      dashboardAbortController: null,
+      dashboardRequestId: 0,
       exportForm: {
         format: "pdf",
         scopes: [],
@@ -421,11 +423,21 @@ export default {
       const organization = this.dashboard?.organization || {};
       return organization.office_unit || organization.name || organization.region || "BFP Region II";
     },
+    organizationRegion() {
+      return this.dashboard?.organization?.region || "Region II";
+    },
+    footerVersion() {
+      return this.dashboard?.footer_version || "v4.2.0";
+    },
     dashboardSubtitle() {
       return `Welcome back. Here is the overview for ${this.organizationLabel} Contract Progress.`;
     },
     canExport() {
-      return Boolean(this.dashboard?.permissions?.can_export);
+      return Boolean(this.dashboard) && this.dashboard?.permissions?.can_export !== false;
+    },
+    visibleQuickActions() {
+      const actions = this.dashboard?.quick_actions?.length ? this.dashboard.quick_actions : this.quickActions;
+      return actions.filter((action) => action.allowed !== false);
     },
     topStats() {
       return (this.dashboard?.stats || []).slice(0, 3);
@@ -470,17 +482,30 @@ export default {
     this.loadDashboard();
   },
   beforeUnmount() {
+    if (this.dashboardAbortController) {
+      this.dashboardAbortController.abort();
+      this.dashboardAbortController = null;
+    }
+    this.dashboardRequestId += 1;
     this.destroyCharts();
   },
   methods: {
     async loadDashboard() {
+      const requestId = ++this.dashboardRequestId;
+      if (this.dashboardAbortController) {
+        this.dashboardAbortController.abort();
+      }
+      this.dashboardAbortController = typeof AbortController !== "undefined" ? new AbortController() : null;
       this.isLoading = true;
       this.loadError = null;
 
       try {
         const response = await DashboardService.getSummary({
           fiscal_year: this.selectedFiscalYear || undefined,
-        });
+        }, this.dashboardAbortController ? { signal: this.dashboardAbortController.signal } : {});
+        if (requestId !== this.dashboardRequestId) {
+          return;
+        }
         const payload = response.data.data || {};
         this.dashboard = payload;
         this.selectedFiscalYear = String(payload.fiscal_year || this.selectedFiscalYear || "");
@@ -496,9 +521,15 @@ export default {
         await this.$nextTick();
         this.renderCharts();
       } catch (error) {
+        if (error?.code === "ERR_CANCELED" || error?.name === "CanceledError" || requestId !== this.dashboardRequestId) {
+          return;
+        }
         this.loadError = error.response?.data?.message || "Unable to load dashboard data.";
       } finally {
-        this.isLoading = false;
+        if (requestId === this.dashboardRequestId) {
+          this.isLoading = false;
+          this.dashboardAbortController = null;
+        }
       }
     },
 
@@ -1008,6 +1039,14 @@ h4 {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-top: 0.2rem;
+}
+
+.legend-pill-budget {
+  background: #4a90d9;
+}
+
+.legend-pill-expenditure {
+  background: #7b6b3d;
 }
 
 .donut-legend {

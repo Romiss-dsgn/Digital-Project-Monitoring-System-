@@ -11,8 +11,11 @@ use App\Models\Project;
 use App\Models\ProjectAccomplishment;
 use App\Models\VariationOrder;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -51,9 +54,11 @@ class DashboardController extends Controller
     public function summary(Request $request): JsonResponse
     {
         $this->authorizeModule($request, 'view');
+        $availableYears = $this->availableFiscalYears();
+        $validated = $this->validateDashboardRequest($request, false, $availableYears);
 
         return response()->json([
-            'data' => $this->buildDashboardPayload($request),
+            'data' => $this->buildDashboardPayload($request, $validated['fiscal_year'] ?? null, $availableYears),
         ]);
     }
 
@@ -61,16 +66,9 @@ class DashboardController extends Controller
     {
         $this->authorizeModule($request, 'export');
 
-        $validated = $request->validate([
-            'fiscal_year' => ['nullable', 'integer', 'min:2000', 'max:3000'],
-            'format' => ['required', 'in:pdf,excel,csv'],
-            'scopes' => ['nullable', 'array'],
-            'scopes.*' => ['string'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
-        $payload = $this->buildDashboardPayload($request);
+        $availableYears = $this->availableFiscalYears();
+        $validated = $this->validateDashboardRequest($request, true, $availableYears);
+        $payload = $this->buildDashboardPayload($request, $validated['fiscal_year'] ?? null, $availableYears);
         $scopes = collect($validated['scopes'] ?? ['summary'])
             ->intersect(collect(self::EXPORT_SCOPES)->pluck('value'))
             ->values()
@@ -95,19 +93,20 @@ class DashboardController extends Controller
         return $this->downloadPdf($rows, $filename, $payload);
     }
 
-    private function buildDashboardPayload(Request $request): array
+    private function buildDashboardPayload(Request $request, ?int $fiscalYear = null, ?array $availableYears = null): array
     {
-        $latestYear = $this->latestFiscalYear();
-        $fiscalYear = $request->integer('fiscal_year') ?: $latestYear;
-        $range = $this->fiscalYearRange($fiscalYear);
+        $availableYears = $availableYears ?: $this->availableFiscalYears();
+        $resolvedYear = $fiscalYear ?? $availableYears[0] ?? now()->year;
+        $range = $this->fiscalYearRange($resolvedYear);
         $user = $request->user();
 
-        $projectSummary = $this->projectSummary($range);
-        $variationSummary = $this->variationOrderSummary($range);
-        $cashflowSummary = $this->cashflowSummary($range);
-        $invoiceSummary = $this->invoiceSummary($range);
-        $recentUpdates = $this->recentActivity($range);
-        $upcomingDeadlines = $this->upcomingDeadlines($range);
+        $context = $this->buildDashboardContext($range);
+        $projectSummary = $context['project_summary'];
+        $variationSummary = $context['variation_summary'];
+        $cashflowSummary = $context['cashflow_summary'];
+        $invoiceSummary = $context['invoice_summary'];
+        $recentUpdates = $context['recent_updates'];
+        $upcomingDeadlines = $context['upcoming_deadlines'];
 
         $activeProjects = (int) ($projectSummary['total_projects'] ?? 0);
         $ongoingProjects = (int) ($projectSummary['ongoing_projects'] ?? 0);
@@ -127,16 +126,19 @@ class DashboardController extends Controller
         $systemAlerts = $delayedProjects + $pendingVos + $overdueDocuments;
 
         return [
-            'fiscal_year' => (string) $fiscalYear,
-            'fiscal_years' => $this->fiscalYearOptions($fiscalYear),
+            'fiscal_year' => (string) $resolvedYear,
+            'fiscal_years' => $this->fiscalYearOptions($availableYears, $resolvedYear),
             'organization' => [
-                'name' => 'BFP Region II',
-                'region' => 'Region II',
-                'office_unit' => $user?->office_unit ?: 'BFP Region II',
+                'name' => $this->organizationName(),
+                'region' => $this->organizationRegion(),
+                'office_unit' => $user?->office_unit ?: $this->organizationName(),
                 'position' => $user?->position ?: null,
             ],
             'footer_year' => now()->year,
+            'footer_version' => config('app.version', 'v4.2.0'),
             'permissions' => $user?->modulePermissions(self::MODULE) ?? [],
+            'permissions_by_module' => $user?->modulePermissionsMap() ?? [],
+            'quick_actions' => $this->quickActions($user),
             'export' => [
                 'formats' => self::EXPORT_FORMATS,
                 'scopes' => self::EXPORT_SCOPES,
@@ -235,6 +237,19 @@ class DashboardController extends Controller
             ],
             'recent_updates' => $recentUpdates,
             'upcoming_deadlines' => $upcomingDeadlines,
+            'context' => $context,
+        ];
+    }
+
+    private function buildDashboardContext(array $range): array
+    {
+        return [
+            'project_summary' => $this->projectSummary($range),
+            'variation_summary' => $this->variationOrderSummary($range),
+            'cashflow_summary' => $this->cashflowSummary($range),
+            'invoice_summary' => $this->invoiceSummary($range),
+            'recent_updates' => $this->recentActivity($range),
+            'upcoming_deadlines' => $this->upcomingDeadlines($range),
         ];
     }
 
@@ -377,6 +392,7 @@ class DashboardController extends Controller
                     'title' => $project->project_name,
                     'description' => $project->location ? 'Target completion in ' . $project->location : 'Project completion deadline',
                     'urgent' => $dueDate->diffInDays(Carbon::today(), false) <= 14,
+                    'sort_date' => $dueDate->toDateString(),
                 ]);
             });
 
@@ -399,6 +415,7 @@ class DashboardController extends Controller
                     'title' => 'Invoice ' . $invoice->invoice_number,
                     'description' => 'Contract ' . ($invoice->contract?->contract_number ?? '-'),
                     'urgent' => $dueDate->diffInDays(Carbon::today(), false) <= 14,
+                    'sort_date' => $dueDate->toDateString(),
                 ]);
             });
 
@@ -421,13 +438,15 @@ class DashboardController extends Controller
                     'title' => $accomplishment->milestone_title,
                     'description' => 'Project ' . ($accomplishment->project?->project_name ?? '-'),
                     'urgent' => $dueDate->diffInDays(Carbon::today(), false) <= 14,
+                    'sort_date' => $dueDate->toDateString(),
                 ]);
             });
 
         return $items
-            ->sortBy(fn (array $item) => Carbon::parse($item['month'] . ' ' . $item['day'] . ' ' . $range['end']->year)->timestamp)
+            ->sortBy('sort_date')
             ->values()
             ->take(3)
+            ->map(fn (array $item) => collect($item)->except('sort_date')->all())
             ->all();
     }
 
@@ -497,12 +516,13 @@ class DashboardController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Dashboard Summary');
 
-        $sheet->setCellValue('A1', 'BFP Region II Dashboard Summary FY' . $payload['fiscal_year']);
+        $sheet->setCellValue('A1', $this->organizationName() . ' Dashboard Summary FY' . $payload['fiscal_year']);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->setCellValue('A2', 'Organization: ' . ($payload['organization']['office_unit'] ?? 'BFP Region II'));
-        $sheet->setCellValue('A3', 'Generated: ' . now()->format('M d, Y h:i A'));
+        $sheet->setCellValue('A2', 'Organization: ' . ($payload['organization']['office_unit'] ?? $this->organizationName()));
+        $sheet->setCellValue('A3', 'Region: ' . ($payload['organization']['region'] ?? $this->organizationRegion()));
+        $sheet->setCellValue('A4', 'Generated: ' . now()->format('M d, Y h:i A'));
 
-        $headersRow = 5;
+        $headersRow = 6;
         $sheet->setCellValue('A' . $headersRow, 'Section');
         $sheet->setCellValue('B' . $headersRow, 'Label');
         $sheet->setCellValue('C' . $headersRow, 'Value');
@@ -544,8 +564,9 @@ class DashboardController extends Controller
             th,td{border:1px solid #d1d5db;padding:6px 8px;text-align:left;vertical-align:top}
             th{background:#f3f4f6}
         </style></head><body>';
-        $html .= '<h1>BFP Region II Dashboard Summary FY' . e($payload['fiscal_year']) . '</h1>';
-        $html .= '<div>Organization: ' . e($payload['organization']['office_unit'] ?? 'BFP Region II') . '</div>';
+        $html .= '<h1>' . e($this->organizationName()) . ' Dashboard Summary FY' . e($payload['fiscal_year']) . '</h1>';
+        $html .= '<div>Organization: ' . e($payload['organization']['office_unit'] ?? $this->organizationName()) . '</div>';
+        $html .= '<div>Region: ' . e($payload['organization']['region'] ?? $this->organizationRegion()) . '</div>';
         $html .= '<div>Generated: ' . e(now()->format('M d, Y h:i A')) . '</div>';
 
         foreach ($sections as $section => $items) {
@@ -561,26 +582,44 @@ class DashboardController extends Controller
         return Pdf::loadHTML($html)->setPaper('a4', 'portrait')->download($filename . '.pdf');
     }
 
-    private function latestFiscalYear(): int
+    private function availableFiscalYears(): array
     {
-        $years = collect([
-            Project::query()->whereNotNull('target_start_date')->max('target_start_date'),
-            Contract::query()->whereNotNull('start_date')->max('start_date'),
-            CashflowPeriod::query()->whereNotNull('period_start')->max('period_start'),
-            VariationOrder::query()->whereNotNull('submitted_at')->max('submitted_at'),
-            ProjectAccomplishment::query()->whereNotNull('target_date')->max('target_date'),
-            Invoice::query()->whereNotNull('due_date')->max('due_date'),
-            AuditLog::query()->whereNotNull('performed_at')->max('performed_at'),
-        ])
-            ->filter()
-            ->map(fn ($value) => Carbon::parse($value)->year);
+        return Cache::remember('dashboard.available_fiscal_years', now()->addMinutes(15), function () {
+            $sources = [
+                DB::table('projects')->selectRaw('YEAR(target_start_date) as fiscal_year')->where('is_archived', false)->whereNotNull('target_start_date'),
+                DB::table('contracts')->selectRaw('YEAR(start_date) as fiscal_year')->where('is_archived', false)->whereNotNull('start_date'),
+                DB::table('cashflow_periods')->selectRaw('YEAR(period_start) as fiscal_year')->where('is_archived', false)->whereNotNull('period_start'),
+                DB::table('variation_orders')->selectRaw('YEAR(submitted_at) as fiscal_year')->where('is_archived', false)->whereNotNull('submitted_at'),
+                DB::table('project_accomplishments')->selectRaw('YEAR(target_date) as fiscal_year')->where('is_archived', false)->whereNotNull('target_date'),
+                DB::table('invoices')->selectRaw('YEAR(due_date) as fiscal_year')->whereNotNull('due_date'),
+                DB::table('audit_logs')->selectRaw('YEAR(performed_at) as fiscal_year')->whereNotNull('performed_at'),
+            ];
 
-        return $years->isNotEmpty() ? (int) $years->max() : now()->year;
+            $union = array_reduce($sources, function ($carry, $query) {
+                return $carry ? $carry->unionAll($query) : $query;
+            });
+
+            if (!$union) {
+                return [now()->year];
+            }
+
+            $years = DB::query()
+                ->fromSub($union, 'dashboard_years')
+                ->whereNotNull('fiscal_year')
+                ->distinct()
+                ->orderByDesc('fiscal_year')
+                ->pluck('fiscal_year')
+                ->map(fn ($value) => (int) $value)
+                ->values()
+                ->all();
+
+            return $years ?: [now()->year];
+        });
     }
 
-    private function fiscalYearOptions(int $selectedYear): array
+    private function fiscalYearOptions(array $years, int $selectedYear): array
     {
-        return collect(range($selectedYear, max($selectedYear - 3, 2000)))
+        return collect($years)
             ->map(function (int $year) use ($selectedYear) {
                 return [
                     'value' => (string) $year,
@@ -637,6 +676,87 @@ class DashboardController extends Controller
     private function peso(float $amount): string
     {
         return '₱' . number_format($amount, 2);
+    }
+
+    private function validateDashboardRequest(Request $request, bool $isExport = false, ?array $availableYears = null): array
+    {
+        $years = $availableYears ?: $this->availableFiscalYears();
+        $rules = [
+            'fiscal_year' => ['nullable', 'integer', Rule::in($years)],
+        ];
+
+        if ($isExport) {
+            $rules['format'] = ['required', 'string', Rule::in(collect(self::EXPORT_FORMATS)->pluck('value')->all())];
+            $rules['scopes'] = ['nullable', 'array'];
+            $rules['scopes.*'] = ['string', Rule::in(collect(self::EXPORT_SCOPES)->pluck('value')->all())];
+            $rules['date_from'] = ['nullable', 'date'];
+            $rules['date_to'] = ['nullable', 'date', 'after_or_equal:date_from'];
+        }
+
+        return $request->validate($rules);
+    }
+
+    private function quickActions(?\App\Models\User $user): array
+    {
+        $modules = $user?->modulePermissionsMap() ?? [];
+
+        return [
+            [
+                'id' => 1,
+                'icon' => 'add_circle_outline',
+                'label' => 'Add Project',
+                'route' => 'infrastructure-plans',
+                'module' => 'projects',
+                'ability' => 'create',
+                'allowed' => (bool) ($modules['projects']['can_create'] ?? false),
+            ],
+            [
+                'id' => 2,
+                'icon' => 'upload_file',
+                'label' => 'Upload Document',
+                'route' => 'engineering-plans',
+                'module' => 'engineering_plans',
+                'ability' => 'create',
+                'allowed' => (bool) ($modules['engineering_plans']['can_create'] ?? false),
+            ],
+            [
+                'id' => 3,
+                'icon' => 'note_add',
+                'label' => 'Add Contract',
+                'route' => 'contract-management',
+                'module' => 'contracts',
+                'ability' => 'create',
+                'allowed' => (bool) ($modules['contracts']['can_create'] ?? false),
+            ],
+            [
+                'id' => 4,
+                'icon' => 'add_photo_alternate',
+                'label' => 'Create VO',
+                'route' => 'variation-orders',
+                'module' => 'variation_orders',
+                'ability' => 'create',
+                'allowed' => (bool) ($modules['variation_orders']['can_create'] ?? false),
+            ],
+            [
+                'id' => 5,
+                'icon' => 'bar_chart',
+                'label' => 'Generate Report',
+                'route' => 'Reports',
+                'module' => 'reports',
+                'ability' => 'view',
+                'allowed' => (bool) ($modules['reports']['can_view'] ?? false),
+            ],
+        ];
+    }
+
+    private function organizationName(): string
+    {
+        return (string) config('app.organization_name', config('app.name', 'BFP Region II'));
+    }
+
+    private function organizationRegion(): string
+    {
+        return (string) config('app.region', 'Region II');
     }
 
     private function authorizeModule(Request $request, string $ability): void

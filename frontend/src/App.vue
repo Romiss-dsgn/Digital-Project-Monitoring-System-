@@ -29,7 +29,7 @@ Coded by www.creative-tim.com
       v-if="showAppShell && showNavbar"
     />
     <router-view />
-    <app-footer v-if="showAppShell && showFooter" />
+    <app-footer v-if="showAppShell && showFooter && !isDashboardRoute" />
   </main>
 </template>
 <script>
@@ -62,6 +62,9 @@ export default {
     ]),
     showAppShell() {
       return !this.$route.matched.some((record) => record.meta.hideAppShell);
+    },
+    isDashboardRoute() {
+      return this.$route.name === "Dashboard";
     }
   },
   beforeMount() {
