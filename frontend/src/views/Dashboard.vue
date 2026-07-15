@@ -1326,6 +1326,7 @@ h4 {
   color: #6b7280;
 }
 
+/* ===== MODAL: fixed overflow so header/footer never get pushed off-screen ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1334,7 +1335,7 @@ h4 {
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .modal-box {
@@ -1342,8 +1343,11 @@ h4 {
   border-radius: 1rem;
   width: 100%;
   max-width: 520px;
+  max-height: calc(100vh - 3rem);
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-box-sm {
@@ -1356,6 +1360,7 @@ h4 {
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #e0e5ee;
+  flex-shrink: 0;
 }
 
 .modal-header-left {
@@ -1427,6 +1432,9 @@ h4 {
 
 .modal-body {
   padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .modal-section-label {
@@ -1449,6 +1457,7 @@ h4 {
   padding: 1rem 1.5rem;
   border-top: 1px solid #e0e5ee;
   background: #f8fafc;
+  flex-shrink: 0;
 }
 
 .modal-btn-cancel {

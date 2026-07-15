@@ -348,10 +348,10 @@
       :show="showExportModal"
       title="Export Cashflow Report"
       stripe="FINANCIAL REPORT EXPORT"
-      confirm-text="Export Report"
+      :confirm-text="exportingReport ? 'Exporting...' : 'Export Report'"
       confirm-icon="download"
       @close="showExportModal = false"
-      @confirm="showExportModal = false"
+      @confirm="confirmExportReport"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Settings</div>
@@ -371,14 +371,14 @@
             <label class="bfp-label">Period</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">date_range</i>
-              <select class="bfp-input bfp-select">
+              <select class="bfp-input bfp-select" v-model="exportPeriod">
                 <option>Current Fiscal Year</option>
                 <option>Current Quarter</option>
                 <option>Month to Date</option>
               </select>
             </div>
           </div>
-          <label class="bfp-check-option bfp-field-full"><input type="checkbox" checked /> Include budget vs actual chart data</label>
+          <label class="bfp-check-option bfp-field-full"><input type="checkbox" v-model="exportIncludeChart" /> Include budget vs actual chart data</label>
         </div>
       </div>
     </BfpModal>
@@ -750,6 +750,9 @@ export default {
         remarks: "",
       },
       exportFormat: "PDF",
+      exportPeriod: "Current Fiscal Year",
+      exportIncludeChart: true,
+      exportingReport: false,
       invoices: [],
       periods: [],
       contracts: [],
@@ -1343,10 +1346,353 @@ export default {
       this.showAddInvoiceModal = true;
     },
 
-exportReport(format) {
+    exportReport(format) {
       const labels = { pdf: "PDF", excel: "Excel", csv: "CSV" };
       this.exportFormat = labels[format] || "PDF";
       this.showExportModal = true;
+    },
+
+    async confirmExportReport() {
+      if (this.exportingReport) {
+        return;
+      }
+
+      this.exportingReport = true;
+      try {
+        const range = this.getExportDateRange(this.exportPeriod);
+
+        // Pull the full invoice list (not just the current page) for the export
+        let allInvoices = this.invoices;
+        try {
+          const invoicesResponse = await cashflowService.getInvoices({ per_page: 1000 });
+          allInvoices = invoicesResponse?.data || this.invoices;
+        } catch (fetchError) {
+          console.error('Falling back to loaded invoices for export:', fetchError);
+        }
+
+        const filteredInvoices = this.filterByDateRange(allInvoices, 'invoice_date', range);
+        const filteredPeriods = this.filterPeriodsByRange(this.periods, range);
+        const filenameBase = `cashflow-report-${this.todayString()}`;
+        const format = (this.exportFormat || 'PDF').toLowerCase();
+
+        if (format === 'csv') {
+          this.downloadCsvReport(filteredPeriods, filteredInvoices, filenameBase);
+        } else if (format === 'excel') {
+          this.downloadExcelReport(filteredPeriods, filteredInvoices, filenameBase);
+        } else {
+          this.openPdfReportPreview(filteredPeriods, filteredInvoices, range, filenameBase);
+        }
+
+        this.showExportModal = false;
+      } catch (error) {
+        console.error('Failed to export cashflow report:', error);
+        alert(error.response?.data?.message || 'Failed to export report');
+      } finally {
+        this.exportingReport = false;
+      }
+    },
+
+    getExportDateRange(periodLabel) {
+      const now = new Date();
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      let start;
+
+      if (periodLabel === 'Current Quarter') {
+        const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+        start = new Date(now.getFullYear(), quarterStartMonth, 1);
+      } else if (periodLabel === 'Month to Date') {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else {
+        start = new Date(now.getFullYear(), 0, 1);
+      }
+
+      return { start, end };
+    },
+
+    filterByDateRange(items, dateField, range) {
+      return (items || []).filter((item) => {
+        if (!item[dateField]) return false;
+        const date = new Date(item[dateField]);
+        if (Number.isNaN(date.getTime())) return false;
+        return date >= range.start && date <= range.end;
+      });
+    },
+
+    filterPeriodsByRange(periods, range) {
+      return (periods || []).filter((period) => {
+        if (!period.period_start) return true;
+        const start = new Date(period.period_start);
+        const end = period.period_end ? new Date(period.period_end) : start;
+        return start <= range.end && end >= range.start;
+      });
+    },
+
+    csvEscape(value) {
+      const str = String(value ?? '');
+      if (/[",\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    },
+
+    buildReportCsvContent(periods, invoices) {
+      const lines = [];
+
+      lines.push('Cashflow Summary');
+      lines.push(`Planned Budget,${this.summary?.planned_total || 0}`);
+      lines.push(`Actual Expenditure,${this.summary?.actual_total || 0}`);
+      lines.push(`Remaining Budget,${this.summary?.remaining_total || 0}`);
+      lines.push(`Variance,${this.summary?.variance_total || 0}`);
+      lines.push(`Revised Contract Amount,${this.summary?.revised_contract_amount || 0}`);
+      lines.push(`Budget Status,${this.csvEscape(this.summary?.budget_status || 'Within Budget')}`);
+      lines.push('');
+
+      if (this.exportIncludeChart && this.summary?.monthly_breakdown?.length) {
+        lines.push('Budget vs Actual (Monthly)');
+        lines.push('Month,Planned,Actual');
+        this.summary.monthly_breakdown.forEach((m) => {
+          lines.push(`${this.csvEscape(m.month)},${m.planned || 0},${m.actual || 0}`);
+        });
+        lines.push('');
+      }
+
+      lines.push('Cashflow Periods');
+      lines.push('Period,Contract,Start,End,Planned,Actual,Variance,Budget Status,Status');
+      periods.forEach((p) => {
+        lines.push([
+          this.csvEscape(p.period_label),
+          this.csvEscape(p.contract_number),
+          p.period_start || '',
+          p.period_end || '',
+          p.planned_amount || 0,
+          p.actual_amount || 0,
+          p.variance || 0,
+          this.csvEscape(p.budget_status || ''),
+          this.csvEscape(p.status || ''),
+        ].join(','));
+      });
+      lines.push('');
+
+      lines.push('Invoices');
+      lines.push('Invoice #,Contract,Amount,Billing Period,Status');
+      invoices.forEach((inv) => {
+        lines.push([
+          this.csvEscape(inv.invoice_number),
+          this.csvEscape(inv.contract_number),
+          inv.invoice_amount || 0,
+          this.csvEscape(inv.billing_period || ''),
+          this.csvEscape(inv.status || ''),
+        ].join(','));
+      });
+
+      return lines.join('\n');
+    },
+
+    downloadCsvReport(periods, invoices, filenameBase) {
+      const csvContent = this.buildReportCsvContent(periods, invoices);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      this.triggerDownload(blob, `${filenameBase}.csv`);
+    },
+
+    downloadExcelReport(periods, invoices, filenameBase) {
+      const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      let rows = '';
+      rows += '<tr><td colspan="5"><b>Cashflow Summary</b></td></tr>';
+      rows += `<tr><td>Planned Budget</td><td>${this.summary?.planned_total || 0}</td></tr>`;
+      rows += `<tr><td>Actual Expenditure</td><td>${this.summary?.actual_total || 0}</td></tr>`;
+      rows += `<tr><td>Remaining Budget</td><td>${this.summary?.remaining_total || 0}</td></tr>`;
+      rows += `<tr><td>Variance</td><td>${this.summary?.variance_total || 0}</td></tr>`;
+      rows += `<tr><td>Revised Contract Amount</td><td>${this.summary?.revised_contract_amount || 0}</td></tr>`;
+      rows += `<tr><td>Budget Status</td><td>${escapeHtml(this.summary?.budget_status || 'Within Budget')}</td></tr>`;
+      rows += '<tr><td>&nbsp;</td></tr>';
+
+      if (this.exportIncludeChart && this.summary?.monthly_breakdown?.length) {
+        rows += '<tr><td colspan="5"><b>Budget vs Actual (Monthly)</b></td></tr>';
+        rows += '<tr><th>Month</th><th>Planned</th><th>Actual</th></tr>';
+        this.summary.monthly_breakdown.forEach((m) => {
+          rows += `<tr><td>${escapeHtml(m.month)}</td><td>${m.planned || 0}</td><td>${m.actual || 0}</td></tr>`;
+        });
+        rows += '<tr><td>&nbsp;</td></tr>';
+      }
+
+      rows += '<tr><td colspan="9"><b>Cashflow Periods</b></td></tr>';
+      rows += '<tr><th>Period</th><th>Contract</th><th>Start</th><th>End</th><th>Planned</th><th>Actual</th><th>Variance</th><th>Budget Status</th><th>Status</th></tr>';
+      periods.forEach((p) => {
+        rows += `<tr><td>${escapeHtml(p.period_label)}</td><td>${escapeHtml(p.contract_number)}</td><td>${p.period_start || ''}</td><td>${p.period_end || ''}</td><td>${p.planned_amount || 0}</td><td>${p.actual_amount || 0}</td><td>${p.variance || 0}</td><td>${escapeHtml(p.budget_status || '')}</td><td>${escapeHtml(p.status || '')}</td></tr>`;
+      });
+      rows += '<tr><td>&nbsp;</td></tr>';
+
+      rows += '<tr><td colspan="5"><b>Invoices</b></td></tr>';
+      rows += '<tr><th>Invoice #</th><th>Contract</th><th>Amount</th><th>Billing Period</th><th>Status</th></tr>';
+      invoices.forEach((inv) => {
+        rows += `<tr><td>${escapeHtml(inv.invoice_number)}</td><td>${escapeHtml(inv.contract_number)}</td><td>${inv.invoice_amount || 0}</td><td>${escapeHtml(inv.billing_period || '')}</td><td>${escapeHtml(inv.status || '')}</td></tr>`;
+      });
+
+      const html = `<html><head><meta charset="UTF-8"></head><body><table border="1">${rows}</table></body></html>`;
+      const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel' });
+      this.triggerDownload(blob, `${filenameBase}.xls`);
+    },
+
+    openPdfReportPreview(periods, invoices, range, filenameBase) {
+      const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      const periodRows = periods.map((p) => `
+        <tr>
+          <td>${escapeHtml(p.period_label)}</td>
+          <td>${escapeHtml(p.contract_number)}</td>
+          <td>${p.period_start || 'N/A'} to ${p.period_end || 'N/A'}</td>
+          <td>${this.formatCurrency(p.planned_amount)}</td>
+          <td>${this.formatCurrency(p.actual_amount)}</td>
+          <td>${this.formatCurrency(p.variance)}</td>
+          <td>${escapeHtml(p.budget_status || '')}</td>
+          <td>${escapeHtml(p.status || '')}</td>
+        </tr>
+      `).join('');
+
+      const invoiceRows = invoices.map((inv) => `
+        <tr>
+          <td>${escapeHtml(inv.invoice_number)}</td>
+          <td>${escapeHtml(inv.contract_number)}</td>
+          <td>${this.formatCurrency(inv.invoice_amount)}</td>
+          <td>${escapeHtml(inv.billing_period || '')}</td>
+          <td>${escapeHtml(inv.status || '')}</td>
+        </tr>
+      `).join('');
+
+      const chartSection = this.exportIncludeChart && this.summary?.monthly_breakdown?.length ? `
+        <h3>Budget vs Actual (Monthly)</h3>
+        <table>
+          <thead><tr><th>Month</th><th>Planned</th><th>Actual</th></tr></thead>
+          <tbody>
+            ${this.summary.monthly_breakdown.map((m) => `
+              <tr><td>${escapeHtml(m.month)}</td><td>${this.formatCurrency(m.planned)}</td><td>${this.formatCurrency(m.actual)}</td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '';
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Cashflow Report - ${filenameBase}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #1f2633; background: #eef1f5; }
+            .toolbar {
+              position: sticky;
+              top: 0;
+              z-index: 10;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background: #1f2633;
+              color: #fff;
+              padding: 12px 24px;
+            }
+            .toolbar span { font-size: 14px; font-weight: 600; }
+            .toolbar-actions { display: flex; gap: 10px; }
+            .toolbar button {
+              border: none;
+              border-radius: 6px;
+              padding: 8px 16px;
+              font-size: 13px;
+              font-weight: 600;
+              cursor: pointer;
+            }
+            .btn-download { background: #d32f2f; color: #fff; }
+            .btn-close { background: #4b5563; color: #fff; }
+            .report-sheet {
+              max-width: 900px;
+              margin: 24px auto;
+              background: #fff;
+              padding: 32px;
+              border-radius: 8px;
+              box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            }
+            h1 { font-size: 20px; margin-bottom: 4px; }
+            h2 { font-size: 14px; color: #5a6270; margin-top: 0; font-weight: normal; }
+            h3 { font-size: 15px; margin-top: 28px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+            th, td { border: 1px solid #d0d5dd; padding: 6px 8px; text-align: left; }
+            th { background: #f3f4f6; }
+            .summary-grid { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+            .summary-card { border: 1px solid #d0d5dd; border-radius: 8px; padding: 10px 14px; min-width: 150px; }
+            .summary-card span { display: block; font-size: 11px; color: #5a6270; text-transform: uppercase; }
+            .summary-card strong { font-size: 16px; }
+            @media print {
+              .toolbar { display: none; }
+              body { background: #fff; }
+              .report-sheet { box-shadow: none; margin: 0; max-width: 100%; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="toolbar">
+            <span>Cashflow Report Preview</span>
+            <div class="toolbar-actions">
+              <button class="btn-download" onclick="window.print()">Download as PDF</button>
+              <button class="btn-close" onclick="window.close()">Close</button>
+            </div>
+          </div>
+
+          <div class="report-sheet">
+            <h1>ConTrackPro — Cashflow Report</h1>
+            <h2>BFP Region II · Generated ${new Date().toLocaleString('en-US')} · Range: ${range.start.toLocaleDateString('en-US')} to ${range.end.toLocaleDateString('en-US')}</h2>
+
+            <div class="summary-grid">
+              <div class="summary-card"><span>Planned Budget</span><strong>${this.formatCurrency(this.summary?.planned_total)}</strong></div>
+              <div class="summary-card"><span>Actual Expenditure</span><strong>${this.formatCurrency(this.summary?.actual_total)}</strong></div>
+              <div class="summary-card"><span>Remaining Budget</span><strong>${this.formatCurrency(this.summary?.remaining_total)}</strong></div>
+              <div class="summary-card"><span>Variance</span><strong>${this.formatCurrency(this.summary?.variance_total)}</strong></div>
+              <div class="summary-card"><span>Revised Contract Amount</span><strong>${this.formatCurrency(this.summary?.revised_contract_amount)}</strong></div>
+              <div class="summary-card"><span>Budget Status</span><strong>${escapeHtml(this.summary?.budget_status || 'Within Budget')}</strong></div>
+            </div>
+
+            ${chartSection}
+
+            <h3>Cashflow Periods</h3>
+            <table>
+              <thead><tr><th>Period</th><th>Contract</th><th>Dates</th><th>Planned</th><th>Actual</th><th>Variance</th><th>Budget Status</th><th>Status</th></tr></thead>
+              <tbody>${periodRows || '<tr><td colspan="8">No cashflow periods found</td></tr>'}</tbody>
+            </table>
+
+            <h3>Invoices</h3>
+            <table>
+              <thead><tr><th>Invoice #</th><th>Contract</th><th>Amount</th><th>Billing Period</th><th>Status</th></tr></thead>
+              <tbody>${invoiceRows || '<tr><td colspan="5">No invoices found</td></tr>'}</tbody>
+            </table>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const previewWindow = window.open('', '_blank');
+      if (!previewWindow) {
+        alert('Please allow pop-ups to preview the report.');
+        return;
+      }
+      previewWindow.document.open();
+      previewWindow.document.write(html);
+      previewWindow.document.close();
+    },
+
+    triggerDownload(blob, filename) {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     },
 
     async createInvoice() {
