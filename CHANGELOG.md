@@ -4,6 +4,17 @@ All notable project-owned changes to ConTrackPro are documented here.
 
 ## Unreleased
 
+### MVP Cleanup And QA Hardening
+
+- Standardized the local QA seed to a small repeatable dataset and left file-backed document tables empty for E2E upload testing.
+- Added `VariationOrdersSeeder` and wired financial seed data into the default seeding flow.
+- Configured backend tests to use an isolated `contrackpro_testing` database through `backend/phpunit.xml`.
+- Added PowerShell QA scripts under `scripts/qa/` for API smoke checks, engineering plan permission checks, and isolated backend test runs.
+- Removed the unsupported frontend profile image upload call instead of pointing to a missing backend route.
+- Hid/redirected Notifications and Contractor Performance out of the MVP route surface.
+- Converted connected Contract Management and Variation Orders row actions to Vue-controlled fixed overlays.
+- Moved utility scripts out of the root/backend model namespace into `scripts/qa/`.
+
 ### Documentation
 
 - Rewrote the root README around the current ConTrackPro MVP state.

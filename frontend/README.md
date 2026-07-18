@@ -91,18 +91,18 @@ frontend/src/views/modules/ContractorPerformance.vue
 | Register/Request Access | Connected to backend request-access registration flow. |
 | Profile | Connected to backend `/me` profile endpoints. |
 | Layout | ConTrackPro header/sidebar branding applied. Shared ConTrackPro footer is enabled for authenticated module pages. |
-| Dashboard | Designed as the system overview. Some summary values may still be static or partially connected. |
+| Dashboard | Connected to dashboard summary/export API. |
 | Infrastructure Plans | Connected to DB-backed project API. Create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header are active. |
 | Contract Management | Connected to DB-backed contract API. Create/update/archive, summary, filters, document workflow. |
 | Engineering Plans | Connected to DB-backed engineering plans API for list, stats, pagination, project dropdown, upload, download, review status changes, and archive actions. |
 | Project Accomplishments | Connected to DB-backed accomplishments API. Create/update/archive/validate, summary, documents. |
-| User Management | Frontend module is active work. Backend admin endpoints exist. |
-| Cashflows | UI exists; backend integration pending. |
-| Variation Orders | UI exists; backend integration pending. |
-| Reports | UI exists; backend integration pending. |
-| Audit Logs | UI exists; read-only backend API pending. |
-| Notifications | UI exists; backend integration pending. |
-| Contractor Performance | UI exists; backend integration pending. |
+| User Management | Connected to admin users, roles, stats, and access request endpoints. |
+| Cashflows | Connected to cashflow periods, invoices, payments, summaries, options, and document endpoints. |
+| Variation Orders | Connected to VO list/create/update/submit/review/archive/document endpoints. |
+| Reports | Connected to admin report endpoints. |
+| Audit Logs | Connected to read-only admin audit log endpoints and export. |
+| Notifications | Out of MVP for now; legacy route redirects to Dashboard. |
+| Contractor Performance | Out of MVP for now; legacy route redirects to Dashboard. |
 
 ## Services
 
@@ -116,6 +116,11 @@ frontend/src/services/project.service.js
 frontend/src/services/contract.service.js
 frontend/src/services/accomplishment.service.js
 frontend/src/services/engineering-plan.service.js
+frontend/src/services/dashboard.service.js
+frontend/src/services/cashflow.service.js
+frontend/src/services/variation-order.service.js
+frontend/src/services/report.service.js
+frontend/src/services/audit.service.js
 frontend/src/services/api-base.js
 frontend/src/services/auth-header.js
 ```
@@ -126,7 +131,7 @@ Service rules:
 - Use `api-base.js` for the API root.
 - Use `auth-header.js` for protected requests.
 - Do not hard-code `http://localhost:8000` inside components.
-- Keep static arrays only for screens that do not have backend endpoints yet.
+- Do not add static module data for connected MVP screens.
 
 ## Backend Connection Test
 
@@ -161,6 +166,7 @@ password
 ```text
 POST http://127.0.0.1:8000/api/v2/login
 GET  http://127.0.0.1:8000/api/v2/me
+GET  http://127.0.0.1:8000/api/v2/admin/dashboard/summary
 ```
 
 ## Common Frontend Issues
@@ -202,9 +208,8 @@ Build has warnings:
 
 ## Recommended Integration Order
 
-1. Finish User Management frontend connection.
-2. Finish Infrastructure Plans / Project Plans connection.
-3. Finish Engineering Plans review/download/archive workflow.
-4. Implement Financial Management as Cashflows + Variation Orders.
-5. Implement Records & Reports.
-6. Add Dashboard real metrics from connected modules.
+1. Keep the QA seed small, repeatable, and file-free.
+2. Run API smoke, backend tests, and frontend build before merging to `staging`.
+3. Add tests around dashboard summary/export, reports, and VO financial impact.
+4. Keep Notifications and Contractor Performance hidden until they are intentionally added to MVP.
+5. Continue UI polish on connected table actions, empty states, loading states, and permission states.

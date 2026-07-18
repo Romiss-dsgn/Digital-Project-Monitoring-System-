@@ -88,6 +88,7 @@ class ProjectControllerTest extends TestCase
                 'code' => 'ENG-001',
                 'name' => 'Engineer Project',
                 'location' => 'Isabela',
+                'new_contractor_name' => 'Engineer QA Contractor',
                 'phase' => 'Planning',
                 'status' => 'planning',
             ]);
@@ -120,6 +121,7 @@ class ProjectControllerTest extends TestCase
                 'code' => 'NEW-001',
                 'name' => 'New Project',
                 'location' => 'Isabela',
+                'new_contractor_name' => 'Admin QA Contractor',
                 'phase' => 'Planning',
                 'status' => 'planning',
             ]);

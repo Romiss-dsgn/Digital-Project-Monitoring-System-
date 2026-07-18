@@ -1,299 +1,155 @@
-# ConTrackPro System Audit and E2E Test Plan
+# ConTrackPro QA Runbook and E2E Test Plan
 
-Date checked: 2026-07-11
+Date checked: 2026-07-18
 
-This document records the current repo-level audit, known defects, API/frontend connection status, cleanup candidates, and end-to-end scenarios for QA.
+This runbook is for testing the current ConTrackPro MVP end to end through the GUI, Postman, browser devtools, and database checks.
 
-## Current Verification Summary
+## Current Code Reality
 
-### Passed Checks
+The current code is ahead of some older docs. Test against the routes and services in the repo, not only the status tables in `PLAN.md`.
 
-- Frontend production build passed with `npm run build`.
-- Backend route list for `/api/v2` loads successfully in Docker.
-- Authenticated API smoke checks returned `200 OK` after reseeding and recreating the Passport personal access client:
-  - `GET /api/v2/me`
-  - `GET /api/v2/admin/projects`
-  - `GET /api/v2/admin/engineering-plans`
-  - `GET /api/v2/contracts`
-  - `GET /api/v2/contract-management/summary`
-  - `GET /api/v2/project-accomplishments`
-  - `GET /api/v2/project-accomplishments/summary`
-  - `GET /api/v2/cashflow-periods`
-  - `GET /api/v2/cashflow-periods/summary`
-  - `GET /api/v2/invoices`
-  - `GET /api/v2/variation-orders`
-  - `GET /api/v2/variation-orders/summary`
-  - `GET /api/v2/admin/reports/project-status`
-  - `GET /api/v2/admin/audit-logs/stats`
-  - `GET /api/v2/admin/users/stats`
+Connected MVP modules:
 
-### Important Local Setup Notes
+- Auth, logout, registration/access request, profile read/update.
+- Dashboard summary and export via `/api/v2/admin/dashboard/summary` and `/api/v2/admin/dashboard/export`.
+- Infrastructure Plans through `/api/v2/admin/projects`.
+- Engineering Plans through `/api/v2/admin/engineering-plans`.
+- Contract Management and contract documents.
+- Project Accomplishments and accomplishment documents.
+- Cashflow periods, invoices, invoice documents, and payments.
+- Variation Orders and variation order documents.
+- Reports through `/api/v2/admin/reports/...`.
+- Audit Logs through `/api/v2/admin/audit-logs`.
+- User Management and roles.
 
-If login shows `Personal access client not found. Please create one.`, run:
+Out of MVP for this pass:
+
+- Contractor Performance is hidden/redirected until the workflow is intentionally built.
+- Notifications Inbox is hidden/redirected until the workflow is intentionally built.
+
+## Known Risks To Watch
+
+1. Backend tests must run against the isolated test database.
+   - Fixed in this pass: `backend/phpunit.xml` points test runs to `contrackpro_testing`.
+   - Use `scripts/qa/run-backend-tests.ps1` instead of running raw tests against the local development DB.
+
+2. Keep docs aligned with route reality.
+   - Fixed in this pass: README, PLAN, API, Docker, backend README, and frontend README now describe connected dashboard/finance/reporting/audit modules.
+   - Fixed in this pass: `API.md` no longer documents a `refresh_token` in the login response.
+
+3. Some out-of-MVP screens may still contain template-era UI.
+   - Contractor Performance and Notifications are hidden/redirected for MVP and should not be used as acceptance criteria.
+   - Connected table modules should use Vue-controlled action overlays.
+
+4. Profile image upload is unsupported by design for this MVP pass.
+   - Fixed in this pass: the frontend profile service no longer calls the missing upload route.
+
+5. Seed data needs to be small, repeatable, and file-free.
+   - Fixed in this pass: the default QA seed now creates 3 users, 3 contractors, 3 projects, 3 contracts, 3 variation orders, 3 cashflow periods, 3 invoices, and 3 project accomplishments.
+   - Fixed in this pass: `EngineeringPlansSeeder` creates no active placeholder file rows; engineering plans and all supporting documents should be uploaded during E2E.
+   - Fixed in this pass: `ContractManagementSeeder` project statuses use lowercase values, and `ContractManagementController::summary()` counts the same active project statuses used by the dashboard.
+
+## Local QA Reset
+
+Use this when you want a known test baseline.
 
 ```powershell
+docker compose up -d --build
+docker compose exec backend php artisan migrate
+docker compose exec backend php artisan db:seed --force
 docker compose exec backend php artisan passport:keys --force
 docker compose exec backend php artisan passport:client --personal --name="ConTrackPro Personal Access Client" --no-interaction
 docker compose exec backend php artisan optimize:clear
 ```
 
-Seed data can be restored with:
+Use this only when you are okay destroying local data:
 
 ```powershell
-docker compose exec backend php artisan db:seed --force
+docker compose exec backend php artisan migrate:fresh --seed
+docker compose exec backend php artisan passport:keys --force
+docker compose exec backend php artisan passport:client --personal --name="ConTrackPro Personal Access Client" --no-interaction
 ```
 
-## Current Logical Flow
+Expected fresh QA seed shape:
 
-The intended MVP flow is now mostly consistent:
+| Area | Expected active rows | Notes |
+| --- | ---: | --- |
+| Users | 3 | Admin, QA Planning Engineer, QA Contract Monitor. |
+| Contractors | 3 | Parent records for project/contract dropdowns. |
+| Projects | 3 | Infrastructure Plans is the project source of truth. |
+| Contracts | 3 | Active, Pending Review, and Draft states. |
+| Variation Orders | 3 | Approved, Under Review, and Draft states. |
+| Cashflow Periods | 3 | One period per seeded contract. |
+| Invoices | 3 | Paid, Approved, and Pending states. |
+| Project Accomplishments | 3 | Completed, In Progress, and Delayed states. |
+| Engineering Plans | 0 | Create by uploading files during E2E. |
+| Document tables | 0 | Contract, invoice, VO, and accomplishment documents must be created by upload tests. |
 
-1. Infrastructure Plans creates the project and contractor link.
-2. Engineering Plans uploads technical documents against an existing project.
-3. Project Accomplishments records progress against an existing project.
-4. Contract Management creates contracts tied to projects and contractors.
-5. Variation Orders modify contract value/time after review.
-6. Cashflows, invoices, and payments track planned vs actual disbursement.
-7. Reports and Audit Logs provide monitoring output.
-8. User Management controls roles and module permissions.
+Frontend:
 
-The biggest remaining product gap is the main Dashboard. It is still mostly static/hardcoded while Reports already uses backend data.
+```powershell
+cd frontend
+npm run serve
+```
 
-## Known Issues Found
-
-### 1. Backend tests can disturb the local development database
-
-`backend/phpunit.xml` does not configure a separate test database. Some tests use `RefreshDatabase`, so running `php artisan test` inside the Docker backend can wipe/rebuild the normal `contrackpro` database if no separate `.env.testing` exists.
-
-Recommended fix:
-
-- Add a real `.env.testing` and separate database such as `contrackpro_test`, or configure sqlite in-memory only if all migrations/queries are compatible.
-- Do not rely on the normal Docker development database for automated tests.
-
-### 2. Some backend feature tests are stale
-
-Current `php artisan test` result: 23 passed, 6 failed.
-
-Known stale failures:
-
-- `ProjectControllerTest` still creates a project without `contractor_id` or `new_contractor_name`, but the current ProjectController correctly requires one.
-- `VariationOrderTest` expects `reviewed_at` to equal a past timestamp that the test never writes before review.
-- `CashflowPeriodTest` has strict JSON numeric assertions and summary expectations that are brittle when the test database is not isolated.
-
-### 3. Profile image upload service has no matching backend route
-
-`frontend/src/services/profile.service.js` calls:
+Admin seed login:
 
 ```text
-POST /api/v2/uploads/users/{id}/profile-image
+email: admin@contrackpro.test
+password: password
 ```
 
-No matching route exists in `backend/routes/api.php`. The request also does not include `Authorization`. Profile text fields use `/api/v2/me` correctly, but image upload should be treated as unsupported until a backend route is added or the frontend method is removed.
+## Smoke Checks Before E2E
 
-### 4. Main Dashboard is mostly static
+Backend route check:
 
-`frontend/src/views/Dashboard.vue` still hardcodes charts, recent updates, deadlines, fiscal years, and summary values. It should be the next module to connect to real summary endpoints after current module stabilization.
-
-Fixed during this audit:
-
-- Dashboard quick action buttons were using non-existing route names like `add-project`, `upload-document`, `add-contract`, `create-vo`, and `generate-report`. They now route to existing module routes.
-
-### 5. Some action menus still depend on Bootstrap dropdown behavior
-
-The Cashflow and Engineering Plans row action menus have been changed to Vue-controlled overlays. Remaining module views still using Bootstrap dropdown toggles should be checked because this is the same pattern that caused intermittent action-button bugs:
-
-- `frontend/src/views/modules/VariationOrders.vue`
-- `frontend/src/views/modules/ContractorPerformance.vue`
-- `frontend/src/views/modules/ContractManagement.vue`
-
-### 6. Documentation is behind the current code
-
-Docs that need updating:
-
-- `PLAN.md` and `README.md` still say Cashflows and Variation Orders are not connected, but current backend routes and frontend services are connected.
-- `frontend/README.md` and `backend/README.md` also describe Cashflows/Variation Orders as pending.
-- `API.md` says login returns `refresh_token`, but current `LoginController` returns `token_type`, `expires_in`, and `access_token`.
-- `API.md` Project Accomplishments sample payload is stale versus `ProjectAccomplishmentController`.
-
-## Cleanup Candidates
-
-Do not delete these blindly; verify route/sidebar usage first.
-
-- `backend/app/Models/list-user.php`
-  - This is not a valid namespaced Laravel model. It is a one-off script placed inside `app/Models`. Move it to `scripts/` or delete it.
-- `test-engineering-plan-permissions.ps1`
-  - Useful QA script, but it is root-level clutter. Move to `scripts/qa/` and document expected seed users.
-- Template/demo frontend routes still exist but are not part of the ConTrackPro sidebar flow:
-  - `frontend/src/views/Tables.vue`
-  - `frontend/src/views/Billing.vue`
-  - `frontend/src/views/Rtl.vue`
-  - `frontend/src/views/Notifications.vue`
-  - `frontend/src/views/SignIn.vue`
-  - `frontend/src/views/SignUp.vue`
-- Static or not-yet-integrated modules:
-  - `frontend/src/views/modules/ContractorPerformance.vue`
-  - `frontend/src/views/modules/NotificationsInbox.vue`
-
-## E2E Scenario 1: Project Planning to Engineering to Accomplishment
-
-Goal: Confirm the core project lifecycle uses Infrastructure Plans as the source of truth.
-
-Primary method: GUI, with Postman/API checks after each major step.
-
-Preconditions:
-
-- Docker backend is running at `http://127.0.0.1:8000`.
-- Frontend is running at `http://localhost:8080`.
-- Admin can log in with `admin@contrackpro.test` / `password`.
-- Passport personal access client exists.
-
-Steps:
-
-1. Log in as System Administrator.
-2. Open Dashboard, click `Add Project`, and confirm it routes to Infrastructure Plans.
-3. In Infrastructure Plans, create a new project.
-   - Use an existing contractor from the dropdown, or use the add-new-contractor flow.
-   - Save and confirm the project appears in the table.
-4. Open Engineering Plans.
-   - Confirm the project dropdown contains the newly created project.
-   - Upload an engineering plan document linked to that project.
-   - Change status through the allowed review path.
-5. Open Project Accomplishments.
-   - Confirm the same project is available.
-   - Create a progress/milestone report linked to that project.
-   - Validate/approve the accomplishment if the role has permission.
-6. Open Reports.
-   - Generate/refresh Project Status Report.
-   - Confirm the project appears with updated status/completion.
-7. Open Audit Logs.
-   - Confirm project creation, engineering plan upload/review, and accomplishment actions were recorded.
-
-Expected API checks:
-
-```http
-GET /api/v2/admin/projects
-GET /api/v2/admin/engineering-plans
-GET /api/v2/project-accomplishments
-GET /api/v2/admin/reports/project-status
-GET /api/v2/admin/audit-logs
+```powershell
+docker compose exec backend php artisan route:list --path=api/v2
 ```
 
-Pass criteria:
+Migration status:
 
-- Every record is tied to the same `project_id`.
-- Engineering Plans and Accomplishments do not create standalone projects.
-- Status/permissions are enforced by role.
-- Audit trail records the important changes.
-
-## E2E Scenario 2: Contract, Variation Order, Cashflow, Invoice, Payment
-
-Goal: Confirm the financial flow is connected and contract value changes propagate logically.
-
-Primary method: GUI plus Postman for exact response validation.
-
-Preconditions:
-
-- At least one active project and contractor exist.
-- Admin or authorized contract/cashflow user is logged in.
-
-Steps:
-
-1. Open Contract Management.
-   - Create a contract linked to an existing project and contractor.
-   - Confirm it appears in the contract table and summary cards.
-2. Upload a contract document.
-   - Approve/review the document if permissions allow.
-3. Open Variation Orders.
-   - Create a draft variation order for the contract.
-   - Submit it.
-   - Review/approve it.
-4. Return to Contract Management.
-   - Confirm the revised contract amount changed by the approved variation amount.
-5. Open Cashflows Management.
-   - Create a cashflow period for the same contract.
-   - Create an invoice under that contract/period.
-   - Verify then approve the invoice.
-   - Record a partial payment, then a final payment.
-6. Confirm summaries.
-   - Cashflow planned total, actual total, variance, invoice status, and remaining balance update correctly.
-7. Open Audit Logs.
-   - Confirm contract, variation order, invoice, and payment actions are logged.
-
-Expected API checks:
-
-```http
-GET /api/v2/contracts
-GET /api/v2/contract-management/summary
-GET /api/v2/variation-orders
-GET /api/v2/variation-orders/summary
-GET /api/v2/cashflow-periods
-GET /api/v2/cashflow-periods/summary
-GET /api/v2/invoices
-GET /api/v2/invoices/summary
+```powershell
+docker compose exec backend php artisan migrate:status
 ```
 
-Pass criteria:
+Frontend build:
 
-- Variation order approval updates contract revised amount only once.
-- Invoice cannot be overpaid.
-- Partial payment keeps invoice open and exposes remaining balance.
-- Full payment marks invoice paid and updates cashflow actuals.
-- Audit logs reflect financial changes.
-
-## E2E Scenario 3: Registration, Approval, RBAC, and Profile
-
-Goal: Confirm user access request, approval, permissions, sidebar visibility, and profile behavior.
-
-Primary method: GUI plus Postman for forbidden/allowed checks.
-
-Steps:
-
-1. Log out.
-2. Register a new user from the public signup/access request page.
-3. Try logging in immediately.
-   - Expected: blocked or pending approval message.
-4. Log in as System Administrator.
-5. Open User Management.
-   - Find the access request.
-   - Approve it and assign a role.
-6. Log in as the newly approved user.
-   - Confirm sidebar modules match the assigned role permissions.
-   - Try opening an allowed module.
-   - Try accessing a forbidden module URL directly.
-7. Open Profile.
-   - Update normal profile fields.
-   - Do not treat profile image upload as passed until a backend upload route exists.
-8. Log back in as admin and check Audit Logs/User Management stats.
-
-Expected API checks:
-
-```http
-POST /api/v2/register
-POST /api/v2/login
-GET /api/v2/admin/access-requests
-PATCH /api/v2/admin/access-requests/{id}/approve
-GET /api/v2/me
-PATCH /api/v2/me
-GET /api/v2/admin/users/stats
+```powershell
+cd frontend
+npm run build
 ```
 
-Pass criteria:
+Browser checks:
 
-- Pending users cannot access protected modules.
-- Approved users can log in.
-- Sidebar uses real `module_permissions`.
-- API returns `403` for forbidden modules even if the route is manually opened.
-- Profile field updates work through `/me`.
+- Open DevTools Network tab.
+- Enable Preserve log.
+- Enable Disable cache while DevTools is open.
+- Refresh `/dashboard` 5 to 10 times.
+- Expected: no Settings-only sidebar flash, no wrong role flash, no red API errors.
 
-## E2E Scenario 4: Full API Smoke Test for Postman
+## Postman Environment
 
-Goal: Verify the backend API surface is alive before GUI testing.
+Recommended variables:
 
-Steps:
+```text
+baseUrl = http://127.0.0.1:8000/api/v2
+token =
+projectId =
+contractorId =
+contractId =
+engineeringPlanId =
+accomplishmentId =
+cashflowPeriodId =
+invoiceId =
+variationOrderId =
+```
 
-1. Login:
+Login request:
 
 ```http
-POST /api/v2/login
+POST {{baseUrl}}/login
+Accept: application/json
 Content-Type: application/json
 
 {
@@ -302,62 +158,387 @@ Content-Type: application/json
 }
 ```
 
-2. Store `access_token` as `{{token}}`.
-3. Send each request with:
+Set `token` from `access_token`, then use:
 
 ```http
 Authorization: Bearer {{token}}
 Accept: application/json
 ```
 
-4. Check these endpoints:
+## API Smoke Matrix
+
+Run these before detailed CRUD:
 
 ```http
-GET /api/v2/me
-GET /api/v2/admin/projects/options
-GET /api/v2/admin/projects
-GET /api/v2/admin/engineering-plans
-GET /api/v2/contracts
-GET /api/v2/contract-management/options
-GET /api/v2/contract-management/summary
-GET /api/v2/project-accomplishments/options
-GET /api/v2/project-accomplishments/summary
-GET /api/v2/cashflow-periods/options
-GET /api/v2/cashflow-periods/summary
-GET /api/v2/invoices/options
-GET /api/v2/invoices/summary
-GET /api/v2/variation-orders/options
-GET /api/v2/variation-orders/summary
-GET /api/v2/admin/reports/project-status
-GET /api/v2/admin/audit-logs/stats
-GET /api/v2/admin/users/stats
-GET /api/v2/admin/roles
+GET {{baseUrl}}/me
+GET {{baseUrl}}/admin/dashboard/summary
+GET {{baseUrl}}/admin/projects/options
+GET {{baseUrl}}/admin/projects
+GET {{baseUrl}}/admin/engineering-plans
+GET {{baseUrl}}/contracts
+GET {{baseUrl}}/contract-management/options
+GET {{baseUrl}}/contract-management/summary
+GET {{baseUrl}}/project-accomplishments/options
+GET {{baseUrl}}/project-accomplishments/summary
+GET {{baseUrl}}/cashflow-periods/options
+GET {{baseUrl}}/cashflow-periods/summary
+GET {{baseUrl}}/invoices/options
+GET {{baseUrl}}/invoices/summary
+GET {{baseUrl}}/variation-orders/options
+GET {{baseUrl}}/variation-orders/summary
+GET {{baseUrl}}/admin/reports/project-status
+GET {{baseUrl}}/admin/reports/contract-summary
+GET {{baseUrl}}/admin/reports/cashflow-analysis
+GET {{baseUrl}}/admin/reports/variation-orders
+GET {{baseUrl}}/admin/audit-logs/stats
+GET {{baseUrl}}/admin/users/stats
+GET {{baseUrl}}/admin/roles
+```
+
+Expected:
+
+- Admin gets `200`.
+- Missing bearer token gets `401`.
+- Low-permission user gets `403` for unauthorized modules.
+
+## E2E Scenario 1: Auth, RBAC, And Session Stability
+
+Goal: catch login, stale token, permission, sidebar, and profile bugs.
+
+GUI steps:
+
+1. Open `/login`.
+2. Login as admin.
+3. Refresh `/dashboard` repeatedly.
+4. Confirm sidebar modules do not temporarily collapse to Settings only.
+5. Confirm navbar name/role stay correct.
+6. Logout.
+7. Manually set a bad token in DevTools:
+
+```js
+localStorage.setItem("user_free", JSON.stringify("bad-token"));
+location.href = "/login";
+```
+
+8. Confirm app stays on Login or clears invalid session automatically.
+9. Register a new access request.
+10. Admin approves the request in User Management.
+11. Login as the approved user and verify sidebar module visibility matches the assigned role.
+
+Postman checks:
+
+```http
+POST {{baseUrl}}/register
+GET {{baseUrl}}/admin/access-requests
+PATCH {{baseUrl}}/admin/access-requests/{id}/approve
+GET {{baseUrl}}/me
+PATCH {{baseUrl}}/me
 ```
 
 Pass criteria:
 
-- All endpoints return `200 OK` for admin.
-- Options endpoints return data needed by frontend dropdowns.
-- Summary endpoints return numeric totals without server errors.
-- Unauthorized request without bearer token returns `401`.
-- Forbidden request using a low-permission user returns `403`.
+- No manual localStorage clearing is required for normal use.
+- Invalid token does not trap the user on Dashboard.
+- Permissions affect both sidebar visibility and API access.
 
-## Recommended Next Module Task
+## E2E Scenario 2: Project Planning Flow
 
-Next high-value module task: connect the main Dashboard to real backend summary data.
+Goal: verify Infrastructure Plans is the only project creation source.
 
-Recommended implementation order:
+GUI steps:
 
-1. Add a backend dashboard summary endpoint, for example `GET /api/v2/admin/dashboard/summary`.
-2. Aggregate existing module data:
-   - Projects by status and completion.
-   - Contract totals and active contracts.
-   - Cashflow planned vs actual.
-   - Pending/approved variation orders.
-   - Recent audit logs.
-   - Upcoming project/contract deadlines.
-3. Add `frontend/src/services/dashboard.service.js`.
-4. Replace Dashboard hardcoded cards/charts/recent updates with API data.
-5. Keep the current Dashboard layout, but add loading and error states.
-6. Add Postman smoke tests and one feature test for the summary endpoint.
+1. Open Dashboard and click Add Project.
+2. Confirm route goes to Infrastructure Plans.
+3. Create a project with either an existing contractor or a new contractor name.
+4. Edit the project status, progress, and dates.
+5. Archive a test project.
+6. Confirm filters, pagination, summary cards, regional distribution, and recent updates still work.
 
+Postman create payload:
+
+```json
+{
+  "code": "QA-2026-PROJ-001",
+  "name": "QA Fire Station Test Project",
+  "location": "Cagayan",
+  "new_contractor_name": "QA Test Contractor",
+  "startDate": "2026-07-15",
+  "endDate": "2026-12-15",
+  "budget": 2500000,
+  "phase": "Planning",
+  "status": "planning",
+  "progress": 0,
+  "notes": "Created during QA E2E testing."
+}
+```
+
+API checks:
+
+```http
+POST {{baseUrl}}/admin/projects
+PATCH {{baseUrl}}/admin/projects/{{projectId}}
+DELETE {{baseUrl}}/admin/projects/{{projectId}}
+GET {{baseUrl}}/admin/audit-logs?module=projects
+```
+
+Pass criteria:
+
+- Project requires contractor selection or new contractor name.
+- Engineering Plans and Accomplishments only consume existing projects.
+- Project archive removes the record from active lists but audit history remains.
+
+## E2E Scenario 3: Engineering Plans
+
+Goal: verify documents are linked to existing projects.
+
+GUI steps:
+
+1. Open Engineering Plans.
+2. Confirm project dropdown is loaded from backend projects.
+3. Upload a small PDF/DOCX/PNG test file.
+4. Mark it approved, require revision, and send back to review.
+5. Download the file.
+6. Archive the record.
+
+Postman checks:
+
+```http
+GET {{baseUrl}}/admin/engineering-plans
+POST {{baseUrl}}/admin/engineering-plans
+PATCH {{baseUrl}}/admin/engineering-plans/{{engineeringPlanId}}/status
+GET {{baseUrl}}/admin/engineering-plans/{{engineeringPlanId}}/download
+DELETE {{baseUrl}}/admin/engineering-plans/{{engineeringPlanId}}
+```
+
+Negative tests:
+
+- Upload without `project_id` should fail.
+- Upload with non-existing project ID should fail.
+- Download without token should fail.
+
+## E2E Scenario 4: Contract And Document Flow
+
+Goal: verify contracts depend on projects and contractors.
+
+GUI steps:
+
+1. Open Contract Management.
+2. Create a contract for an existing project/contractor.
+3. Edit contract dates/status/amount.
+4. Upload a contract document.
+5. Review/approve/reject document if role allows.
+6. Archive a test contract.
+
+Postman checks:
+
+```http
+GET {{baseUrl}}/contract-management/options
+POST {{baseUrl}}/contracts
+PATCH {{baseUrl}}/contracts/{{contractId}}
+POST {{baseUrl}}/contracts/{{contractId}}/documents
+PATCH {{baseUrl}}/contract-documents/{documentId}/status
+DELETE {{baseUrl}}/contracts/{{contractId}}
+```
+
+Pass criteria:
+
+- Contract cannot be created without valid `project_id` and `contractor_id`.
+- Contract document downloads require auth.
+- Audit logs record create/update/archive/document actions.
+
+## E2E Scenario 5: Variation Order Financial Impact
+
+Goal: verify VO lifecycle and revised contract amount behavior.
+
+GUI steps:
+
+1. Open Variation Orders.
+2. Create a draft VO for an active contract.
+3. Submit the VO.
+4. Review it as Under Review.
+5. Approve it.
+6. Return to Contract Management and confirm revised contract amount increased once.
+7. Try approving again and confirm it is rejected.
+8. Upload and download a VO document.
+
+Postman checks:
+
+```http
+POST {{baseUrl}}/variation-orders
+PATCH {{baseUrl}}/variation-orders/{{variationOrderId}}/submit
+PATCH {{baseUrl}}/variation-orders/{{variationOrderId}}/review
+POST {{baseUrl}}/variation-orders/{{variationOrderId}}/documents
+GET {{baseUrl}}/variation-order-documents/{documentId}/download
+GET {{baseUrl}}/variation-orders/summary
+```
+
+Pass criteria:
+
+- Draft to Submitted to Under Review to Approved is enforced.
+- Approved VO updates contract revised amount once.
+- Approved/rejected VO appears in Reports and Dashboard summary.
+
+## E2E Scenario 6: Cashflow, Invoice, And Payment
+
+Goal: verify planned vs actual disbursement.
+
+GUI steps:
+
+1. Open Cashflows Management.
+2. Create a cashflow period for a contract.
+3. Edit the cashflow period.
+4. Create an invoice under the period.
+5. Verify and approve the invoice.
+6. Record a partial payment.
+7. Record a final payment.
+8. Confirm invoice status, remaining balance, cashflow actual amount, and variance update.
+9. Attempt overpayment and confirm it fails.
+
+Postman checks:
+
+```http
+POST {{baseUrl}}/cashflow-periods
+PATCH {{baseUrl}}/cashflow-periods/{{cashflowPeriodId}}
+POST {{baseUrl}}/invoices
+PATCH {{baseUrl}}/invoices/{{invoiceId}}/verify
+PATCH {{baseUrl}}/invoices/{{invoiceId}}/approve
+POST {{baseUrl}}/payments
+GET {{baseUrl}}/cashflow-periods/summary
+GET {{baseUrl}}/invoices/summary
+```
+
+Pass criteria:
+
+- Partial payment keeps invoice open with remaining balance.
+- Full payment marks invoice as Paid.
+- Overpayment is rejected before payment creation.
+- Dashboard budget/expenditure chart reflects cashflow data.
+
+## E2E Scenario 7: Accomplishments, Reports, And Audit Logs
+
+Goal: verify progress evidence and accountability.
+
+GUI steps:
+
+1. Open Project Accomplishments.
+2. Create a milestone for an existing project.
+3. Upload proof document.
+4. Validate the accomplishment.
+5. Confirm project progress updates or is reflected in reports.
+6. Open Reports and check Project Status, Contract Summary, Cashflow Analysis, and Variation Orders.
+7. Export reports if available.
+8. Open Audit Logs and filter by module/user/date.
+
+Postman checks:
+
+```http
+POST {{baseUrl}}/project-accomplishments
+PATCH {{baseUrl}}/project-accomplishments/{{accomplishmentId}}/validate
+POST {{baseUrl}}/project-accomplishments/{{accomplishmentId}}/documents
+GET {{baseUrl}}/admin/reports/project-status
+GET {{baseUrl}}/admin/reports/contract-summary
+GET {{baseUrl}}/admin/reports/cashflow-analysis
+GET {{baseUrl}}/admin/reports/variation-orders
+GET {{baseUrl}}/admin/audit-logs
+POST {{baseUrl}}/admin/audit-logs/export
+```
+
+Pass criteria:
+
+- Accomplishment requires existing project.
+- Validation writes reviewer/validated metadata.
+- Audit log entries exist for important writes.
+- Report rows match source module records.
+
+## Browser DevTools Checklist
+
+Use this on every connected module page:
+
+- Network has no unexpected `401`, `403`, `404`, `422`, or `500`.
+- Failed validation displays a useful message, not a silent failure.
+- No debug `console.log` noise remains.
+- `console.error` only appears for actual failed API calls.
+- Loading state appears during slow network.
+- Empty state appears when filters return no data.
+- Refresh does not duplicate records or duplicate API submissions.
+- Action menus work on first row, middle row, and last row.
+- Last-row menu does not expand table height.
+- Long names/titles truncate or wrap cleanly.
+- Pagination does not lose filters.
+
+## Performance And Loading Checks
+
+Local MVP targets:
+
+- Initial protected route should not show wrong role/sidebar state.
+- Dashboard summary should settle within about 2 seconds on local Docker.
+- Module list pages should avoid repeated infinite requests.
+- File upload should show loading/disabled state.
+- Export buttons should disable while exporting.
+- Chart pages should destroy old Chart.js instances before re-rendering.
+
+Manual stress tests:
+
+1. Refresh `/dashboard` 10 times.
+2. Switch fiscal year quickly 5 times.
+3. Change filters quickly on Infrastructure Plans and Variation Orders.
+4. Open/close row action menus repeatedly.
+5. Try slow network throttling in Chrome DevTools.
+
+## Database Integrity Checks
+
+Use phpMyAdmin or SQL after an E2E run:
+
+```sql
+select count(*) as active_projects from projects where is_archived = 0;
+select count(*) as active_contracts from contracts where is_archived = 0;
+select count(*) as active_variation_orders from variation_orders where is_archived = 0;
+select count(*) as active_cashflow_periods from cashflow_periods where is_archived = 0;
+select count(*) as invoices from invoices;
+select count(*) as active_project_accomplishments from project_accomplishments where is_archived = 0;
+select count(*) as active_engineering_plans_before_uploads from engineering_plans where is_archived = 0;
+select 'contract_documents' as table_name, count(*) as rows_count from contract_documents
+union all select 'invoice_documents', count(*) from invoice_documents
+union all select 'variation_order_documents', count(*) from variation_order_documents
+union all select 'accomplishment_documents', count(*) from accomplishment_documents;
+select count(*) from projects where is_archived = 0 and contractor_id is null;
+select count(*) from engineering_plans ep left join projects p on p.id = ep.project_id where ep.is_archived = 0 and p.id is null;
+select count(*) from project_accomplishments pa left join projects p on p.id = pa.project_id where pa.is_archived = 0 and p.id is null;
+select count(*) from contracts c left join projects p on p.id = c.project_id where c.is_archived = 0 and p.id is null;
+select count(*) from contracts c left join contractors ct on ct.id = c.contractor_id where c.is_archived = 0 and ct.id is null;
+select count(*) from cashflow_periods cp left join contracts c on c.id = cp.contract_id where cp.is_archived = 0 and c.id is null;
+select count(*) from invoices i left join contracts c on c.id = i.contract_id where c.id is null;
+select invoice_id, sum(amount_paid) as paid from payments group by invoice_id having paid < 0;
+select module, action, count(*) from audit_logs group by module, action order by module, action;
+```
+
+Expected:
+
+- Immediately after `migrate:fresh --seed`, active parent/workflow counts should match the seed table above.
+- Before upload tests, engineering plans and document tables should be `0`.
+- Orphan counts should be `0` for active records.
+- Payment totals should never exceed invoice amount through the payment API.
+- Audit logs should contain create/update/archive/review/upload actions after QA.
+
+## Recommended Fix Backlog
+
+Completed in this pass:
+
+- Configured an isolated backend test database through `backend/phpunit.xml` and `scripts/qa/run-backend-tests.ps1`.
+- Updated README, PLAN, API, Docker, backend README, frontend README, and this QA runbook to match connected MVP routes.
+- Removed the unsupported frontend profile image upload call.
+- Converted Contract Management and Variation Orders row actions to Vue-controlled fixed overlays.
+- Added repeatable PowerShell QA scripts in `scripts/qa/`.
+- Moved the engineering permission smoke script into `scripts/qa/`.
+- Moved the user listing helper out of `backend/app/Models/` into `scripts/qa/`.
+- Hid/redirected Notifications and Contractor Performance out of the MVP route surface.
+
+Remaining high priority:
+
+- Add feature tests for Dashboard summary/export and seeded Variation Orders.
+- Run the full GUI E2E scenarios after each `migrate:fresh --seed`.
+
+Remaining medium priority:
+
+- Add an exportable Postman collection that mirrors `scripts/qa/api-smoke.ps1`.
+- Revisit Notifications and Contractor Performance only after the connected MVP is stable.

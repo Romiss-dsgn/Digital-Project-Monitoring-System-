@@ -13,79 +13,108 @@ class ProjectsSeeder extends Seeder
     {
         $admin = User::where('email', 'admin@contrackpro.test')->first();
 
-        $contractors = Contractor::insert([
-            ['company_name' => 'V.G. Construction Services', 'contact_person' => 'Victor Garcia', 'contact_number' => '09123456789', 'email' => 'info@vgconstruction.com', 'is_active' => true],
-            ['company_name' => 'BuildRight Partners Corp.', 'contact_person' => 'Betty Right', 'contact_number' => '09123456788', 'email' => 'contact@buildright.com', 'is_active' => true],
-            ['company_name' => 'NorthEdge Engineering', 'contact_person' => 'Nelson Edge', 'contact_number' => '09123456787', 'email' => 'info@northedge.com', 'is_active' => true],
-            ['company_name' => 'PrimeBuilders Inc.', 'contact_person' => 'Peter Builder', 'contact_number' => '09123456786', 'email' => 'info@primebuilders.com', 'is_active' => true],
-            ['company_name' => 'EcoPower Solutions', 'contact_person' => 'Eco Green', 'contact_number' => '09123456785', 'email' => 'info@ecopower.com', 'is_active' => true],
-        ]);
-
-        $contractorIds = Contractor::pluck('id', 'company_name');
-
-        $projects = [
+        $contractors = [
             [
-                'project_code' => 'BFP-2024-C001',
-                'project_name' => 'Tuguegarao Central Fire Station - Phase II',
-                'location' => 'Cagayan',
-                'phase' => 'Construction',
-                'status' => 'on_time',
-                'progress_percent' => 45,
-                'approved_budget' => 5000000.00,
-                'target_start_date' => '2024-01-15',
-                'target_end_date' => '2024-12-30',
+                'company_name' => 'Cagayan Valley Builders Corp.',
+                'contact_person' => 'Engr. Ramon Santos',
+                'contact_number' => '09170000001',
+                'email' => 'cagayan.builders@contractor.test',
+                'license_number' => 'PCAB-QA-2026-001',
             ],
             [
-                'project_code' => 'BFP-2024-1012',
-                'project_name' => 'Ilagan City Fire Sub-Station Annex',
-                'location' => 'Isabela',
-                'phase' => 'Foundation',
-                'status' => 'delayed',
-                'progress_percent' => 12,
-                'approved_budget' => 3500000.00,
-                'target_start_date' => '2024-03-01',
-                'target_end_date' => '2024-10-15',
+                'company_name' => 'Northern Luzon Construction Services',
+                'contact_person' => 'Maria Villanueva',
+                'contact_number' => '09170000002',
+                'email' => 'northern.luzon@contractor.test',
+                'license_number' => 'PCAB-QA-2026-002',
             ],
             [
-                'project_code' => 'BFP-2023-N005',
-                'project_name' => 'Bayombong Regional Logistics Hub',
-                'location' => 'Nueva Vizcaya',
-                'phase' => 'Finishing',
-                'status' => 'ongoing',
-                'progress_percent' => 85,
-                'approved_budget' => 8750000.00,
-                'target_start_date' => '2023-06-01',
-                'target_end_date' => '2023-11-30',
-            ],
-            [
-                'project_code' => 'BFP-2024-P002',
-                'project_name' => 'Region II Headquarters Renovation',
-                'location' => 'Cagayan',
-                'phase' => 'Planning',
-                'status' => 'planning',
-                'progress_percent' => 5,
-                'approved_budget' => 2200000.00,
-                'target_start_date' => '2024-07-01',
-                'target_end_date' => '2025-03-30',
-            ],
-            [
-                'project_code' => 'BFP-2023-Q008',
-                'project_name' => 'Quirino Provincial Fire Office - Solar Project',
-                'location' => 'Quirino',
-                'phase' => 'Post-Eval',
-                'status' => 'completed',
-                'progress_percent' => 100,
-                'approved_budget' => 1500000.00,
-                'target_start_date' => '2023-01-10',
-                'target_end_date' => '2023-12-15',
-                'actual_end_date' => '2023-12-10',
+                'company_name' => 'Red Shield Engineering Works',
+                'contact_person' => 'Carlo Mendoza',
+                'contact_number' => '09170000003',
+                'email' => 'red.shield@contractor.test',
+                'license_number' => 'PCAB-QA-2026-003',
             ],
         ];
 
-        foreach ($projects as $data) {
+        foreach ($contractors as $contractor) {
+            Contractor::updateOrCreate(
+                ['company_name' => $contractor['company_name']],
+                $contractor + [
+                    'address' => 'Region II, Philippines',
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        $contractorIds = Contractor::query()
+            ->whereIn('company_name', collect($contractors)->pluck('company_name'))
+            ->pluck('id', 'company_name');
+
+        $projects = [
+            [
+                'project_code' => 'BFP-R2-PROJ-001',
+                'project_name' => 'Tuguegarao Central Fire Station Phase II',
+                'location' => 'Cagayan',
+                'contractor' => 'Cagayan Valley Builders Corp.',
+                'phase' => 'Construction',
+                'status' => 'on_time',
+                'progress_percent' => 65,
+                'approved_budget' => 18500000,
+                'target_start_date' => '2026-01-15',
+                'target_end_date' => '2026-10-30',
+                'description' => 'QA seed project for project planning, contracts, and dashboard totals.',
+            ],
+            [
+                'project_code' => 'BFP-R2-PROJ-002',
+                'project_name' => 'Regional Office Records Room Renovation',
+                'location' => 'Cagayan',
+                'contractor' => 'Northern Luzon Construction Services',
+                'phase' => 'Procurement',
+                'status' => 'ongoing',
+                'progress_percent' => 35,
+                'approved_budget' => 7200000,
+                'target_start_date' => '2026-02-01',
+                'target_end_date' => '2026-08-31',
+                'description' => 'QA seed project for engineering plan upload and contract review.',
+            ],
+            [
+                'project_code' => 'BFP-R2-PROJ-003',
+                'project_name' => 'Ilagan Fire Truck Bay Expansion',
+                'location' => 'Isabela',
+                'contractor' => 'Red Shield Engineering Works',
+                'phase' => 'Execution',
+                'status' => 'delayed',
+                'progress_percent' => 45,
+                'approved_budget' => 9800000,
+                'target_start_date' => '2026-03-01',
+                'target_end_date' => '2026-09-15',
+                'description' => 'QA seed project with a delayed status for alerts and report testing.',
+            ],
+        ];
+
+        foreach ($projects as $project) {
+            $contractorName = $project['contractor'];
+
             Project::updateOrCreate(
-                ['project_code' => $data['project_code']],
-                $data + ['created_by' => $admin?->id]
+                ['project_code' => $project['project_code']],
+                [
+                    'project_name' => $project['project_name'],
+                    'location' => $project['location'],
+                    'contractor_id' => $contractorIds[$contractorName] ?? null,
+                    'implementing_office' => $contractorName,
+                    'project_type' => 'Infrastructure',
+                    'funding_source' => 'FY 2026 BFP Regional Allocation',
+                    'phase' => $project['phase'],
+                    'status' => $project['status'],
+                    'progress_percent' => $project['progress_percent'],
+                    'approved_budget' => $project['approved_budget'],
+                    'target_start_date' => $project['target_start_date'],
+                    'target_end_date' => $project['target_end_date'],
+                    'description' => $project['description'],
+                    'created_by' => $admin?->id,
+                    'is_archived' => false,
+                ]
             );
         }
     }

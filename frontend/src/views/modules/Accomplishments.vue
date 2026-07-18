@@ -240,7 +240,7 @@
       </div>
     </div>
 
-    <!-- ── Upload / Edit Modal ───────────────────────────────────────────────── -->
+    <!-- Upload / Edit Modal -->
     <BfpModal
       :show="showUploadReportModal"
       :title="accomplishmentForm.id ? 'Edit Accomplishment' : 'Add Accomplishment Report'"
@@ -360,7 +360,7 @@
       </div>
     </BfpModal>
 
-    <!-- ── Filter Modal ──────────────────────────────────────────────────────── -->
+    <!-- Filter Modal -->
     <BfpModal
       :show="showFilterModal"
       title="Accomplishment Filters"
@@ -399,7 +399,7 @@
       </div>
     </BfpModal>
 
-    <!-- ── Print Modal ───────────────────────────────────────────────────────── -->
+    <!-- Print Modal -->
     <BfpModal
       :show="showPrintModal"
       title="Print Accomplishment Summary"
@@ -415,7 +415,7 @@
       </div>
     </BfpModal>
 
-    <!-- ── Export Modal ──────────────────────────────────────────────────────── -->
+    <!-- Export Modal -->
     <BfpModal
       :show="showExportModal"
       title="Export Accomplishments"
@@ -507,7 +507,7 @@ export default {
       exportFormat: "csv",
       exportMonth: "", // "YYYY-MM" or "" for all
       accomplishments: [],
-      // Projects without an active accomplishment report yet — used as the
+      // Projects without an active accomplishment report yet are used as the
       // dropdown source when creating a *new* report, and to gate the
       // "Upload Report" button / empty-state messaging.
       projects: [],
@@ -943,23 +943,6 @@ export default {
   min-height: 100vh;
 }
 
-/* ── Dropdown menu ── */
-.dropdown-menu {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
-}
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
-  display: flex;
-  align-items: center;
-}
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
-
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
 .edit-icon { color: #d97706; }
@@ -1015,7 +998,7 @@ export default {
   border: 1px solid #dfe4ed;
 }
 
-/* ── Summary Cards ── */
+/* Summary Cards */
 .summary-card {
   box-shadow: 0 4px 15px rgba(15, 23, 42, 0.08) !important;
 }
@@ -1058,7 +1041,7 @@ export default {
   color: #94a3b8;
 }
 
-/* ── Featured Project Card ── */
+/* Featured Project Card */
 .featured-project-card {
   background: linear-gradient(135deg, #1e3a6e, #2563eb) !important;
   color: #fff !important;
@@ -1106,7 +1089,7 @@ export default {
   color: rgba(255,255,255,0.75);
 }
 
-/* ── Progress bar variants ── */
+/* Progress bar variants */
 .progress-bar-wrapper {
   width: 120px;
   min-width: 80px;
@@ -1131,7 +1114,7 @@ export default {
   white-space: nowrap;
 }
 
-/* ── Report Links ── */
+/* Report Links */
 .report-link {
   font-size: 0.8rem;
   color: #64748b;
@@ -1145,7 +1128,7 @@ export default {
 .report-icon-upload{ font-size: 0.95rem; color: #2563eb; }
 .report-icon-warn  { font-size: 0.95rem; color: #f59e0b; }
 
-/* ── Pagination ── */
+/* Pagination */
 .btn-pagination {
   width: 32px;
   height: 32px;
@@ -1163,7 +1146,7 @@ export default {
 }
 .btn-pagination:hover:not(.active) { background: #f1f5f9; }
 
-/* ── Timeline ── */
+/* Timeline */
 .timeline {
   position: relative;
   padding-left: 0;

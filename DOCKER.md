@@ -61,7 +61,8 @@ Password: contrackpro
 |-- docker-compose.yml
 |-- DOCKER.md
 |-- scripts/
-|   `-- docker-setup.ps1
+|   |-- docker-setup.ps1
+|   `-- qa/
 |-- backend/
 |   |-- Dockerfile
 |   |-- .dockerignore
@@ -170,6 +171,8 @@ docker compose exec backend php artisan db:seed --class=ContractManagementSeeder
 docker compose exec backend php artisan db:seed --class=ProjectAccomplishmentsSeeder --force
 docker compose exec backend php artisan db:seed --class=ProjectsSeeder --force
 docker compose exec backend php artisan db:seed --class=EngineeringPlansSeeder --force
+docker compose exec backend php artisan db:seed --class=VariationOrdersSeeder --force
+docker compose exec backend php artisan db:seed --class=CashflowSeeder --force
 ```
 
 Clear Laravel caches:
@@ -205,6 +208,44 @@ Check admin account:
 docker compose exec -T mysql mysql -ucontrackpro -pcontrackpro contrackpro --batch --execute="SELECT id, email, name, is_active FROM users WHERE email='admin@contrackpro.test';"
 ```
 
+Expected fresh QA seed shape:
+
+```text
+users: 3
+contractors: 3
+projects: 3
+contracts: 3
+variation_orders: 3
+cashflow_periods: 3
+invoices: 3
+payments: 1
+project_accomplishments: 3
+engineering_plans: 0
+document tables: 0
+```
+
+Engineering plan and document tables intentionally start empty. Create file-backed records during GUI/Postman E2E instead of seeding fake file paths.
+
+## QA Scripts
+
+Run API smoke tests against the local Docker API:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\qa\api-smoke.ps1
+```
+
+Run engineering plan permission checks:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\qa\test-engineering-plan-permissions.ps1
+```
+
+Run backend tests against the separate `contrackpro_testing` database:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\qa\run-backend-tests.ps1
+```
+
 ## API Smoke Test
 
 Login:
@@ -236,6 +277,10 @@ GET http://localhost:8000/api/v2/contracts
 GET http://localhost:8000/api/v2/admin/projects
 GET http://localhost:8000/api/v2/admin/engineering-plans
 GET http://localhost:8000/api/v2/project-accomplishments
+GET http://localhost:8000/api/v2/cashflow-periods
+GET http://localhost:8000/api/v2/variation-orders
+GET http://localhost:8000/api/v2/admin/reports/project-status
+GET http://localhost:8000/api/v2/admin/audit-logs
 ```
 
 ## Frontend Connection

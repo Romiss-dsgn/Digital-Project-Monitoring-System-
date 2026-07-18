@@ -1,6 +1,7 @@
 <template>
   <div class="module-page">
     <div class="container-fluid py-4">
+      <div v-if="apiError" class="alert alert-danger py-2 px-3 mb-3">{{ apiError }}</div>
       <!-- Header -->
       <div class="row mb-4 align-items-center">
         <div class="col-lg-6">
@@ -772,6 +773,7 @@ export default {
         can_delete: false,
         can_approve: false,
       },
+      apiError: "",
       periodStatuses: ["On Track", "At Risk", "Delayed", "Completed"],
       newPeriod: {
         id: null,
@@ -845,6 +847,15 @@ export default {
     window.removeEventListener("scroll", this.closeActionMenus, true);
   },
   methods: {
+    setApiError(error, fallback, notify = false) {
+      const message = error?.response?.data?.message || error.message || fallback;
+      this.apiError = message;
+      if (notify) {
+        alert(message);
+      }
+      return message;
+    },
+
     toggleExportMenu(event) {
       if (this.showExportMenu) {
         this.closeActionMenus();
@@ -928,8 +939,9 @@ export default {
         const options = await cashflowService.getOptions();
         this.permissions = options.permissions || this.permissions;
         this.contracts = options.contracts || [];
+        this.apiError = "";
       } catch (error) {
-        console.error('Failed to load cashflow permissions:', error);
+        this.setApiError(error, 'Failed to load cashflow permissions');
       }
     },
 
@@ -937,8 +949,9 @@ export default {
       try {
         const response = await cashflowService.getCashflowPeriods({ per_page: 100 });
         this.periods = response.data || [];
+        this.apiError = "";
       } catch (error) {
-        console.error('Failed to load cashflow periods:', error);
+        this.setApiError(error, 'Failed to load cashflow periods');
       }
     },
 
@@ -946,8 +959,9 @@ export default {
       try {
         this.summary = await cashflowService.getSummary();
         this.initBudgetChart();
+        this.apiError = "";
       } catch (error) {
-        console.error('Failed to load cashflow summary:', error);
+        this.setApiError(error, 'Failed to load cashflow summary');
       }
     },
 
@@ -986,8 +1000,9 @@ export default {
         const response = await cashflowService.getInvoices({ page });
         this.invoices = response.data || [];
         this.pagination = response.meta || this.pagination;
+        this.apiError = "";
       } catch (error) {
-        console.error('Failed to load invoices:', error);
+        this.setApiError(error, 'Failed to load invoices');
       }
     },
 
@@ -1007,7 +1022,6 @@ export default {
         this.editingPeriod = { ...normalizedPeriod };
         this.editingPeriodId = normalizedPeriod.id;
         Object.assign(this.newPeriod, normalizedPeriod);
-        console.log('MODAL FORM STATE:', this.newPeriod);
       }
       this.showPeriodModal = true;
     },
@@ -1045,7 +1059,6 @@ export default {
 
         const isEditing = this.editingPeriod !== null;
         const periodId = this.newPeriod.id ?? this.editingPeriodId ?? this.editingPeriod?.id ?? null;
-        console.log('SAVE PERIOD - form state:', this.newPeriod, 'ID specifically:', this.newPeriod.id);
 
         if (isEditing && (periodId === null || periodId === undefined || periodId === '')) {
           throw new Error('Unable to update cashflow period because the period ID is missing.');
@@ -1069,18 +1082,16 @@ export default {
           await this.loadInvoices(1);
         }
       } catch (error) {
-        console.error('Failed to save cashflow period:', error);
-        alert(error.response?.data?.message || 'Failed to save cashflow period');
+        this.setApiError(error, 'Failed to save cashflow period', true);
       }
     },
 
     async editPeriod(period) {
       try {
-        console.log('EDIT CLICKED - period data:', period);
         const detail = await cashflowService.getCashflowPeriod(period.id);
         this.openPeriodModal(detail || period);
       } catch (error) {
-        console.error('Failed to load cashflow period detail:', error);
+        this.setApiError(error, 'Failed to load cashflow period detail');
         this.openPeriodModal(period);
       }
     },
@@ -1099,8 +1110,7 @@ export default {
           await this.loadInvoices(1);
         }
       } catch (error) {
-        console.error('Failed to archive cashflow period:', error);
-        alert(error.response?.data?.message || 'Failed to archive cashflow period');
+        this.setApiError(error, 'Failed to archive cashflow period', true);
       }
     },
 
@@ -1236,8 +1246,7 @@ export default {
         this.loadSummary();
         alert(this.disbursementMode === 'mark-paid' ? 'Invoice marked as paid successfully' : 'Disbursement recorded successfully');
       } catch (error) {
-        console.error('Failed to disburse funds:', error);
-        alert(error.response?.data?.message || 'Failed to record disbursement');
+        this.setApiError(error, 'Failed to record disbursement', true);
       }
     },
 
@@ -1280,8 +1289,7 @@ export default {
         this.selectedInvoice = detail || invoice;
         this.showInvoiceDetailModal = true;
       } catch (error) {
-        console.error('Failed to load invoice details:', error);
-        alert(error.response?.data?.message || 'Failed to load invoice details');
+        this.setApiError(error, 'Failed to load invoice details', true);
       } finally {
         this.loadingInvoiceDetail = false;
       }
@@ -1312,8 +1320,7 @@ export default {
       try {
         await cashflowService.downloadDocument(document);
       } catch (error) {
-        console.error('Failed to download invoice document:', error);
-        alert(error.response?.data?.message || 'Failed to download document');
+        this.setApiError(error, 'Failed to download document', true);
       }
     },
 
@@ -1334,8 +1341,7 @@ export default {
         this.selectedInvoice = refreshedInvoice || this.selectedInvoice;
         this.resetInvoiceDocumentUpload();
       } catch (error) {
-        console.error('Failed to upload invoice document:', error);
-        alert(error.response?.data?.message || 'Failed to upload document');
+        this.setApiError(error, 'Failed to upload document', true);
       } finally {
         this.uploadingInvoiceDocument = false;
       }
@@ -1367,7 +1373,7 @@ export default {
           const invoicesResponse = await cashflowService.getInvoices({ per_page: 1000 });
           allInvoices = invoicesResponse?.data || this.invoices;
         } catch (fetchError) {
-          console.error('Falling back to loaded invoices for export:', fetchError);
+          this.setApiError(fetchError, 'Unable to load full invoice list; exporting currently loaded invoices only.');
         }
 
         const filteredInvoices = this.filterByDateRange(allInvoices, 'invoice_date', range);
@@ -1385,8 +1391,7 @@ export default {
 
         this.showExportModal = false;
       } catch (error) {
-        console.error('Failed to export cashflow report:', error);
-        alert(error.response?.data?.message || 'Failed to export report');
+        this.setApiError(error, 'Failed to export report', true);
       } finally {
         this.exportingReport = false;
       }
@@ -1715,8 +1720,7 @@ export default {
         this.loadSummary();
         alert('Invoice created successfully');
       } catch (error) {
-        console.error('Failed to create invoice:', error);
-        alert(error.response?.data?.message || 'Failed to create invoice');
+        this.setApiError(error, 'Failed to create invoice', true);
       }
     },
 
@@ -1725,7 +1729,7 @@ export default {
         await cashflowService.verifyInvoice(invoice.id);
         this.loadInvoices(this.pagination.current_page);
       } catch (error) {
-        console.error('Failed to verify invoice:', error);
+        this.setApiError(error, 'Failed to verify invoice', true);
       }
     },
 
@@ -1734,7 +1738,7 @@ export default {
         await cashflowService.approveInvoice(invoice.id);
         this.loadInvoices(this.pagination.current_page);
       } catch (error) {
-        console.error('Failed to approve invoice:', error);
+        this.setApiError(error, 'Failed to approve invoice', true);
       }
     },
 
@@ -1744,7 +1748,7 @@ export default {
           await cashflowService.deleteInvoice(invoice.id);
           this.loadInvoices(this.pagination.current_page);
         } catch (error) {
-          console.error('Failed to delete invoice:', error);
+          this.setApiError(error, 'Failed to delete invoice', true);
         }
       }
     },
@@ -1780,7 +1784,7 @@ export default {
         this.loadInvoices(this.pagination.current_page);
         this.loadSummary();
       } catch (error) {
-        console.error('Failed to update invoice:', error);
+        this.setApiError(error, 'Failed to update invoice', true);
       }
     },
 
@@ -1904,22 +1908,6 @@ export default {
 .cashflow-action-menu-item.danger:hover {
   background: #fef2f2;
 }
-
-.dropdown-menu {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
-}
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
-  display: flex;
-  align-items: center;
-}
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
 
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }

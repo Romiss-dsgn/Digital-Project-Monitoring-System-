@@ -24,7 +24,7 @@ class DiagTest extends TestCase
             'can_approve' => true, 'can_export' => true]);
         $user = User::factory()->create(['role_id' => $role->id]);
 
-        $project = Project::create(['project_code' => 'DIA-' . uniqid(), 'project_name' => 'd', 'status' => 'Ongoing', 'is_archived' => false]);
+        $project = Project::create(['project_code' => 'DIA-' . uniqid(), 'project_name' => 'd', 'status' => 'ongoing', 'is_archived' => false]);
         $contractor = Contractor::create(['company_name' => 'DIA ' . uniqid(), 'license_number' => 'D-' . uniqid(), 'is_active' => true]);
         $contract = Contract::create([
             'contract_number' => 'DIA-' . uniqid(), 'contract_title' => 'd', 'project_id' => $project->id,

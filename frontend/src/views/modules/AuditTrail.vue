@@ -1,6 +1,7 @@
 <template>
   <div class="module-page">
     <div class="container-fluid py-4">
+      <div v-if="apiError" class="alert alert-danger py-2 px-3 mb-3">{{ apiError }}</div>
       <!-- Header -->
       <div class="row mb-4 align-items-center">
         <div class="col-lg-8">
@@ -474,6 +475,7 @@ export default {
       },
       exportError: "",
       exportLoading: false,
+      apiError: "",
 
       // Debounce timer
       searchTimer: null,
@@ -511,6 +513,10 @@ export default {
   },
 
   methods: {
+    setApiError(error, fallback) {
+      this.apiError = error?.response?.data?.message || error.message || fallback;
+    },
+
     async fetchLogs(page = 1) {
       this.logsLoading = true;
       try {
@@ -538,8 +544,9 @@ export default {
           total:        data.logs.total,
         };
         if (data.stats) this.stats = data.stats;
+        this.apiError = "";
       } catch (e) {
-        console.error("Failed to fetch audit logs", e);
+        this.setApiError(e, "Failed to fetch audit logs.");
       } finally {
         this.logsLoading = false;
       }
@@ -550,8 +557,9 @@ export default {
       try {
         const res = await AuditService.getStats();
         this.stats = res.data;
+        this.apiError = "";
       } catch (e) {
-        console.error("Failed to fetch stats", e);
+        this.setApiError(e, "Failed to fetch audit stats.");
       } finally {
         this.statsLoading = false;
       }
@@ -562,7 +570,7 @@ export default {
         const res = await AuditService.getModules();
         this.moduleOptions = res.data;
       } catch (e) {
-        console.error("Failed to fetch modules", e);
+        this.setApiError(e, "Failed to fetch audit modules.");
       }
     },
 
@@ -571,7 +579,7 @@ export default {
         const res = await AuditService.getRoles();
         this.roleOptions = res.data;
       } catch (e) {
-        console.error("Failed to fetch roles", e);
+        this.setApiError(e, "Failed to fetch audit roles.");
       }
     },
 
@@ -653,8 +661,8 @@ export default {
         window.URL.revokeObjectURL(url);
         this.showExportModal = false;
       } catch (e) {
-        this.exportError = "Export failed. Please try again.";
-        console.error(e);
+        this.exportError = e?.response?.data?.message || "Export failed. Please try again.";
+        this.apiError = this.exportError;
       } finally {
         this.exportLoading = false;
       }

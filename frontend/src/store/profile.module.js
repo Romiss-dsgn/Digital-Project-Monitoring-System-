@@ -32,11 +32,6 @@ export const profile = {
             const userProfile = await ProfileService.editProfile(modifiedProfile);
             commit('success', userProfile);
         },
-        //eslint-disable-next-line no-unused-vars
-        async uploadPic({ commit }, file) {
-           const picURL = (await ProfileService.uploadPic(file, this.state.profile.userProfile.id)).url;
-           commit('successUpload', picURL);
-        },
         clearProfile({ commit }) {
             commit("clear");
         },
@@ -45,9 +40,6 @@ export const profile = {
         success(state, userProfile) {
             state.userProfile = userProfile;
         },
-        successUpload(state, picURL){
-            state.userProfile.profile_image = picURL;
-        },
         clear(state) {
             state.userProfile = null;
         }
@@ -55,9 +47,6 @@ export const profile = {
     getters: {
         getUserProfile(state){
             return state.userProfile
-        },
-        getUserProfileImage(state){
-            return state.userProfile.profile_image
         }
     }
 }
