@@ -18,10 +18,11 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             RolePermissionsSeeder::class,
             UsersSeeder::class,
+            ProjectsSeeder::class,
             ContractManagementSeeder::class,
+            VariationOrdersSeeder::class,
             CashflowSeeder::class,
             ProjectAccomplishmentsSeeder::class,
-            ProjectsSeeder::class,
             EngineeringPlansSeeder::class,
         ]);
     }

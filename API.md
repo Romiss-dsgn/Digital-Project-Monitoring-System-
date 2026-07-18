@@ -46,8 +46,7 @@ Response:
 {
   "token_type": "Bearer",
   "expires_in": 31536000,
-  "access_token": "<token>",
-  "refresh_token": "<token>"
+  "access_token": "<token>"
 }
 ```
 
@@ -70,6 +69,15 @@ Frontend behavior:
 | PATCH | `/me` | Required | Update authenticated user profile. |
 
 ## Current Module APIs
+
+### Dashboard
+
+Dashboard endpoints are DB-backed and use connected project, contract, financial, document, and audit data.
+
+| Method | Endpoint | Permission | Purpose |
+| --- | --- | --- | --- |
+| GET | `/admin/dashboard/summary` | `dashboard:view` | Global dashboard cards, charts, alerts, and recent activity. |
+| GET | `/admin/dashboard/export` | `dashboard:export` | Export dashboard summary data. |
 
 ### Contract Management
 
@@ -149,6 +157,55 @@ Implementation notes:
 - Validation is a separate endpoint because it is a review action.
 - Uploaded proof documents remain private.
 
+### Cashflows, Invoices, And Payments
+
+These endpoints are DB-backed and connected to `contracts`, `cashflow_periods`, `invoices`, `invoice_documents`, `payments`, and `audit_logs`.
+
+| Method | Endpoint | Permission | Purpose |
+| --- | --- | --- | --- |
+| GET | `/cashflow-periods/summary` | `cashflow_periods:view` | Cashflow summary cards and chart totals. |
+| GET | `/cashflow-periods/options` | `cashflow_periods:view` | Contract and filter options for cashflow forms. |
+| GET | `/cashflow-periods` | `cashflow_periods:view` | Paginated/filterable cashflow period list. |
+| POST | `/cashflow-periods` | `cashflow_periods:create` | Create cashflow period. |
+| GET | `/cashflow-periods/{period}` | `cashflow_periods:view` | Read one cashflow period. |
+| PATCH | `/cashflow-periods/{period}` | `cashflow_periods:edit` | Update cashflow period. |
+| DELETE | `/cashflow-periods/{period}` | `cashflow_periods:delete` | Archive cashflow period. |
+| GET | `/cashflow-periods/{period}/invoices` | `invoices:view` | List invoices for one period. |
+| GET | `/invoices/summary` | `invoices:view` | Invoice summary cards. |
+| GET | `/invoices/options` | `invoices:view` | Invoice form options. |
+| GET | `/invoices` | `invoices:view` | Paginated/filterable invoice list. |
+| POST | `/invoices` | `invoices:create` | Create invoice. |
+| GET | `/invoices/{invoice}` | `invoices:view` | Read one invoice. |
+| PATCH | `/invoices/{invoice}` | `invoices:edit` | Update invoice. |
+| PATCH | `/invoices/{invoice}/verify` | `invoices:create` | Mark invoice verified. |
+| PATCH | `/invoices/{invoice}/approve` | `invoices:approve` | Approve invoice. |
+| DELETE | `/invoices/{invoice}` | `invoices:delete` | Archive invoice. |
+| POST | `/invoices/{invoice}/documents` | `invoices:create` | Upload invoice support document. |
+| GET | `/invoice-documents/{document}/download` | `invoices:view` | Download private invoice document. |
+| POST | `/payments` | `invoices:create` | Record payment against an invoice. |
+
+### Variation Orders
+
+These endpoints are DB-backed and connected to `contracts`, `variation_orders`, `variation_order_documents`, and `audit_logs`.
+
+| Method | Endpoint | Permission | Purpose |
+| --- | --- | --- | --- |
+| GET | `/variation-orders/summary` | `variation_orders:view` | VO cards and financial totals. |
+| GET | `/variation-orders/options` | `variation_orders:view` | Contract and filter options. |
+| GET | `/variation-orders` | `variation_orders:view` | Paginated/filterable VO list. |
+| POST | `/variation-orders` | `variation_orders:create` | Create draft VO. |
+| GET | `/variation-orders/{order}` | `variation_orders:view` | Read one VO. |
+| PATCH | `/variation-orders/{order}` | `variation_orders:edit` | Update draft/reviewable VO metadata. |
+| PATCH | `/variation-orders/{order}/submit` | `variation_orders:create` | Submit draft VO for review. |
+| PATCH | `/variation-orders/{order}/review` | `variation_orders:approve` | Approve/reject/review VO. |
+| DELETE | `/variation-orders/{order}` | `variation_orders:delete` | Archive VO. |
+| POST | `/variation-orders/{order}/documents` | `variation_orders:create` | Upload VO document. |
+| GET | `/variation-order-documents/{document}/download` | `variation_orders:view` | Download private VO document. |
+
+Important rule:
+
+- Approved variation orders update the contract revised amount once and affect financial summaries.
+
 ### Admin Access Requests
 
 These endpoints support the request-access workflow from registration to approved active user.
@@ -190,6 +247,7 @@ These endpoints are the backend foundation for Infrastructure Plans / Project Pl
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
+| GET | `/admin/projects/options` | Lightweight project/contractor options for dropdowns. |
 | GET | `/admin/projects` | List projects. |
 | POST | `/admin/projects` | Create project. |
 | PATCH | `/admin/projects/{project}` | Update project. |
@@ -243,6 +301,28 @@ Current frontend behavior:
 - Archives records instead of hard-deleting them.
 - Refreshes the list from the database after write actions.
 
+### Reports
+
+Reports are DB-backed read-only endpoints for the connected MVP modules.
+
+| Method | Endpoint | Permission | Purpose |
+| --- | --- | --- | --- |
+| GET | `/admin/reports/project-status` | `reports:view` | Project status report data. |
+| GET | `/admin/reports/{reportType}` | `reports:view` | Report rows for supported report types such as `contract-summary`, `cashflow-analysis`, and `variation-orders`. |
+| GET | `/admin/reports/{reportType}/export` | `reports:export` | Export supported report data. |
+
+### Audit Logs
+
+Audit logs are DB-backed and should be written by important create, update, upload, review, archive, export, and approval actions.
+
+| Method | Endpoint | Permission | Purpose |
+| --- | --- | --- | --- |
+| GET | `/admin/audit-logs` | `audit_logs:view` | Filterable audit log list. |
+| GET | `/admin/audit-logs/stats` | `audit_logs:view` | Audit log summary counters. |
+| GET | `/admin/audit-logs/modules` | `audit_logs:view` | Available module filters. |
+| GET | `/admin/audit-logs/roles` | `audit_logs:view` | Available role filters. |
+| POST | `/admin/audit-logs/export` | `audit_logs:export` | Export audit log rows. |
+
 ### JSON:API User Resource
 
 The project still exposes Laravel JSON:API user resource routes.
@@ -257,81 +337,22 @@ The project still exposes Laravel JSON:API user resource routes.
 
 Prefer the module-specific admin user endpoints for ConTrackPro UI work unless the team intentionally keeps JSON:API resources for that screen.
 
-## Planned API Roadmap
+## Future Or Deferred API Notes
 
-These endpoints are planning targets. Do not treat them as implemented until `php artisan route:list` confirms them.
+The current MVP already exposes Dashboard, Project Plans, Engineering Plans, Contract Management, Cashflows, Variation Orders, Project Accomplishments, Reports, Audit Logs, User Management, and Settings/Profile routes.
 
-### Dashboard
+Deferred modules:
 
-| Method | Planned endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/dashboard/summary` | Global cards: active projects, ongoing projects, total budget, overdue documents. |
-| GET | `/dashboard/project-status` | Chart data for project status. |
-| GET | `/dashboard/budget-vs-expenditure` | Chart data for budget/expenditure comparison. |
-| GET | `/dashboard/recent-activity` | Latest important audit/project events. |
+| Module | Current MVP decision |
+| --- | --- |
+| Notifications | Out of MVP. Keep hidden/redirected until notification generation, read state, permissions, and QA flow are built. |
+| Contractor Performance | Out of MVP. Keep hidden/redirected until contractor rating workflow, permissions, seed rules, and reports are built. |
 
-### Project Plans
+Possible future consolidation:
 
-Use this as the future unified planning area for Infrastructure Plans and Engineering Plans.
-
-| Method | Planned endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/project-plans/summary` | Project plan cards and counts. |
-| GET | `/project-plans` | Combined list of infrastructure and engineering plan records. |
-| GET | `/admin/engineering-plans/{engineeringPlan}` | Read one engineering plan. |
-| PATCH | `/admin/engineering-plans/{engineeringPlan}` | Update metadata/status. |
-| GET | `/admin/engineering-plans/{engineeringPlan}/download` | Authenticated file download. |
-| PATCH | `/admin/engineering-plans/{engineeringPlan}/review` | Approve/reject engineering plan. |
-| DELETE | `/admin/engineering-plans/{engineeringPlan}` | Archive engineering plan. |
-
-### Financial Management
-
-Use this as the future combined area for Cashflows and Variation Orders.
-
-| Method | Planned endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/financial-management/summary` | Financial cards for budget, disbursement, pending VOs. |
-| GET | `/cashflow-periods` | List cashflow periods. |
-| POST | `/cashflow-periods` | Create cashflow period. |
-| PATCH | `/cashflow-periods/{cashflowPeriod}` | Update cashflow period. |
-| DELETE | `/cashflow-periods/{cashflowPeriod}` | Archive cashflow period. |
-| GET | `/variation-orders` | List variation orders. |
-| POST | `/variation-orders` | Create variation order. |
-| PATCH | `/variation-orders/{variationOrder}` | Update variation order. |
-| PATCH | `/variation-orders/{variationOrder}/review` | Approve/reject variation order. |
-| DELETE | `/variation-orders/{variationOrder}` | Archive variation order. |
-
-Important rule:
-
-- Approved variation orders should update revised contract value and affect cashflow summaries.
-
-### Records And Reports
-
-| Method | Planned endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/reports/summary` | Report cards and available exports. |
-| GET | `/reports/contracts` | Contract report rows. |
-| GET | `/reports/accomplishments` | Accomplishment report rows. |
-| GET | `/reports/financial` | Financial report rows. |
-| GET | `/audit-logs` | Filterable audit trail. |
-| GET | `/audit-logs/{auditLog}` | Read one audit event. |
-
-### Notifications
-
-| Method | Planned endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/notifications` | List user/system notifications. |
-| PATCH | `/notifications/{notification}/read` | Mark notification as read. |
-| PATCH | `/notifications/read-all` | Mark all notifications as read. |
-
-### Contractor Performance
-
-| Method | Planned endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/contractor-performance` | List ratings. |
-| POST | `/contractor-performance` | Create contractor performance rating. |
-| PATCH | `/contractor-performance/{rating}` | Update rating. |
-| DELETE | `/contractor-performance/{rating}` | Archive rating. |
+- A `/project-plans/*` namespace may later combine Infrastructure Plans and Engineering Plans.
+- A `/financial-management/*` namespace may later combine cashflows, invoices, payments, and variation orders.
+- Keep the existing module-specific endpoints stable while the MVP is being tested.
 
 ## Database Tables By Module
 

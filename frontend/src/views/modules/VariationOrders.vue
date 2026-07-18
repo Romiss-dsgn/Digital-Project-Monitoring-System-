@@ -1,6 +1,7 @@
 <template>
   <div class="module-page">
     <div class="container-fluid py-4">
+      <div v-if="errorMessage" class="alert alert-danger py-2 px-3 mb-3">{{ errorMessage }}</div>
       <!-- Header -->
       <div class="row mb-4 align-items-center">
         <div class="col-lg-8">
@@ -108,48 +109,74 @@
                       </td>
                       <td><status-badge :status="order.status" /></td>
                       <td class="align-middle text-end">
-                        <div class="dropdown">
+                        <div class="vo-actions-menu">
                           <button
                             class="btn btn-sm btn-icon btn-light text-secondary"
                             type="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
+                            :aria-expanded="openActionMenuId === order.id"
+                            title="Variation order actions"
+                            @click.stop="toggleActionMenu(order.id, $event)"
                           >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                           <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                             <li>
-                               <a class="dropdown-item" href="#" @click.prevent="viewOrder(order)">
-                                 <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
-                                 View
-                               </a>
-                             </li>
-                             <li v-if="order.status === 'Draft'">
-                               <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_create }" href="#" @click.prevent="submitOrder(order)">
-                                 <i class="material-icons-round align-middle me-2 dropdown-icon">send</i>
-                                 Submit
-                               </a>
-                             </li>
-                             <li v-if="order.status === 'Submitted' || order.status === 'Under Review'">
-                               <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_approve }" href="#" @click.prevent="openReviewModal(order)">
-                                 <i class="material-icons-round align-middle me-2 dropdown-icon">rate_review</i>
-                                 Review
-                               </a>
-                             </li>
-                             <li v-if="order.status !== 'Draft' && order.status !== 'Approved' && order.status !== 'Rejected'">
-                               <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_edit }" href="#" @click.prevent="editOrder(order)">
-                                 <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
-                                 Edit
-                               </a>
-                             </li>
-                             <li><hr class="dropdown-divider" /></li>
-                             <li>
-                               <a class="dropdown-item text-danger" :class="{ 'disabled-link': !permissions.can_delete }" href="#" @click.prevent="archiveOrder(order)">
-                                 <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i>
-                                 Archive
-                               </a>
-                             </li>
-                           </ul>
+                          <div
+                            v-if="openActionMenuId === order.id"
+                            class="vo-action-menu"
+                            :style="{
+                              top: `${actionMenuPosition.top}px`,
+                              left: `${actionMenuPosition.left}px`,
+                            }"
+                            role="menu"
+                            @click.stop
+                          >
+                            <button class="vo-action-menu-item" type="button" role="menuitem" @click="handleViewOrder(order)">
+                              <i class="material-icons-round dropdown-icon view-icon">visibility</i>
+                              View
+                            </button>
+                            <button
+                              v-if="order.status === 'Draft'"
+                              class="vo-action-menu-item"
+                              :disabled="!permissions.can_create"
+                              type="button"
+                              role="menuitem"
+                              @click="handleSubmitOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon">send</i>
+                              Submit
+                            </button>
+                            <button
+                              v-if="order.status === 'Submitted' || order.status === 'Under Review'"
+                              class="vo-action-menu-item"
+                              :disabled="!permissions.can_approve"
+                              type="button"
+                              role="menuitem"
+                              @click="handleReviewOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon">rate_review</i>
+                              Review
+                            </button>
+                            <button
+                              v-if="order.status !== 'Draft' && order.status !== 'Approved' && order.status !== 'Rejected'"
+                              class="vo-action-menu-item"
+                              :disabled="!permissions.can_edit"
+                              type="button"
+                              role="menuitem"
+                              @click="handleEditOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon edit-icon">edit</i>
+                              Edit
+                            </button>
+                            <button
+                              class="vo-action-menu-item danger"
+                              :disabled="!permissions.can_delete"
+                              type="button"
+                              role="menuitem"
+                              @click="handleArchiveOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon">archive</i>
+                              Archive
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -582,6 +609,11 @@ export default {
         remarks: '',
       },
       errorMessage: '',
+      openActionMenuId: null,
+      actionMenuPosition: {
+        top: 0,
+        left: 0,
+      },
     };
   },
   computed: {
@@ -604,8 +636,73 @@ export default {
     this.loadPermissions();
     this.loadSummary();
     this.loadOrders(1);
+    document.addEventListener('click', this.closeActionMenu);
+    window.addEventListener('resize', this.closeActionMenu);
+    window.addEventListener('scroll', this.closeActionMenu, true);
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.closeActionMenu);
+    window.removeEventListener('resize', this.closeActionMenu);
+    window.removeEventListener('scroll', this.closeActionMenu, true);
   },
   methods: {
+    toggleActionMenu(orderId, event) {
+      if (this.openActionMenuId === orderId) {
+        this.closeActionMenu();
+        return;
+      }
+
+      this.positionActionMenu(event.currentTarget);
+      this.openActionMenuId = orderId;
+    },
+
+    positionActionMenu(trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const menuWidth = 150;
+      const menuHeight = 186;
+      const margin = 8;
+      const viewportPadding = 8;
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      );
+      const opensUp = rect.bottom + menuHeight + margin > window.innerHeight;
+
+      this.actionMenuPosition = {
+        top: opensUp ? Math.max(viewportPadding, rect.top - menuHeight - margin) : rect.bottom + margin,
+        left,
+      };
+    },
+
+    closeActionMenu() {
+      this.openActionMenuId = null;
+    },
+
+    handleViewOrder(order) {
+      this.closeActionMenu();
+      this.viewOrder(order);
+    },
+
+    handleSubmitOrder(order) {
+      this.closeActionMenu();
+      this.submitOrder(order);
+    },
+
+    handleReviewOrder(order) {
+      this.closeActionMenu();
+      this.openReviewModal(order);
+    },
+
+    handleEditOrder(order) {
+      this.closeActionMenu();
+      this.editOrder(order);
+    },
+
+    handleArchiveOrder(order) {
+      this.closeActionMenu();
+      this.archiveOrder(order);
+    },
+
     async loadPermissions() {
       try {
         const options = await variationOrderService.getOptions();
@@ -619,20 +716,22 @@ export default {
           can_export: raw.export ?? false,
         };
         this.contracts = options.contracts || [];
+        this.errorMessage = '';
       } catch (error) {
-        console.error('Failed to load variation order permissions:', error);
+        this.setError(error, 'Failed to load variation order permissions.');
       }
     },
 
-async loadSummary() {
+    async loadSummary() {
        try {
          const data = await variationOrderService.getSummary();
          this.summary = data;
          if (data.monthly_breakdown) {
            this.monthlyBreakdown = data.monthly_breakdown;
          }
+         this.errorMessage = '';
        } catch (error) {
-         console.error('Failed to load variation order summary:', error);
+         this.setError(error, 'Failed to load variation order summary.');
        }
      },
 
@@ -645,8 +744,9 @@ async loadSummary() {
         const response = await variationOrderService.getVariationOrders(params);
         this.orders = response.data || [];
         this.pagination = response.meta || this.pagination;
+        this.errorMessage = '';
       } catch (error) {
-        console.error('Failed to load variation orders:', error);
+        this.setError(error, 'Failed to load variation orders.');
       }
     },
 
@@ -820,7 +920,8 @@ async loadSummary() {
         const response = await variationOrderService.getVariationOrder(order.id);
         const data = response?.data?.data || response?.data || {};
         if (!data.id) {
-          console.warn('[VariationOrders] Unexpected detail response shape', response);
+          this.errorMessage = 'Unable to load variation order details.';
+          return;
         }
         this.detailOrder = data;
         this.resetDocumentUpload();
@@ -886,8 +987,14 @@ async loadSummary() {
     },
 
     showError(error) {
-      const message = error?.response?.data?.message || error.message || 'Something went wrong.';
+      const message = this.setError(error, 'Something went wrong.');
       alert(message);
+    },
+
+    setError(error, fallback) {
+      const message = error?.response?.data?.message || error.message || fallback;
+      this.errorMessage = message;
+      return message;
     },
 
     editOrder(order) {
@@ -918,25 +1025,54 @@ async loadSummary() {
 </script>
 
 <style scoped>
-.dropdown-menu {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
+.vo-actions-menu {
+  display: inline-flex;
+  position: relative;
 }
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
+
+.vo-action-menu {
+  position: fixed;
+  min-width: 150px;
+  padding: 0.35rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  z-index: 1200;
+}
+
+.vo-action-menu-item {
   display: flex;
   align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 34px;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: left;
 }
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
 
-.disabled-link {
-  opacity: 0.5;
-  pointer-events: none;
+.vo-action-menu-item:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.vo-action-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.vo-action-menu-item.danger {
+  color: #dc2626;
+}
+
+.vo-action-menu-item.danger:hover:not(:disabled) {
+  background: #fef2f2;
 }
 
 .dropdown-icon { font-size: 1rem; }

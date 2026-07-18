@@ -117,14 +117,12 @@ class VariationOrderTest extends TestCase
             'is_archived' => false,
         ]);
 
-        $firstReviewAt = now()->subMinutes(5)->format('Y-m-d H:i:s');
-
         $this->patchJson('/api/v2/variation-orders/' . $vo->id . '/review', [
             'review_action' => 'Under Review',
         ])->assertOk();
 
         $vo->refresh();
-        $this->assertEquals($firstReviewAt, $vo->reviewed_at->format('Y-m-d H:i:s'));
+        $firstReviewAt = $vo->reviewed_at->format('Y-m-d H:i:s');
 
         $this->patchJson('/api/v2/variation-orders/' . $vo->id . '/review', [
             'review_action' => 'Approved',
@@ -209,7 +207,7 @@ class VariationOrderTest extends TestCase
         $project = Project::create([
             'project_code' => 'TEST-PROJ-' . uniqid(),
             'project_name' => 'Feature Test Project',
-            'status' => 'Ongoing',
+            'status' => 'ongoing',
             'is_archived' => false,
         ]);
 

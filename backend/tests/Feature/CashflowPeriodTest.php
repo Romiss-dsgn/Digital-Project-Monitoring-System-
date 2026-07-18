@@ -99,9 +99,9 @@ class CashflowPeriodTest extends TestCase
 
         $summary = $this->getJson('/api/v2/cashflow-periods/summary')->assertOk();
 
-        $summary->assertJsonPath('data.planned_total', 1000.00);
-        $summary->assertJsonPath('data.actual_total', 0.00);
-        $summary->assertJsonPath('data.revised_contract_amount', 9000.00);
+        $this->assertEquals(1000.00, (float) $summary->json('data.planned_total'));
+        $this->assertEquals(0.00, (float) $summary->json('data.actual_total'));
+        $this->assertEquals(9000.00, (float) $summary->json('data.revised_contract_amount'));
 
         $this->assertDatabaseHas('cashflow_periods', [
             'id' => $archivedPeriod->id,
@@ -164,7 +164,7 @@ class CashflowPeriodTest extends TestCase
         ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.amount_paid', 450.0);
+        $this->assertEquals(450.00, (float) $response->json('data.amount_paid'));
 
         $invoice->refresh();
         $period->refresh();
@@ -174,7 +174,7 @@ class CashflowPeriodTest extends TestCase
         $this->assertEquals(750.00, (float) $period->variance);
 
         $summary = $this->getJson('/api/v2/cashflow-periods/summary')->assertOk();
-        $summary->assertJsonPath('data.actual_total', 450.00);
+        $this->assertEquals(450.00, (float) $summary->json('data.actual_total'));
     }
 
     public function test_partial_payment_keeps_invoice_open_and_exposes_remaining_balance(): void
@@ -208,12 +208,12 @@ class CashflowPeriodTest extends TestCase
         ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.amount_paid', 200.0);
+        $this->assertEquals(200.00, (float) $response->json('data.amount_paid'));
 
         $invoiceResponse = $this->getJson('/api/v2/invoices/' . $invoice->id);
         $invoiceResponse->assertOk();
-        $invoiceResponse->assertJsonPath('data.paid_amount', 200.0);
-        $invoiceResponse->assertJsonPath('data.remaining_balance', 300.0);
+        $this->assertEquals(200.00, (float) $invoiceResponse->json('data.paid_amount'));
+        $this->assertEquals(300.00, (float) $invoiceResponse->json('data.remaining_balance'));
 
         $invoice->refresh();
         $period->refresh();
@@ -223,7 +223,7 @@ class CashflowPeriodTest extends TestCase
         $this->assertEquals(800.00, (float) $period->variance);
 
         $summary = $this->getJson('/api/v2/cashflow-periods/summary')->assertOk();
-        $summary->assertJsonPath('data.actual_total', 200.00);
+        $this->assertEquals(200.00, (float) $summary->json('data.actual_total'));
     }
 
     public function test_overpayment_is_rejected_before_creating_a_payment(): void
@@ -302,7 +302,7 @@ class CashflowPeriodTest extends TestCase
         $project = Project::create([
             'project_code' => 'TEST-PROJ-' . uniqid(),
             'project_name' => 'Feature Test Project',
-            'status' => 'Ongoing',
+            'status' => 'ongoing',
             'is_archived' => false,
         ]);
 

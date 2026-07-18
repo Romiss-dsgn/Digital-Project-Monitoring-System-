@@ -14,13 +14,6 @@
       </label>
 
       <div class="contrack-actions">
-        <button class="contrack-icon" type="button" aria-label="Notifications">
-          <span class="material-symbols-rounded">notifications</span>
-        </button>
-        <button class="contrack-icon" type="button" aria-label="Help">
-          <span class="material-symbols-rounded">help</span>
-        </button>
-
         <div class="contrack-profile" ref="profileRef">
           <div class="contrack-profile__text">
             <strong>{{ displayName }}</strong>
@@ -44,7 +37,7 @@
             <hr class="contrack-dropdown__divider" />
             <ul class="contrack-dropdown__menu">
               <li>
-                <router-link to="/user-profile" class="contrack-dropdown__item" @click="closeDropdown">
+                <router-link to="/settings" class="contrack-dropdown__item" @click="closeDropdown">
                   <span class="material-symbols-rounded">manage_accounts</span>
                   Edit Profile
                 </router-link>

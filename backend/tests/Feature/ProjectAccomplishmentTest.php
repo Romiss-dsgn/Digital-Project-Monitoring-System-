@@ -22,7 +22,7 @@ class ProjectAccomplishmentTest extends TestCase
         $project = Project::create([
             'project_code' => 'ACC-PROJ-' . uniqid(),
             'project_name' => 'Accomplishment Test Project',
-            'status' => 'Ongoing',
+            'status' => 'ongoing',
             'progress_percent' => 0,
             'is_archived' => false,
         ]);
@@ -69,7 +69,7 @@ class ProjectAccomplishmentTest extends TestCase
         $project = Project::create([
             'project_code' => 'VALIDATE-PROJ-' . uniqid(),
             'project_name' => 'Validation Test Project',
-            'status' => 'Ongoing',
+            'status' => 'ongoing',
             'is_archived' => false,
         ]);
         $accomplishment = ProjectAccomplishment::create([

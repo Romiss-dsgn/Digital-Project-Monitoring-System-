@@ -13,32 +13,39 @@ class ProjectAccomplishmentsSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('email', 'admin@contrackpro.test')->first();
-        $projects = Project::query()
-            ->whereIn('project_code', [
-                'BFP-R2-PROJ-001',
-                'BFP-R2-PROJ-002',
-                'BFP-R2-PROJ-003',
-                'BFP-R2-PROJ-004',
-                'BFP-R2-PROJ-005',
-            ])
-            ->orderBy('project_code')
-            ->get();
 
         $milestones = [
-            ['Site Preparation', 100, 'Completed', -40, -42],
-            ['Foundation and Structural Works', 75, 'In Progress', 30, null],
-            ['Electrical Installation', 45, 'In Progress', 50, null],
-            ['Plumbing and Sanitation', 30, 'Delayed', -5, null],
-            ['Roofing and Weatherproofing', 0, 'Not Started', 80, null],
-            ['Interior Finishing', 90, 'In Progress', 14, null],
-            ['Fire Safety Systems Installation', 60, 'In Progress', 35, null],
-            ['Equipment Testing and Commissioning', 0, 'Not Started', 100, null],
-            ['Final Inspection', 100, 'Completed', -10, -12],
-            ['Project Turnover', 15, 'Delayed', -2, null],
+            [
+                'project_code' => 'BFP-R2-PROJ-001',
+                'milestone_title' => 'Structural Works Completion',
+                'percent_complete' => 75,
+                'status' => 'In Progress',
+                'target_offset_days' => 45,
+                'completion_offset_days' => null,
+                'remarks' => null,
+            ],
+            [
+                'project_code' => 'BFP-R2-PROJ-002',
+                'milestone_title' => 'Procurement Documentation Review',
+                'percent_complete' => 100,
+                'status' => 'Completed',
+                'target_offset_days' => -10,
+                'completion_offset_days' => -12,
+                'remarks' => 'Validated for QA reporting checks.',
+            ],
+            [
+                'project_code' => 'BFP-R2-PROJ-003',
+                'milestone_title' => 'Site Works Recovery Plan',
+                'percent_complete' => 35,
+                'status' => 'Delayed',
+                'target_offset_days' => -5,
+                'completion_offset_days' => null,
+                'remarks' => 'Requires follow-up during E2E testing.',
+            ],
         ];
 
-        foreach ($milestones as $index => [$title, $percent, $status, $targetOffset, $completionOffset]) {
-            $project = $projects[$index % max($projects->count(), 1)] ?? null;
+        foreach ($milestones as $milestone) {
+            $project = Project::where('project_code', $milestone['project_code'])->first();
 
             if (! $project) {
                 continue;
@@ -47,34 +54,25 @@ class ProjectAccomplishmentsSeeder extends Seeder
             ProjectAccomplishment::updateOrCreate(
                 [
                     'project_id' => $project->id,
-                    'milestone_title' => $title,
+                    'milestone_title' => $milestone['milestone_title'],
                 ],
                 [
-                    'description' => 'Seeded milestone for the Project Accomplishments MVP.',
-                    'target_date' => Carbon::today()->addDays($targetOffset),
-                    'completion_date' => $completionOffset !== null
-                        ? Carbon::today()->addDays($completionOffset)
+                    'description' => 'QA seed accomplishment. Upload proof documents during E2E tests.',
+                    'target_date' => Carbon::today()->addDays($milestone['target_offset_days']),
+                    'completion_date' => $milestone['completion_offset_days'] !== null
+                        ? Carbon::today()->addDays($milestone['completion_offset_days'])
                         : null,
-                    'percent_complete' => $percent,
-                    'status' => $status,
+                    'percent_complete' => $milestone['percent_complete'],
+                    'status' => $milestone['status'],
                     'reported_by' => $admin?->id,
-                    'validated_by' => $status === 'Completed' ? $admin?->id : null,
-                    'validated_at' => $status === 'Completed' ? now() : null,
-                    'remarks' => $status === 'Delayed'
-                        ? 'Requires follow-up from the monitoring team.'
-                        : null,
+                    'validated_by' => $milestone['status'] === 'Completed' ? $admin?->id : null,
+                    'validated_at' => $milestone['status'] === 'Completed' ? now() : null,
+                    'remarks' => $milestone['remarks'],
                     'is_archived' => false,
                 ]
             );
-        }
 
-        // Keep each project dashboard percentage aligned with its milestone records.
-        foreach ($projects as $project) {
-            $average = $project->accomplishments()
-                ->where('is_archived', false)
-                ->avg('percent_complete');
-
-            $project->update(['progress_percent' => round((float) ($average ?? 0), 2)]);
+            $project->update(['progress_percent' => $milestone['percent_complete']]);
         }
     }
 }

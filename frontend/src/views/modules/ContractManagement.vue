@@ -156,28 +156,51 @@
                         </div>
                       </td>
                       <td class="text-end">
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-icon btn-light text-secondary" type="button" data-bs-toggle="dropdown">
+                        <div class="contract-actions-menu">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary"
+                            type="button"
+                            :aria-expanded="openActionMenuId === contract.id"
+                            title="Contract actions"
+                            @click.stop="toggleActionMenu(contract.id, $event)"
+                          >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                            <li>
-                              <a class="dropdown-item" href="#" @click.prevent="viewContract(contract)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i> View
-                              </a>
-                            </li>
-                            <li v-if="permissions.edit">
-                              <a class="dropdown-item" href="#" @click.prevent="editContract(contract)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i> Edit
-                              </a>
-                            </li>
-                            <li v-if="permissions.delete"><hr class="dropdown-divider" /></li>
-                            <li v-if="permissions.delete">
-                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteContract(contract)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i> Archive
-                              </a>
-                            </li>
-                          </ul>
+                          <div
+                            v-if="openActionMenuId === contract.id"
+                            class="contract-action-menu"
+                            :style="{
+                              top: `${actionMenuPosition.top}px`,
+                              left: `${actionMenuPosition.left}px`,
+                            }"
+                            role="menu"
+                            @click.stop
+                          >
+                            <button class="contract-action-menu-item" type="button" role="menuitem" @click="handleViewContract(contract)">
+                              <i class="material-icons-round dropdown-icon view-icon">visibility</i>
+                              View
+                            </button>
+                            <button
+                              v-if="permissions.edit"
+                              class="contract-action-menu-item"
+                              type="button"
+                              role="menuitem"
+                              @click="handleEditContract(contract)"
+                            >
+                              <i class="material-icons-round dropdown-icon edit-icon">edit</i>
+                              Edit
+                            </button>
+                            <button
+                              v-if="permissions.delete"
+                              class="contract-action-menu-item danger"
+                              type="button"
+                              role="menuitem"
+                              @click="handleDeleteContract(contract)"
+                            >
+                              <i class="material-icons-round dropdown-icon">archive</i>
+                              Archive
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -777,6 +800,11 @@ export default {
       contractStatusOptions: ['Draft', 'Pending Review', 'Active', 'Delayed', 'Completed', 'Rejected', 'Terminated', 'Expired'],
       complianceStatusOptions: ['Full Compliance', 'Minor Issues', 'Major Issues', 'Pending Review'],
       contracts: [],
+      openActionMenuId: null,
+      actionMenuPosition: {
+        top: 0,
+        left: 0,
+      },
     };
   },
   computed: {
@@ -805,8 +833,57 @@ export default {
   },
   async mounted() {
     await this.loadContractManagement();
+    document.addEventListener("click", this.closeActionMenu);
+    window.addEventListener("resize", this.closeActionMenu);
+    window.addEventListener("scroll", this.closeActionMenu, true);
+  },
+  beforeUnmount() {
+    document.removeEventListener("click", this.closeActionMenu);
+    window.removeEventListener("resize", this.closeActionMenu);
+    window.removeEventListener("scroll", this.closeActionMenu, true);
   },
   methods: {
+    toggleActionMenu(contractId, event) {
+      if (this.openActionMenuId === contractId) {
+        this.closeActionMenu();
+        return;
+      }
+
+      this.positionActionMenu(event.currentTarget);
+      this.openActionMenuId = contractId;
+    },
+    positionActionMenu(trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const menuWidth = 148;
+      const menuHeight = 132;
+      const margin = 8;
+      const viewportPadding = 8;
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      );
+      const opensUp = rect.bottom + menuHeight + margin > window.innerHeight;
+
+      this.actionMenuPosition = {
+        top: opensUp ? Math.max(viewportPadding, rect.top - menuHeight - margin) : rect.bottom + margin,
+        left,
+      };
+    },
+    closeActionMenu() {
+      this.openActionMenuId = null;
+    },
+    handleViewContract(contract) {
+      this.closeActionMenu();
+      this.viewContract(contract);
+    },
+    handleEditContract(contract) {
+      this.closeActionMenu();
+      this.editContract(contract);
+    },
+    handleDeleteContract(contract) {
+      this.closeActionMenu();
+      this.deleteContract(contract);
+    },
     openCreateContractModal() {
       this.apiError = "";
       this.contractForm = emptyContractForm();
@@ -1481,21 +1558,45 @@ export default {
 /* ════════════════════════════════════════════
    DROPDOWN
 ════════════════════════════════════════════ */
-.dropdown-menu {
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
+.contract-actions-menu {
+  display: inline-flex;
+  position: relative;
 }
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
+.contract-action-menu {
+  position: fixed;
+  min-width: 148px;
+  padding: 0.35rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  z-index: 1200;
+}
+.contract-action-menu-item {
   display: flex;
   align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 34px;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: left;
 }
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
+.contract-action-menu-item:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+.contract-action-menu-item.danger {
+  color: #dc2626;
+}
+.contract-action-menu-item.danger:hover {
+  background: #fef2f2;
+}
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
 .edit-icon { color: #d97706; }

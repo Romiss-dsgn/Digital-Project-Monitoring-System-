@@ -26,8 +26,8 @@
 - [ ] Variation Orders
 - [ ] Reports
 - [ ] Audit Logs
-- [ ] Notifications
-- [ ] Contractor Performance
+- [ ] Notifications (future/out of MVP)
+- [ ] Contractor Performance (future/out of MVP)
 - [ ] Settings
 
 ## Summary
@@ -70,6 +70,8 @@ Attach screenshots, browser console logs, Laravel logs, Postman response, reques
 - [ ] Postman/Thunder Client tested
 - [ ] `npm run build`
 - [ ] `php artisan test`
+- [ ] `scripts/qa/api-smoke.ps1`
+- [ ] `scripts/qa/run-backend-tests.ps1`
 - [ ] Docker setup tested
 
 ## Notes

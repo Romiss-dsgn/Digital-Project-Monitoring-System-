@@ -8,6 +8,7 @@ This repository contains:
 - `backend/` - Laravel JSON:API backend.
 - `docker-compose.yml` - local backend, MySQL, and phpMyAdmin stack.
 - `scripts/docker-setup.ps1` - repeatable Docker setup script.
+- `scripts/qa/` - repeatable smoke, permission, and backend test scripts.
 
 ## Current Progress
 
@@ -22,11 +23,12 @@ This repository contains:
 | Project Accomplishments | DB-backed MVP with accomplishments CRUD/archive/validation, document upload/download, project progress sync, summary cards, seed data, and tests. |
 | Infrastructure Plans | DB-backed MVP with project create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header. This module owns project creation and baseline project data. |
 | Engineering Plans | DB-backed MVP with list, summary cards, pagination, project dropdown, upload, authenticated download, review status updates, archive, and audit logging. |
-| Cashflows | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
-| Variation Orders | Frontend module exists, but records are still mostly static. Backend tables/models exist. |
-| Reports and Audit Logs | Frontend modules exist. Audit log table/service exists. Full reporting module is still pending. |
-| Notifications | Frontend module exists. Backend tables/models exist. Full notification workflow is still pending. |
-| Contractor Performance | Frontend module exists. Backend table/model exists. Full API workflow is still pending. |
+| Dashboard | DB-backed summary/export through the dashboard API. |
+| Cashflows | DB-backed MVP for cashflow periods, invoices, payments, summaries, and seed data. |
+| Variation Orders | DB-backed MVP with VO lifecycle, documents, summary, approval impact on contract amount, seed data, and tests. |
+| Reports and Audit Logs | DB-backed read-only report and audit log APIs for the MVP accountability workflow. |
+| Notifications | Out of MVP for now. Legacy route redirects to Dashboard until the workflow is built. |
+| Contractor Performance | Out of MVP for now. Legacy route redirects to Dashboard until the workflow is built. |
 
 ## Intended Use
 
@@ -71,6 +73,11 @@ User Management
 Settings
 ```
 
+Out of MVP for this pass:
+
+- Notifications
+- Contractor Performance
+
 Implementation rule:
 
 - Keep `Contract Management`, `Project Accomplishments`, and `User Management` as standalone workflows.
@@ -109,7 +116,8 @@ See [PLAN.md](PLAN.md) for the detailed sequence of next modules.
 |   |   `-- views/
 |   `-- README.md
 |-- scripts/
-|   `-- docker-setup.ps1
+|   |-- docker-setup.ps1
+|   `-- qa/
 |-- docker-compose.yml
 |-- API.md
 |-- DOCKER.md
@@ -275,6 +283,16 @@ Email: admin@contrackpro.test
 Password: password
 ```
 
+QA seed users:
+
+```text
+admin@contrackpro.test       password
+qa.engineer@contrackpro.test password
+qa.monitor@contrackpro.test  password
+```
+
+The QA seed is intentionally small and repeatable: 3 users, 3 contractors, 3 projects, 3 contracts, 3 variation orders, 3 cashflow periods, 3 invoices, 1 payment, and 3 accomplishments. Engineering plans and document tables start empty so file records are created during E2E tests instead of being faked by seed data.
+
 More Docker details are in [DOCKER.md](DOCKER.md).
 
 ## Frontend Setup
@@ -321,6 +339,8 @@ docker compose exec backend php artisan db:seed --class=ProjectsSeeder --force
 docker compose exec backend php artisan db:seed --class=EngineeringPlansSeeder --force
 docker compose exec backend php artisan db:seed --class=ContractManagementSeeder --force
 docker compose exec backend php artisan db:seed --class=ProjectAccomplishmentsSeeder --force
+docker compose exec backend php artisan db:seed --class=VariationOrdersSeeder --force
+docker compose exec backend php artisan db:seed --class=CashflowSeeder --force
 ```
 
 Reset and reseed the Docker database:
@@ -363,6 +383,18 @@ GET http://localhost:8000/api/v2/admin/projects
 GET http://localhost:8000/api/v2/admin/engineering-plans
 GET http://localhost:8000/api/v2/project-accomplishments
 GET http://localhost:8000/api/v2/project-accomplishments/summary
+GET http://localhost:8000/api/v2/cashflow-periods
+GET http://localhost:8000/api/v2/variation-orders
+GET http://localhost:8000/api/v2/admin/reports/project-status
+GET http://localhost:8000/api/v2/admin/audit-logs
+```
+
+Repeatable QA scripts:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\qa\api-smoke.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\qa\test-engineering-plan-permissions.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\qa\run-backend-tests.ps1
 ```
 
 ## Git Branching Rules
