@@ -75,9 +75,6 @@ jobs:
       - name: Run test database migrations
         run: php artisan migrate:fresh --force
 
-      - name: Verify seeders run successfully
-        run: php artisan migrate:fresh --seed --force
-
       - name: Create Passport keys and personal client
         run: |
           php artisan passport:keys --force
@@ -85,6 +82,9 @@ jobs:
 
       - name: Run backend tests
         run: php artisan test
+
+      - name: Verify seeders run successfully
+        run: php artisan migrate:fresh --seed --force
 
   frontend:
     name: Frontend Vue Build
