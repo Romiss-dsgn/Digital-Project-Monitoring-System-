@@ -72,7 +72,10 @@ jobs:
           php artisan key:generate --ansi
           php artisan config:clear
 
-      - name: Run migrations and seeders
+      - name: Run test database migrations
+        run: php artisan migrate:fresh --force
+
+      - name: Verify seeders run successfully
         run: php artisan migrate:fresh --seed --force
 
       - name: Create Passport keys and personal client
