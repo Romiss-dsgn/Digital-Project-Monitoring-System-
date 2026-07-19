@@ -12,23 +12,23 @@ This repository contains:
 
 ## Current Progress
 
-| Area | Current state |
-| --- | --- |
-| Authentication | Login, logout, registration/request access, password reset, Passport tokens, profile update. |
-| Roles and permissions | Role and permission seeders exist. Backend has module permission middleware for protected module APIs. |
-| User management | Admin access request approval and user management endpoints exist. Frontend module is active work. |
-| Database schema | Core ConTrackPro schema exists in Laravel migrations. Models exist for major domain tables. |
-| Docker | Backend, MySQL 8, and phpMyAdmin are containerized for local development. |
-| Contract Management | DB-backed MVP with contracts CRUD/archive, document upload/download/review/archive, summary cards, seed data, audit logging, and tests. |
-| Project Accomplishments | DB-backed MVP with accomplishments CRUD/archive/validation, document upload/download, project progress sync, summary cards, seed data, and tests. |
-| Infrastructure Plans | DB-backed MVP with project create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header. This module owns project creation and baseline project data. |
-| Engineering Plans | DB-backed MVP with list, summary cards, pagination, project dropdown, upload, authenticated download, review status updates, archive, and audit logging. |
-| Dashboard | DB-backed summary/export through the dashboard API. |
-| Cashflows | DB-backed MVP for cashflow periods, invoices, payments, summaries, and seed data. |
-| Variation Orders | DB-backed MVP with VO lifecycle, documents, summary, approval impact on contract amount, seed data, and tests. |
-| Reports and Audit Logs | DB-backed read-only report and audit log APIs for the MVP accountability workflow. |
-| Notifications | Out of MVP for now. Legacy route redirects to Dashboard until the workflow is built. |
-| Contractor Performance | Out of MVP for now. Legacy route redirects to Dashboard until the workflow is built. |
+| Area                    | Current state                                                                                                                                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication          | Login, logout, registration/request access, password reset, Passport tokens, profile update.                                                                                                         |
+| Roles and permissions   | Role and permission seeders exist. Backend has module permission middleware for protected module APIs.                                                                                               |
+| User management         | Admin access request approval and user management endpoints exist. Frontend module is active work.                                                                                                   |
+| Database schema         | Core ConTrackPro schema exists in Laravel migrations. Models exist for major domain tables.                                                                                                          |
+| Docker                  | Backend, MySQL 8, and phpMyAdmin are containerized for local development.                                                                                                                            |
+| Contract Management     | DB-backed MVP with contracts CRUD/archive, document upload/download/review/archive, summary cards, seed data, audit logging, and tests.                                                              |
+| Project Accomplishments | DB-backed MVP with accomplishments CRUD/archive/validation, document upload/download, project progress sync, summary cards, seed data, and tests.                                                    |
+| Infrastructure Plans    | DB-backed MVP with project create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header. This module owns project creation and baseline project data. |
+| Engineering Plans       | DB-backed MVP with list, summary cards, pagination, project dropdown, upload, authenticated download, review status updates, archive, and audit logging.                                             |
+| Dashboard               | DB-backed summary/export through the dashboard API.                                                                                                                                                  |
+| Cashflows               | DB-backed MVP for cashflow periods, invoices, payments, summaries, and seed data.                                                                                                                    |
+| Variation Orders        | DB-backed MVP with VO lifecycle, documents, summary, approval impact on contract amount, seed data, and tests.                                                                                       |
+| Reports and Audit Logs  | DB-backed read-only report and audit log APIs for the MVP accountability workflow.                                                                                                                   |
+| Notifications           | Out of MVP for now. Legacy route redirects to Dashboard until the workflow is built.                                                                                                                 |
+| Contractor Performance  | Out of MVP for now. Legacy route redirects to Dashboard until the workflow is built.                                                                                                                 |
 
 ## Intended Use
 
@@ -518,3 +518,5 @@ Composer/PHP version problems outside Docker:
 - [PLAN.md](PLAN.md) - recommended module implementation order.
 - [CHANGELOG.md](CHANGELOG.md) - notable project changes.
 - [ISSUE_TEMPLATE.md](ISSUE_TEMPLATE.md) - issue report format.
+
+CI branch protection test.
