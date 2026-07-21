@@ -784,7 +784,7 @@ export default {
     async fetchRoles() {
       try {
         const res = await UserService.getRoles();
-        this.roles = res.data;
+        this.roles = res.data.data;
       } catch (err) {
         this.fetchError = this.getErrorMessage(err, "Failed to load roles.");
       }
