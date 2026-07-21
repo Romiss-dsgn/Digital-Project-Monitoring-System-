@@ -18,6 +18,7 @@ const AuditTrail = () => import("../views/modules/AuditTrail.vue");
 const InfrastructurePlans = () => import("../views/modules/InfrastructurePlans.vue");
 const Reports = () => import("../views/modules/Reports.vue");
 const Settings = () => import("../views/modules/Settings.vue");
+const UserProfile = () => import("../views/examples-api/profile/UserProfile.vue");
 const UserManagement = () => import("../views/modules/UserManagement.vue");
 
 const routes = [
@@ -85,7 +86,8 @@ const routes = [
   },
   {
     path: "/user-profile",
-    redirect: "/settings",
+    name: "User Profile",
+    component: UserProfile,
   },
   {
     path: '/users',

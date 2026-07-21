@@ -346,8 +346,9 @@
             <label class="bfp-label">Contact Number</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">call</i>
-              <input class="bfp-input" type="text" v-model="form.contact_number" placeholder="09XXXXXXXXX" />
+              <input class="bfp-input" type="text" :value="form.contact_number" @input="handleContactNumberInput" maxlength="10" placeholder="9XXXXXXXXX (10 digits, no leading 0)" />
             </div>
+            <span class="bfp-error" v-if="errors.contact_number">{{ errors.contact_number[0] }}</span>
           </div>
         </div>
       </div>
@@ -632,6 +633,9 @@
 import BfpModal from "@/components/BfpModal.vue";
 import UserService from "@/services/user.service";
 
+const PH_COUNTRY_CODE = "63";
+const CONTACT_NUMBER_MAX_LENGTH = 10;
+
 export default {
   name: "UserManagement",
   components: { BfpModal },
@@ -724,6 +728,20 @@ export default {
   },
 
   methods: {
+    stripCountryCode(value) {
+      let digits = String(value || "").replace(/\D/g, "");
+      if (digits.startsWith(PH_COUNTRY_CODE)) {
+        digits = digits.slice(PH_COUNTRY_CODE.length);
+      } else if (digits.startsWith("0")) {
+        digits = digits.slice(1);
+      }
+      return digits.slice(0, CONTACT_NUMBER_MAX_LENGTH);
+    },
+    handleContactNumberInput(event) {
+      const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, CONTACT_NUMBER_MAX_LENGTH);
+      this.form.contact_number = digitsOnly;
+      event.target.value = digitsOnly;
+    },
     getErrorMessage(err, fallback) {
       return err.response?.data?.message || err.message || fallback;
     },
@@ -803,7 +821,7 @@ export default {
         username:       user.username,
         email:          user.email,
         badge_number:   user.badge_number || "",
-        contact_number: user.contact_number || "",
+        contact_number: this.stripCountryCode(user.contact_number || ""),
         position:       user.position || "",
         office_unit:    user.office_unit || "",
         role_id:        user.role_id || "",
@@ -826,11 +844,23 @@ export default {
     async submitUserForm() {
       this.saving = true;
       this.errors = {};
+      const localDigits = this.stripCountryCode(this.form.contact_number);
+      if (localDigits && localDigits.length !== CONTACT_NUMBER_MAX_LENGTH) {
+        this.saving = false;
+        this.errors = {
+          contact_number: [`Contact number must be ${CONTACT_NUMBER_MAX_LENGTH} digits.`],
+        };
+        return;
+      }
+      const payload = {
+        ...this.form,
+        contact_number: localDigits ? `${PH_COUNTRY_CODE}${localDigits}` : "",
+      };
       try {
         if (this.editingUser) {
-          await UserService.updateUser(this.editingUser.id, this.form);
+          await UserService.updateUser(this.editingUser.id, payload);
         } else {
-          await UserService.createUser(this.form);
+          await UserService.createUser(payload);
         }
         this.showUserModal = false;
         await this.fetchUsers(this.meta.current_page);

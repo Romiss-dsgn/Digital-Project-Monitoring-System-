@@ -39,10 +39,11 @@
 
 <script>
 import Info from "./Info.vue";
+import Password from "./Password.vue";
 
 export default {
   name: "User Profile",
-  components: { Info},
+  components: { Info, Password },
   computed: {
     profile() {
       return this.$store.getters["profile/getUserProfile"] || {};

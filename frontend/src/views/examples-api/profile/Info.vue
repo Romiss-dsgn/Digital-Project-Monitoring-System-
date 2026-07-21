@@ -126,9 +126,10 @@
           <label class="info-field__label">Contact Number</label>
           <div class="info-field__input-wrap" :class="{ 'is-readonly': !isEditing }">
             <span class="material-symbols-rounded info-field__icon">phone</span>
-            <input type="tel" class="info-field__input" placeholder="e.g. 09XX XXX XXXX"
-              v-model="user.contact_number" :disabled="!isEditing" />
+            <input type="tel" class="info-field__input" placeholder="9XXXXXXXXX (10 digits, no leading 0)"
+              :value="user.contact_number" @input="handleContactNumberInput" maxlength="10" :disabled="!isEditing" />
           </div>
+          <validation-error :errors="apiValidationErrors.contact_number" />
         </div>
 
         <!-- Username -->
@@ -217,6 +218,9 @@ const BFP_POSITIONS = [
   "System Administrator",
 ];
 
+const PH_COUNTRY_CODE = "63";
+const CONTACT_NUMBER_MAX_LENGTH = 10;
+
 export default {
   name: "Info",
   components: { ValidationError },
@@ -249,6 +253,7 @@ export default {
     try {
       await this.$store.dispatch("profile/getProfile");
       this.user = _.omit(this.$store.getters["profile/getUserProfile"], "links");
+      this.user.contact_number = this.stripCountryCode(this.user.contact_number);
       this.positionSearch = this.user.position || "";
       this.userBackup = { ...this.user };
     } catch {
@@ -258,6 +263,20 @@ export default {
     }
   },
   methods: {
+    stripCountryCode(value) {
+      let digits = String(value || "").replace(/\D/g, "");
+      if (digits.startsWith(PH_COUNTRY_CODE)) {
+        digits = digits.slice(PH_COUNTRY_CODE.length);
+      } else if (digits.startsWith("0")) {
+        digits = digits.slice(1);
+      }
+      return digits.slice(0, CONTACT_NUMBER_MAX_LENGTH);
+    },
+    handleContactNumberInput(event) {
+      const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, CONTACT_NUMBER_MAX_LENGTH);
+      this.user.contact_number = digitsOnly;
+      event.target.value = digitsOnly;
+    },
     toggleEdit() {
       this.userBackup = { ...this.user };
       this.positionSearch = this.user.position || "";
@@ -293,9 +312,21 @@ export default {
         return;
       }
       this.resetApiValidation();
+      const localDigits = this.stripCountryCode(this.user.contact_number);
+      if (localDigits && localDigits.length !== CONTACT_NUMBER_MAX_LENGTH) {
+        this.apiValidationErrors = {
+          contact_number: [`Contact number must be ${CONTACT_NUMBER_MAX_LENGTH} digits.`],
+        };
+        return;
+      }
+      const payload = {
+        ...this.user,
+        contact_number: localDigits ? `${PH_COUNTRY_CODE}${localDigits}` : "",
+      };
       try {
-        await this.$store.dispatch("profile/editProfile", this.user);
+        await this.$store.dispatch("profile/editProfile", payload);
         this.user = _.omit(this.$store.getters["profile/getUserProfile"], "links");
+        this.user.contact_number = this.stripCountryCode(this.user.contact_number);
         this.userBackup = { ...this.user };
         this.positionSearch = this.user.position || "";
         this.isEditing = false;
