@@ -42,7 +42,7 @@ class RegisterRequest extends FormRequest
                 'unique:users,badge_number',
                 Rule::unique('access_requests', 'badge_number')->where('status', 'Pending'),
             ],
-            'contact_number' => ['nullable', 'string', 'max:50'],
+            'contact_number' => ['nullable', 'string', 'regex:/^63[9]\d{9}$/'],
             'position' => ['nullable', 'string', 'max:255'],
             'office_unit' => ['required', 'string', 'max:255'],
             'requested_role_id' => ['nullable', 'integer', 'exists:roles,id', 'required_without:requested_role'],

@@ -139,7 +139,7 @@ const EMPTY_FORM = {
 };
 
 const PH_COUNTRY_CODE = "63";
-const CONTACT_NUMBER_MAX_LENGTH = 11;
+const CONTACT_NUMBER_MAX_LENGTH = 10;
 
 export default {
   name: "Settings",

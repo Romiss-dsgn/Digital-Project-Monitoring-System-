@@ -37,7 +37,7 @@
             <hr class="contrack-dropdown__divider" />
             <ul class="contrack-dropdown__menu">
               <li>
-                <router-link to="/settings" class="contrack-dropdown__item" @click="closeDropdown">
+                <router-link to="/user-profile" class="contrack-dropdown__item" @click="closeDropdown">
                   <span class="material-symbols-rounded">manage_accounts</span>
                   Edit Profile
                 </router-link>

@@ -79,7 +79,7 @@ class MeController extends Controller
             'email' => ['sometimes', 'email'],
             'username' => ['sometimes', 'string'],
             'badge_number' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'contact_number' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'contact_number' => ['sometimes', 'nullable', 'string', 'regex:/^63[9]\d{9}$/'],
             'position' => ['sometimes', 'nullable', 'string', 'max:255'],
             'office_unit' => ['sometimes', 'nullable', 'string', 'max:255'],
             'profile_image' => ['sometimes', 'nullable', 'string'],

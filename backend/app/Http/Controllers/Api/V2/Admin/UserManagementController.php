@@ -109,7 +109,7 @@ class UserManagementController extends Controller
             'email' => ['required', 'email', 'unique:users'],
             'password' => ['required', 'min:8'],
             'badge_number' => ['nullable'],
-            'contact_number' => ['nullable'],
+            'contact_number' => ['nullable', 'string', 'regex:/^63[9]\d{9}$/'],
             'position' => ['nullable'],
             'office_unit' => ['nullable'],
             'role_id' => ['nullable', 'exists:roles,id'],
