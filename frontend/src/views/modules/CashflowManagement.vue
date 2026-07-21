@@ -3,12 +3,12 @@
     <div class="container-fluid py-4">
       <div v-if="apiError" class="alert alert-danger py-2 px-3 mb-3">{{ apiError }}</div>
       <!-- Header -->
-      <div class="row mb-4 align-items-center">
-        <div class="col-lg-6">
+      <div class="row mb-4 align-items-center gy-3">
+        <div class="col-12 col-lg-6">
           <h4 class="mb-0">Cashflow Management</h4>
           <p class="text-secondary small">Monitor budget allocation and expenditures</p>
         </div>
-        <div class="col-lg-6 d-flex justify-content-end align-items-center gap-2">
+        <div class="col-12 col-lg-6 d-flex flex-column flex-sm-row justify-content-lg-end align-items-stretch align-items-sm-center gap-2">
           <!-- Export Report Dropdown -->
           <div class="cashflow-actions-menu">
             <button
@@ -47,7 +47,7 @@
           </div>
 
           <!-- Disburse Funds Button -->
-          <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" @click="openDisburseFundsModal">
+          <button class="btn btn-primary btn-sm d-flex align-items-center gap-1 cashflow-action-trigger" @click="openDisburseFundsModal">
             <i class="material-icons-round" style="font-size: 1rem;">payments</i>
             Disburse Funds
           </button>
@@ -56,25 +56,25 @@
 
       <!-- Budget Overview Cards -->
       <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card">
             <h6>Planned Budget</h6>
             <p class="amount">{{ formatCurrency(summary?.planned_total || 0) }}</p>
           </div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card warning">
             <h6>Actual Expenditure</h6>
             <p class="amount">{{ formatCurrency(summary?.actual_total || 0) }}</p>
           </div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card success">
             <h6>Remaining Budget</h6>
             <p class="amount">{{ formatCurrency(summary?.remaining_total || 0) }}</p>
           </div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card danger">
             <h6>Variance</h6>
             <p class="amount">{{ formatCurrency(summary?.variance_total || 0) }}</p>
@@ -83,14 +83,14 @@
       </div>
 
       <div class="row mb-4">
-        <div class="col-lg-6 col-md-6 mb-3">
+        <div class="col-12 col-md-6 mb-3">
           <div class="overview-card">
             <h6>Revised Contract Amount</h6>
             <p class="amount">{{ formatCurrency(summary?.revised_contract_amount || 0) }}</p>
             <div class="text-secondary small mt-1">Approved VO impact reflected in the summary</div>
           </div>
         </div>
-        <div class="col-lg-6 col-md-6 mb-3">
+        <div class="col-12 col-md-6 mb-3">
           <div class="overview-card">
             <h6>Budget Status</h6>
             <div class="mt-2">
@@ -135,12 +135,12 @@
       <div v-if="activeTab === 'periods'" class="row">
         <div class="col-12">
           <div class="card">
-            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+            <div class="card-header pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
               <div>
                 <h6 class="mb-0">Cashflow Periods</h6>
                 <small class="text-secondary">Manage planned vs actual spending windows by contract</small>
               </div>
-              <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" @click="openPeriodModal()">
+              <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 cashflow-action-trigger" @click="openPeriodModal()">
                 <i class="material-icons-round" style="font-size: 1rem;">add</i>
                 Add Period
               </button>
@@ -178,7 +178,7 @@
                       <td><status-badge :status="period.budget_status || 'Within Budget'" /></td>
                       <td><status-badge :status="period.status" /></td>
                       <td class="align-middle text-end">
-                        <div class="d-inline-flex gap-2">
+                        <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
                           <button class="btn btn-sm btn-outline-secondary" @click="editPeriod(period)">
                             Edit
                           </button>
@@ -205,7 +205,7 @@
       <div v-else class="row">
         <div class="col-12">
           <div class="card">
-            <div class="card-header pb-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="card-header pb-0 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-2">
               <div>
                 <h6 class="mb-0">Invoice Records & Payment Status</h6>
                 <small class="text-secondary">
@@ -213,14 +213,14 @@
                   <span v-else>Showing all invoices</span>
                 </small>
               </div>
-              <div class="d-flex flex-wrap align-items-center gap-2">
-                <select class="form-select form-select-sm" style="min-width: 220px;" v-model="selectedPeriodId" @change="loadInvoices(selectedPeriodId)">
+              <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-lg-auto">
+                <select class="form-select form-select-sm cashflow-period-select" v-model="selectedPeriodId" @change="loadInvoices(selectedPeriodId)">
                   <option value="">All Periods</option>
                   <option v-for="period in periods" :key="period.id" :value="period.id">
                     {{ period.period_label }}
                   </option>
                 </select>
-                <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" @click="openAddInvoiceModal">
+                <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 cashflow-action-trigger" @click="openAddInvoiceModal">
                   <i class="material-icons-round" style="font-size: 1rem;">add</i>
                   Add Invoice
                 </button>
@@ -323,7 +323,7 @@
               </div>
 
               <!-- Pagination -->
-              <div v-if="!selectedPeriodId && pagination.total > 0" class="d-flex justify-content-between align-items-center mt-3 px-2">
+              <div v-if="!selectedPeriodId && pagination.total > 0" class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mt-3 px-2">
                 <span class="text-secondary small">Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} Invoices</span>
                 <nav>
                   <ul class="pagination pagination-sm mb-0">
@@ -1992,6 +1992,35 @@ export default {
   .document-row {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .cashflow-actions-menu,
+  .cashflow-action-trigger,
+  .cashflow-period-select {
+    width: 100%;
+  }
+
+  .cashflow-actions-menu {
+    position: relative;
+  }
+
+  .cashflow-actions-menu > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cashflow-action-menu {
+    min-width: 160px;
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .cashflow-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .overview-card {
+    padding: 1.25rem;
   }
 }
 </style>

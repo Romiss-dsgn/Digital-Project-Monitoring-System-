@@ -44,3 +44,18 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.sidenav-normal {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+@media (max-width: 1199.98px) {
+  .sidenav-normal {
+    margin-right: 0 !important;
+  }
+}
+</style>

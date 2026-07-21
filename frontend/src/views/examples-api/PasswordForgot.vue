@@ -394,10 +394,20 @@ export default {
 }
 
 @media (max-width: 576px) {
+    .forgot-page {
+        background-attachment: scroll;
+    }
+
     .brand-inner {
         flex-direction: column;
         text-align: center;
         padding: 12px 16px;
+    }
+
+    .brand-subtitle-row {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.35rem;
     }
 
     .brand-title {
@@ -408,12 +418,13 @@ export default {
     }
 
     .brand-line {
-        width: 30px;
+        width: 24px;
     }
 
     .brand-subtitle {
         font-size: 0.68rem;
         letter-spacing: 2px;
+        white-space: normal;
     }
 
     .forgot-center {
@@ -428,6 +439,29 @@ export default {
     .forgot-footer {
         flex-direction: column;
         align-items: center;
+    }
+}
+
+@media (max-width: 420px) {
+    .forgot-center {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .forgot-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .recovery-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    .recovery-icon i {
+        font-size: 1.6rem;
+    }
+
+    .forgot-title h4 {
+        font-size: 1.05rem;
     }
 }
 </style>

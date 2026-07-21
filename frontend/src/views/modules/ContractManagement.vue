@@ -18,7 +18,7 @@
                   compliance in real-time.
                 </p>
               </div>
-              <div class="d-flex gap-2">
+              <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
                 <button v-if="permissions.create" class="btn btn-primary btn-sm" @click="openCreateContractModal">
                   <i class="material-icons-round" style="font-size:15px;vertical-align:-3px">add</i>
                   New Contract
@@ -35,7 +35,7 @@
         <!-- Stats Cards -->
         <div class="col-lg-6">
           <div class="row g-3">
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">ONGOING PROJECTS</p>
@@ -43,7 +43,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">PENDING REVIEW</p>
@@ -52,7 +52,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">TOTAL VALUE</p>
@@ -61,7 +61,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">DOCS COMPLIANCE</p>
@@ -80,11 +80,11 @@
       <div class="row mb-4">
         <div class="col-12">
           <div class="card">
-            <div class="card-header pt-3 px-4">
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-3">
+            <div class="card-header pt-3 px-3 px-sm-4">
+              <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-2">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 gap-sm-3">
                   <span class="fw-bold" style="font-size:0.875rem;color:#374151;">Contract Records</span>
-                  <div class="d-flex gap-1">
+                  <div class="d-flex flex-wrap gap-1">
                     <button
                       v-for="tab in ['All', 'Active', 'Expired']"
                       :key="tab"
@@ -209,11 +209,11 @@
               </div>
 
               <!-- Pagination -->
-              <div class="d-flex align-items-center justify-content-between px-4 py-3 border-top">
+              <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 px-3 px-sm-4 py-3 border-top">
                 <span class="text-secondary small">
                   Showing {{ paginationFrom }}-{{ paginationTo }} of {{ filteredContracts.length }} contract records
                 </span>
-                <div class="d-flex gap-1">
+                <div class="d-flex flex-wrap gap-1">
                   <button class="btn btn-sm btn-light border pagination-btn" :disabled="currentPage === 1" @click="currentPage--">
                     <i class="material-icons-round" style="font-size:16px;vertical-align:-3px">chevron_left</i>
                   </button>
@@ -239,7 +239,7 @@
         <!-- Quick Upload → opens Upload Batch modal -->
         <div class="col-lg-12 mb-4">
           <div class="card h-100">
-            <div class="card-body p-4">
+            <div class="card-body p-3 p-sm-4">
               <h6 class="fw-bold mb-1" style="font-size:0.9rem;">Upload Files</h6>
               <p class="text-secondary small mb-3">
                 Drag and drop any contract-related document (PDF, DOCX, XLSX) to automatically link it to the relevant project record.
@@ -1770,8 +1770,65 @@ export default {
 @media (max-width: 576px) {
   .bfp-form-grid { grid-template-columns: 1fr; }
   .bfp-field-half { grid-column: span 1; }
+  .quick-upload-area { padding: 24px 16px; }
+  .tab-pill { padding: 4px 10px; font-size: 0.75rem; }
+  .pagination-btn { width: 30px; height: 30px; }
+  .contract-action-menu {
+    min-width: 136px;
+    max-width: calc(100vw - 1.5rem);
+  }
+  .bfp-modal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .bfp-modal-header-left {
+    width: 100%;
+  }
+  .bfp-modal-close {
+    align-self: flex-end;
+  }
+  .bfp-modal-stripe {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 8px 18px;
+  }
+  .bfp-modal-body { padding: 16px 18px; }
   .bfp-modal-footer { flex-direction: column; gap: 10px; align-items: stretch; }
-  .bfp-footer-actions { justify-content: flex-end; }
+  .bfp-footer-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .bfp-btn-cancel,
+  .bfp-btn-save {
+    width: 100%;
+    justify-content: center;
+  }
+  .bfp-footer-note { width: 100%; }
+  .bfp-upload-area { padding: 24px 16px; }
+  .bfp-format-pills { flex-wrap: wrap; }
+  .bfp-file-item { align-items: flex-start; flex-wrap: wrap; }
+  .bfp-file-name { white-space: normal; overflow: visible; text-overflow: initial; }
+  .bfp-file-size { margin-left: 30px; }
+}
+
+@media (max-width: 420px) {
+  .stat-label { font-size: 10px; }
+  .stat-value { font-size: 1.5rem; }
+  .stat-sub,
+  .compliance-sub { font-size: 10px; }
+  .bfp-modal-title { font-size: 15px; }
+  .bfp-modal-agency { font-size: 10px; }
+  .bfp-section-label { font-size: 10px; padding: 6px 10px; }
+  .bfp-upload-title { font-size: 13px; }
+  .bfp-upload-sub { font-size: 11px; }
+  .stitch-table thead th,
+  .stitch-table tbody td {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 
 /* ════════════════════════════════════════════

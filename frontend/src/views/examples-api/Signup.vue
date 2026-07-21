@@ -704,6 +704,7 @@ export default {
     .access-panel {
         min-height: 360px;
         gap: 1.5rem;
+        background-attachment: scroll;
     }
 
     .access-form-wrap {
@@ -715,6 +716,24 @@ export default {
 @media (max-width: 576px) {
     .access-center {
         padding: 0;
+    }
+
+    .access-panel {
+        min-height: 300px;
+        padding: 1.75rem 1.25rem;
+    }
+
+    .panel-copy {
+        margin-top: 2.2rem;
+    }
+
+    .panel-copy h1 {
+        font-size: 2rem;
+    }
+
+    .system-name,
+    .system-subtitle {
+        white-space: normal;
     }
 
     .access-form-wrap {
@@ -730,6 +749,48 @@ export default {
         flex-direction: column;
         align-items: center;
         text-align: center;
+    }
+}
+
+@media (max-width: 420px) {
+    .access-form-wrap {
+        padding: 1.25rem;
+    }
+
+    .panel-brand {
+        gap: 0.6rem;
+    }
+
+    .panel-mark {
+        width: 42px;
+        height: 42px;
+    }
+
+    .panel-copy h1 {
+        font-size: 1.75rem;
+    }
+
+    .panel-copy p,
+    .security-note p {
+        font-size: 0.84rem;
+    }
+
+    .form-heading h2 {
+        font-size: 1.3rem;
+    }
+
+    .form-control {
+        height: 3rem;
+        font-size: 0.88rem;
+    }
+
+    .terms-row {
+        font-size: 0.8rem;
+    }
+
+    .btn-request {
+        min-height: 3.1rem;
+        letter-spacing: 0.06em;
     }
 }
 </style>

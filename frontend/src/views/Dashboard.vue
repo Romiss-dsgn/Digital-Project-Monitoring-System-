@@ -12,12 +12,12 @@
         Loading dashboard data...
       </div>
 
-      <div class="row mb-4 align-items-center">
+      <div class="row mb-4 align-items-center gy-3">
         <div class="col">
           <h4 class="mb-1">Regional Dashboard</h4>
           <p class="text-muted mb-0">{{ dashboardSubtitle }}</p>
         </div>
-        <div class="col-auto d-flex gap-2 align-items-center">
+        <div class="col-12 col-lg-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center justify-content-lg-end">
           <button class="fiscal-year-btn" @click="showFiscalYearModal = true">
             <i class="material-icons-round">calendar_today</i>
             <span>Fiscal Year {{ fiscalYearLabel || "Loading" }}</span>
@@ -221,7 +221,7 @@
       <div class="row mb-4">
         <div class="col-lg-5 mb-4">
           <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
               <h6>Project Status</h6>
               <button class="btn-icon">
                 <i class="material-icons-round">more_vert</i>
@@ -251,7 +251,7 @@
 
         <div class="col-lg-7 mb-4">
           <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
               <div>
                 <h6>Budget vs Expenditure</h6>
                 <p class="card-subtitle">{{ budgetChartSubtitle }}</p>
@@ -287,7 +287,7 @@
                   <i class="material-icons-round">{{ item.icon }}</i>
                 </div>
                 <div class="update-content">
-                  <div class="d-flex justify-content-between">
+                  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1">
                     <p class="update-title">{{ item.project }}</p>
                     <span class="update-time">{{ item.time }}</span>
                   </div>
@@ -322,7 +322,7 @@
                   <span class="deadline-day">{{ deadline.day }}</span>
                 </div>
                 <div class="deadline-content">
-                  <div class="d-flex justify-content-between align-items-start">
+                  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1">
                     <p class="deadline-title">{{ deadline.title }}</p>
                     <span v-if="deadline.urgent" class="badge-urgent">URGENT</span>
                   </div>
@@ -336,7 +336,7 @@
 
       <div class="row mb-4">
         <div class="col-12">
-          <div class="quick-actions-header">
+          <div class="quick-actions-header d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-1">
             <h6>Administrative Quick Actions</h6>
             <span class="text-muted">Manage your core tasks efficiently</span>
           </div>
@@ -1757,15 +1757,138 @@ h4 {
   opacity: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1199.98px) {
   .quick-actions-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .export-format-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-legend {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .donut-legend {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .modal-header-strip,
+  .modal-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .fiscal-year-btn,
+  .btn-export {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .quick-actions-header {
+    align-items: flex-start;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    min-height: auto;
+  }
+
+  .card-header {
+    padding: 0.875rem 1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .donut-wrapper {
+    width: 200px;
+    height: 200px;
+  }
+
+  .donut-total {
+    font-size: 1.75rem;
+  }
+
+  .update-item,
+  .deadline-item {
+    flex-direction: column;
+  }
+
+  .update-time {
+    white-space: normal;
+  }
+
+  .modal-overlay {
+    padding: 0.75rem;
+  }
+
+  .modal-box {
+    max-height: calc(100vh - 1.5rem);
+  }
+
+  .modal-header-strip {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .modal-btn-cancel,
+  .modal-btn-export {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .export-format-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .scope-item {
+    align-items: flex-start;
+  }
+
+  .export-date-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .export-date-sep {
+    display: none;
+  }
+
+  .fy-option {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .fy-option-right {
+    align-self: flex-end;
   }
 }
 </style>

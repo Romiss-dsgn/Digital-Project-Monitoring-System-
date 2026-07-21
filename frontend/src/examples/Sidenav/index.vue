@@ -11,6 +11,7 @@
         class="top-0 p-3 cursor-pointer material-symbols-rounded text-secondary opacity-5 position-absolute end-0 d-none d-xl-none"
         aria-hidden="true"
         id="iconSidenav"
+        @click="closeMobileSidenav"
       >close</i>
       <a class="m-0 navbar-brand d-flex align-items-center justify-content-center" href="/dashboard">
         <div class="logo-wrapper">
@@ -55,6 +56,11 @@ export default {
       return `url(${this.bgImage})`;
     },
   },
+  methods: {
+    closeMobileSidenav() {
+      this.$store.commit("closeMobileSidenav");
+    }
+  }
 };
 </script>
 
@@ -240,5 +246,74 @@ export default {
 /* ── Divider ──────────────────────────────────── */
 .sidenav hr.horizontal.light {
   border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+@media (max-width: 1199.98px) {
+  .sidenav {
+    top: var(--contrack-shell-header-height) !important;
+    height: calc(100vh - var(--contrack-shell-header-height)) !important;
+    width: min(86vw, var(--contrack-sidebar-width, 17.125rem)) !important;
+    max-width: min(86vw, var(--contrack-sidebar-width, 17.125rem)) !important;
+    z-index: 1030;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidenav .sidenav-header {
+    min-height: 88px;
+  }
+
+  .sidenav .navbar-brand {
+    padding: 0.9rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .brand-text-wrapper {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+
+  .sidebar-brand-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .sidenav .nav-link {
+    margin: 0 0.75rem 0.25rem;
+  }
+
+  .sidenav .nav-link-text,
+  .sidenav .sidenav-normal {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 430px) {
+  .sidenav {
+    width: min(84vw, 15.75rem) !important;
+    max-width: min(84vw, 15.75rem) !important;
+  }
+
+  .sidenav .navbar-brand {
+    padding: 0.75rem 0.875rem;
+  }
+
+  .logo-wrapper {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+  }
+
+  .sidebar-brand-text {
+    font-size: 0.95rem;
+  }
+
+  .sidebar-brand-sub {
+    font-size: 0.6rem;
+  }
 }
 </style>
