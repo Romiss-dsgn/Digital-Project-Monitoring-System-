@@ -57,6 +57,26 @@
                 {{ tab.label }}
               </button>
             </div>
+            <div class="infra-search-group">
+              <div class="infra-search-wrap">
+                <i class="material-icons-round infra-search-icon">search</i>
+                <input
+                  v-model="filters.name"
+                  class="infra-search-input"
+                  type="search"
+                  placeholder="Search project name"
+                  @keyup.enter="searchProjects"
+                />
+              </div>
+              <button class="btn btn-outline-secondary btn-sm infra-toolbar-btn" type="button" @click="searchProjects">
+                <i class="material-icons-round">search</i>
+                Search
+              </button>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm infra-toolbar-btn" type="button" @click="showFilterModal = true">
+              <i class="material-icons-round">filter_list</i>
+              Filter
+            </button>
           </div>
         </div>
 
@@ -557,7 +577,7 @@
       confirm-text="Apply Filters"
       confirm-icon="filter_list"
       @close="showFilterModal = false"
-      @confirm="showFilterModal = false"
+      @confirm="applyFilters"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">tune</i> Project Criteria</div>
@@ -843,15 +863,6 @@ export default {
     },
   },
 
-  watch: {
-    filters: {
-      handler() {
-        this.fetchProjects(1);
-      },
-      deep: true,
-    },
-  },
-
   methods: {
     emptyForm() {
       return {
@@ -928,8 +939,19 @@ export default {
       this.filters = { name: "", code: "", location: "", status: "", phase: "" };
     },
 
+    searchProjects() {
+      this.showFilterModal = false;
+      this.fetchProjects(1);
+    },
+
+    applyFilters() {
+      this.showFilterModal = false;
+      this.fetchProjects(1);
+    },
+
     setFilterStatus(status) {
       this.filters.status = status || "";
+      this.fetchProjects(1);
     },
 
     toggleActionMenu(projectId, event) {
@@ -1279,13 +1301,66 @@ export default {
 .infra-ghost-btn,
 .infra-primary-btn,
 .infra-toolbar-btn {
-  min-height: 38px;
+  height: 36px;
+  min-height: 36px;
   border-radius: 0.85rem;
-  padding-inline: 0.9rem;
+  padding-inline: 0.8rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.infra-search-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.infra-search-wrap {
+  position: relative;
+  width: 210px;
+  flex: 0 1 210px;
+  height: 36px;
+  min-height: 36px;
+}
+
+.infra-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.infra-search-input {
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  border: 1px solid #d8dee9;
+  border-radius: 0.85rem;
+  padding: 0.35rem 0.8rem 0.35rem 2.15rem;
+  font-size: 0.84rem;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.infra-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.infra-search-input:focus {
+  border-color: #ef476f;
+  box-shadow: 0 0 0 0.18rem rgba(239, 71, 111, 0.12);
 }
 
 .infra-primary-btn {
@@ -1414,15 +1489,17 @@ export default {
 .inventory-header {
   align-items: center;
   flex-wrap: wrap;
+  padding-block: 1rem;
 }
 
 .inventory-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.6rem;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   margin-left: auto;
+  min-height: 36px;
 }
 
 .inventory-table-shell {
@@ -1478,21 +1555,31 @@ export default {
 
 .inventory-tabs {
   display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0.3rem;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
+  min-height: 36px;
+  padding: 0.2rem 0.25rem;
   background: #f3f4f8;
   border-radius: 999px;
+  box-sizing: border-box;
 }
 
 .inventory-tab {
   border: 0;
   background: transparent;
   color: #6b7280;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 0.8rem;
   border-radius: 999px;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .inventory-tab.active {
@@ -1512,6 +1599,16 @@ export default {
   padding: 0.82rem 0.9rem;
   border-color: rgba(15, 23, 42, 0.07);
   vertical-align: middle;
+}
+
+.inventory-actions-head,
+.inventory-actions-cell {
+  text-align: center;
+}
+
+.inventory-actions-cell {
+  padding-left: 0.45rem;
+  padding-right: 0.45rem;
 }
 
 .project-code {
@@ -1698,6 +1795,16 @@ export default {
 
 .inventory-action-btn .material-icons-round {
   font-size: 1.05rem;
+}
+
+.inventory-action-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .inventory-action-btn:hover:not(:disabled),

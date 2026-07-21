@@ -156,24 +156,34 @@
                         </div>
                       </td>
                       <td class="text-end">
-                        <div class="dropdown">
-                          <button class="btn btn-sm btn-icon btn-light text-secondary" type="button" data-bs-toggle="dropdown">
+                        <div class="contract-actions-wrap">
+                          <button
+                            class="btn btn-sm btn-icon btn-light text-secondary"
+                            type="button"
+                            :aria-expanded="openActionMenuId === contract.id"
+                            aria-label="Contract actions"
+                            @click.stop="toggleContractActions(contract.id, $event)"
+                          >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                          <ul
+                            v-if="openActionMenuId === contract.id"
+                            class="dropdown-menu dropdown-menu-end shadow-sm contract-actions-menu"
+                            @click.stop
+                          >
                             <li>
-                              <a class="dropdown-item" href="#" @click.prevent="viewContract(contract)">
+                              <a class="dropdown-item" href="#" @click.prevent="handleViewContract(contract)">
                                 <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i> View
                               </a>
                             </li>
                             <li v-if="permissions.edit">
-                              <a class="dropdown-item" href="#" @click.prevent="editContract(contract)">
+                              <a class="dropdown-item" href="#" @click.prevent="handleEditContract(contract)">
                                 <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i> Edit
                               </a>
                             </li>
                             <li v-if="permissions.delete"><hr class="dropdown-divider" /></li>
                             <li v-if="permissions.delete">
-                              <a class="dropdown-item text-danger" href="#" @click.prevent="deleteContract(contract)">
+                              <a class="dropdown-item text-danger" href="#" @click.prevent="handleDeleteContract(contract)">
                                 <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i> Archive
                               </a>
                             </li>
@@ -673,6 +683,49 @@
       </div>
     </div>
 
+    <div v-if="showSaveResultModal" class="modal-overlay" @click.self="closeSaveResultModal">
+      <div class="bfp-modal" style="width: 520px;">
+        <div class="bfp-modal-header">
+          <div>
+            <p class="bfp-modal-agency">Contract Management</p>
+            <h5 class="bfp-modal-title">{{ saveResultTitle }}</h5>
+          </div>
+          <button class="bfp-modal-close" @click="closeSaveResultModal">
+            <i class="material-icons-round">close</i>
+          </button>
+        </div>
+        <div class="bfp-modal-stripe">
+          <span>REGION II — CAGAYAN VALLEY</span>
+          <span>{{ saveResultStatus === "success" ? "DATA SAVED" : "SAVE FAILED" }}</span>
+        </div>
+        <div class="bfp-modal-body">
+          <div class="save-result-card" :class="saveResultStatus">
+            <i class="material-icons-round save-result-icon">
+              {{ saveResultStatus === "success" ? "check_circle" : "error" }}
+            </i>
+            <div>
+              <div class="save-result-message">{{ saveResultMessage }}</div>
+              <div class="save-result-subtext">
+                {{ saveResultStatus === "success" ? "You can continue working or close this message." : "Please correct the issue and try again." }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bfp-modal-footer">
+          <div class="bfp-footer-note">
+            <i class="material-icons-round" style="font-size:14px;vertical-align:-2px">info</i>
+            {{ saveResultStatus === "success" ? "Operation completed successfully." : "Operation did not complete." }}
+          </div>
+          <div class="bfp-footer-actions">
+            <button class="bfp-btn-save" @click="closeSaveResultModal">
+              <i class="material-icons-round">check</i>
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -703,13 +756,18 @@ export default {
       showUploadModal: false,
       showAdvancedFilterModal: false,
       showDetailsModal: false,
+      showSaveResultModal: false,
       isLoading: false,
       isSaving: false,
       isUploading: false,
       apiError: "",
+      openActionMenuId: null,
       projects: [],
       contractors: [],
       selectedContract: null,
+      saveResultStatus: "success",
+      saveResultTitle: "",
+      saveResultMessage: "",
       activeStatusTab: "All",
       currentPage: 1,
       rowsPerPage: 10,
@@ -805,12 +863,46 @@ export default {
   },
   async mounted() {
     await this.loadContractManagement();
+    document.addEventListener("click", this.closeActionMenu);
+  },
+  beforeUnmount() {
+    document.removeEventListener("click", this.closeActionMenu);
   },
   methods: {
     openCreateContractModal() {
       this.apiError = "";
       this.contractForm = emptyContractForm();
       this.showNewProjectModal = true;
+    },
+    openSaveResultModal(status, title, message) {
+      this.saveResultStatus = status;
+      this.saveResultTitle = title;
+      this.saveResultMessage = message;
+      this.showSaveResultModal = true;
+    },
+    closeSaveResultModal() {
+      this.showSaveResultModal = false;
+      this.saveResultStatus = "success";
+      this.saveResultTitle = "";
+      this.saveResultMessage = "";
+    },
+    toggleContractActions(contractId) {
+      this.openActionMenuId = this.openActionMenuId === contractId ? null : contractId;
+    },
+    closeActionMenu() {
+      this.openActionMenuId = null;
+    },
+    handleViewContract(contract) {
+      this.closeActionMenu();
+      this.viewContract(contract);
+    },
+    handleEditContract(contract) {
+      this.closeActionMenu();
+      this.editContract(contract);
+    },
+    handleDeleteContract(contract) {
+      this.closeActionMenu();
+      this.deleteContract(contract);
     },
     async loadContractManagement() {
       this.isLoading = true;
@@ -845,14 +937,16 @@ export default {
       const validationError = this.validateContractForm();
       if (validationError) {
         this.apiError = validationError;
+        this.openSaveResultModal("error", "Save Failed", validationError);
         return;
       }
 
       this.isSaving = true;
       const payload = this.contractPayload();
+      const isEditing = !!this.contractForm.id;
 
       try {
-        if (this.contractForm.id) {
+        if (isEditing) {
           await contractService.updateContract(this.contractForm.id, payload);
         } else {
           await contractService.createContract(payload);
@@ -860,9 +954,18 @@ export default {
 
         this.showNewProjectModal = false;
         this.contractForm = emptyContractForm();
-        await this.loadContractManagement();
+        this.openSaveResultModal(
+          "success",
+          isEditing ? "Contract Updated Successfully" : "Contract Added Successfully",
+          isEditing ? "The contract data has been updated successfully." : "The contract data has been added successfully."
+        );
+        await this.loadContractManagement().catch((error) => {
+          this.apiError = this.errorMessage(error, "Contract saved, but the table could not refresh.");
+        });
       } catch (error) {
-        this.apiError = this.errorMessage(error, "Unable to save contract.");
+        const message = this.errorMessage(error, "Unable to save contract.");
+        this.apiError = message;
+        this.openSaveResultModal("error", "Save Failed", message);
       } finally {
         this.isSaving = false;
       }
@@ -1488,6 +1591,21 @@ export default {
   min-width: 140px;
   padding: 0.3rem;
 }
+
+.contract-actions-wrap {
+  position: relative;
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.contract-actions-menu {
+  display: block;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 1060;
+}
+
 .dropdown-item {
   border-radius: 0.5rem;
   padding: 0.45rem 0.75rem;
@@ -1665,6 +1783,53 @@ export default {
 .bfp-modal::-webkit-scrollbar { width: 5px; }
 .bfp-modal::-webkit-scrollbar-track { background: transparent; }
 .bfp-modal::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+
+.save-result-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.save-result-card.success {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.save-result-card.error {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.save-result-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.save-result-card.success .save-result-icon {
+  color: #16a34a;
+}
+
+.save-result-card.error .save-result-icon {
+  color: #dc2626;
+}
+
+.save-result-message {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.save-result-subtext {
+  font-size: 0.84rem;
+  color: #6b7280;
+  line-height: 1.45;
+}
 
 @media (max-width: 576px) {
   .bfp-form-grid { grid-template-columns: 1fr; }
