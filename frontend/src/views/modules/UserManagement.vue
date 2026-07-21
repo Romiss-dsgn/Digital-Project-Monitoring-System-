@@ -388,14 +388,7 @@
             </div>
           </div>
 
-          <!-- Status: pending notice for Add, dropdown for Edit -->
-          <div class="bfp-field-half" v-if="!editingUser">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-pending-notice">
-              <i class="material-icons-round">hourglass_top</i>
-              Account will be set as <strong>Pending</strong> until accepted by admin
-            </div>
-          </div>
+          <!-- Status: dropdown for Edit only (pending notice for Add has been removed) -->
           <div class="bfp-field-half" v-if="editingUser">
             <label class="bfp-label">Status</label>
             <div class="bfp-input-wrap">
