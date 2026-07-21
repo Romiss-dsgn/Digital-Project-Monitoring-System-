@@ -164,7 +164,7 @@
                       <td><small class="text-secondary fst-italic">{{ log.remarks || '-' }}</small></td>
                       <td>
                         <button class="btn btn-sm btn-outline-secondary p-1 lh-1" @click="showDetail(log)">
-                          <i class="bi bi-eye-fill"></i>
+                          <i class="material-icons-round" style="font-size:1rem;">visibility</i>
                         </button>
                       </td>
                     </tr>
