@@ -68,6 +68,10 @@ export default {
       if (this.$route.path !== this.routePath) {
         this.$router.push(this.routePath).catch(() => {});
       }
+
+      if (window.innerWidth <= 1199.98) {
+        this.$store.commit("closeMobileSidenav");
+      }
     }
   }
 };
@@ -83,5 +87,20 @@ export default {
   text-align: left;
   appearance: none;
   -webkit-appearance: none;
+  min-width: 0;
+}
+
+.nav-link-button .nav-link-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+@media (max-width: 1199.98px) {
+  .nav-link-button {
+    width: calc(100% - 1.5rem);
+    margin: 0 0.75rem 0.25rem;
+  }
 }
 </style>

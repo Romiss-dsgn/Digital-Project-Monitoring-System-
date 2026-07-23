@@ -3,16 +3,16 @@
     <div class="container-fluid py-4">
       <div v-if="errorMessage" class="alert alert-danger py-2 px-3 mb-3">{{ errorMessage }}</div>
       <!-- Header -->
-      <div class="row mb-4 align-items-center">
-        <div class="col-lg-8">
+      <div class="row mb-4 align-items-center gy-3">
+        <div class="col-12 col-lg-8">
           <h4 class="mb-0">Variation Orders Monitoring</h4>
           <p class="text-secondary small">Track, review, and manage contract changes and financial impacts.</p>
         </div>
-        <div class="col-lg-4 text-end d-flex gap-2 justify-content-end">
-          <button class="btn btn-outline-secondary btn-sm" @click="showFilterModal = true">
+        <div class="col-12 col-lg-4 d-flex flex-column flex-sm-row justify-content-lg-end align-items-stretch align-items-sm-center gap-2">
+          <button class="btn btn-outline-secondary btn-sm w-100 w-sm-auto" @click="showFilterModal = true">
             <i class="material-icons-round">filter_list</i> Filter
           </button>
-          <button class="btn btn-primary btn-sm" @click="showRequestModal = true">
+          <button class="btn btn-primary btn-sm w-100 w-sm-auto" @click="showRequestModal = true">
             <i class="material-icons-round">add</i> New VO Request
           </button>
         </div>
@@ -64,15 +64,15 @@
       <div class="row">
         <div class="col-12">
           <div class="card">
-            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+            <div class="card-header pb-0 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-2">
               <h6>Active Variation Orders</h6>
-              <div class="d-flex gap-2 align-items-center">
-                <div class="btn-group btn-group-sm" role="group">
+              <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center w-100 w-lg-auto">
+                <div class="btn-group btn-group-sm vo-status-group" role="group">
                   <button type="button" class="btn btn-dark" @click="filterStatus = ''">All</button>
                   <button type="button" class="btn btn-outline-secondary" @click="filterStatus = 'Submitted'">Requests</button>
                   <button type="button" class="btn btn-outline-secondary" @click="filterStatus = 'Under Review'">Approvals</button>
                 </div>
-                <button class="btn btn-sm btn-icon btn-light text-secondary">
+                <button class="btn btn-sm btn-icon btn-light text-secondary vo-more-btn">
                   <i class="material-icons-round">more_vert</i>
                 </button>
               </div>
@@ -190,9 +190,9 @@
               </div>
 
               <!-- Pagination -->
-              <div v-if="pagination.total > 0" class="d-flex justify-content-between align-items-center mt-3 px-2">
+              <div v-if="pagination.total > 0" class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mt-3 px-2">
                 <span class="text-secondary small">Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} Variation Orders</span>
-                <nav>
+                <nav class="w-100 w-sm-auto">
                   <ul class="pagination pagination-sm mb-0">
                     <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
                       <a class="page-link" href="#" @click.prevent="loadOrders(pagination.current_page - 1)">&laquo;</a>
@@ -213,7 +213,7 @@
 
       <!-- Analytics Bottom Row -->
       <div class="row mt-4">
-        <div class="col-md-6 mb-3">
+        <div class="col-12 col-md-6 mb-3">
           <div class="card h-100">
             <div class="card-header pb-0">
               <h6>Approval Efficiency</h6>
@@ -247,16 +247,16 @@
             </div>
           </div>
         </div>
-        <div class="col-md-6 mb-3">
+        <div class="col-12 col-md-6 mb-3">
           <div class="card h-100">
-            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+            <div class="card-header pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
               <h6>Monthly Impact</h6>
               <i class="material-icons-round text-secondary" style="font-size:1.1rem">bar_chart</i>
             </div>
-<div class="card-body">
-               <div v-for="(month, index) in monthlyBreakdown" :key="month.month + index" class="monthly-row mb-3">
-                 <div class="d-flex justify-content-between mb-1">
-                   <span class="small">{{ month.month }}</span>
+            <div class="card-body">
+                <div v-for="(month, index) in monthlyBreakdown" :key="month.month + index" class="monthly-row mb-3">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="small">{{ month.month }}</span>
                    <strong class="small">{{ formatCurrency(month.amount) }}</strong>
                  </div>
                  <div class="monthly-bar-bg">
@@ -1157,6 +1157,10 @@ export default {
   padding: 1.5rem;
 }
 
+.vo-status-group {
+  flex-wrap: wrap;
+}
+
 .table { font-size: 0.875rem; }
 
 .vo-num { color: #7b1113; }
@@ -1274,5 +1278,54 @@ export default {
 .document-meta {
   font-size: 0.75rem;
   color: #5a6270;
+}
+
+@media (max-width: 576px) {
+  .vo-status-group {
+    width: 100%;
+  }
+
+  .vo-status-group > .btn {
+    flex: 1 1 0;
+  }
+
+  .vo-more-btn {
+    width: 100%;
+  }
+
+  .vo-actions-menu > .btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .vo-action-menu {
+    min-width: 160px;
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .pipeline-labels {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    justify-content: flex-start;
+  }
+
+  .pipeline-labels span {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 120px;
+  }
+
+  .monthly-row .d-flex {
+    gap: 8px;
+  }
+
+  .document-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .document-info {
+    align-items: flex-start;
+  }
 }
 </style>

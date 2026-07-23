@@ -18,6 +18,13 @@ Coded by www.creative-tim.com
     :class="[isRTL ? 'fixed-end' : 'fixed-start']"
     v-if="showAppShell && showSidenav"
   />
+  <button
+    v-if="showAppShell && showSidenav && isMobileSidenavOpen"
+    class="mobile-sidenav-backdrop d-xl-none"
+    type="button"
+    aria-label="Close sidebar"
+    @click="closeMobileSidenav"
+  />
   <main
     class="main-content position-relative max-height-vh-100 h-100 overflow-x-hidden"
   >
@@ -45,9 +52,6 @@ export default {
     Navbar,
     AppFooter
   },
-  methods: {
-    ...mapMutations(["navbarMinimize"])
-  },
   computed: {
     ...mapState([
       "isRTL",
@@ -58,7 +62,8 @@ export default {
       "absolute",
       "showSidenav",
       "showNavbar",
-      "showFooter"
+      "showFooter",
+      "mobileSidenavOpen"
     ]),
     showAppShell() {
       return !this.$route.matched.some((record) => record.meta.hideAppShell);
@@ -67,13 +72,41 @@ export default {
       return this.$route.name === "Dashboard";
     }
   },
+  watch: {
+    $route() {
+      if (window.innerWidth <= 1199.98) {
+        this.closeMobileSidenav();
+      }
+    }
+  },
+  mounted() {
+    window.addEventListener("resize", this.handleViewportChange);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.handleViewportChange);
+  },
+  methods: {
+    ...mapMutations(["navbarMinimize", "closeMobileSidenav"]),
+    handleViewportChange() {
+      const sidenav = document.getElementsByClassName("g-sidenav-show")[0];
+
+      if (window.innerWidth > 1199.98) {
+        this.closeMobileSidenav();
+        if (sidenav && !sidenav.classList.contains("g-sidenav-pinned")) {
+          sidenav.classList.add("g-sidenav-pinned");
+        }
+      }
+    }
+  },
   beforeMount() {
     this.$store.state.isTransparent = "bg-transparent";
 
     const sidenav = document.getElementsByClassName("g-sidenav-show")[0];
 
-    if (window.innerWidth > 1200) {
+    if (sidenav && window.innerWidth > 1200) {
       sidenav.classList.add("g-sidenav-pinned");
+    } else if (sidenav) {
+      sidenav.classList.remove("g-sidenav-pinned");
     }
   }
 };

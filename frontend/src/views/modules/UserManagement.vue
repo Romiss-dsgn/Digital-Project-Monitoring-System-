@@ -10,14 +10,14 @@
       </nav>
 
       <!-- ── Page Header ────────────────────────────────────────── -->
-      <div class="row mb-4 align-items-center">
+      <div class="row mb-4 align-items-center gy-3">
         <div class="col">
           <h4 class="page-title mb-1">User Management</h4>
           <p class="page-subtitle mb-0">
             Manage personnel access, define institutional roles, and monitor system activity.
           </p>
         </div>
-        <div class="col-auto d-flex gap-2">
+        <div class="col-12 col-lg-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
           <button class="btn btn-outline-dark btn-header" @click="showExportModal = true">
             <i class="material-icons-round">download</i> Export List
           </button>
@@ -29,7 +29,7 @@
 
       <!-- ── Stat Cards ──────────────────────────────────────────── -->
       <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -47,7 +47,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -62,7 +62,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -80,7 +80,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -101,7 +101,7 @@
         <div class="card-body py-2 px-3">
           <div class="row align-items-center g-2">
 
-            <div class="col-md-5 col-lg-4">
+            <div class="col-12 col-md-5 col-lg-4">
               <div class="search-wrap">
                 <i class="material-icons-round search-icon">search</i>
                 <input
@@ -114,7 +114,7 @@
               </div>
             </div>
 
-            <div class="col-6 col-md-3 col-lg-2">
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
               <div class="select-wrap">
                 <select class="form-control filter-select" v-model="filters.role" @change="fetchUsers">
                   <option value="">All Roles</option>
@@ -124,7 +124,7 @@
               </div>
             </div>
 
-            <div class="col-6 col-md-3 col-lg-2">
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
               <div class="select-wrap">
                 <select class="form-control filter-select" v-model="filters.status" @change="fetchUsers">
                   <option value="">All Statuses</option>
@@ -136,7 +136,7 @@
               </div>
             </div>
 
-            <div class="col-auto ms-auto">
+            <div class="col-12 col-sm-auto ms-sm-auto">
               <button class="btn btn-sm btn-icon-only" title="Advanced Filters" @click="showAdvancedFilterModal = true">
                 <i class="material-icons-round">tune</i>
               </button>
@@ -253,7 +253,7 @@
           </div>
 
           <!-- ── Pagination ──────────────────────────────────────── -->
-          <div class="table-footer d-flex align-items-center justify-content-between px-3 py-2">
+          <div class="table-footer d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 px-3 py-2">
             <span class="text-secondary small">
               Showing {{ meta.from ?? 0 }} to {{ meta.to ?? 0 }} of {{ meta.total ?? 0 }} entries
             </span>
@@ -1388,5 +1388,64 @@ export default {
   font-size: 1rem;
   color: #d97706;
   flex-shrink: 0;
+}
+@media (max-width: 575.98px) {
+  .btn-header {
+    width: 100%;
+    justify-content: center;
+  }
+  .search-input,
+  .filter-select {
+    height: 40px;
+  }
+  .btn-icon-only {
+    width: 100%;
+  }
+  .action-btns {
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .table-footer {
+    align-items: stretch;
+  }
+  .table-footer nav {
+    width: 100%;
+  }
+  .table-footer .pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .delete-user-card {
+    width: 100%;
+  }
+}
+@media (max-width: 420px) {
+  .page-title {
+    font-size: 1.15rem;
+  }
+  .page-subtitle {
+    font-size: 0.8rem;
+  }
+  .stat-card-body {
+    padding: 1rem;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+  }
+  .search-input,
+  .filter-select {
+    font-size: 0.8rem;
+  }
+  .users-table thead th,
+  .users-table tbody td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .bfp-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
