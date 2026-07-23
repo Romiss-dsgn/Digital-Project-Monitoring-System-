@@ -388,14 +388,7 @@
             </div>
           </div>
 
-          <!-- Status: pending notice for Add, dropdown for Edit -->
-          <div class="bfp-field-half" v-if="!editingUser">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-pending-notice">
-              <i class="material-icons-round">hourglass_top</i>
-              Account will be set as <strong>Pending</strong> until accepted by admin
-            </div>
-          </div>
+          <!-- Status: dropdown for Edit only (pending notice for Add has been removed) -->
           <div class="bfp-field-half" v-if="editingUser">
             <label class="bfp-label">Status</label>
             <div class="bfp-input-wrap">
@@ -784,7 +777,7 @@ export default {
     async fetchRoles() {
       try {
         const res = await UserService.getRoles();
-        this.roles = res.data;
+        this.roles = res.data.data;
       } catch (err) {
         this.fetchError = this.getErrorMessage(err, "Failed to load roles.");
       }
@@ -967,9 +960,38 @@ export default {
 
     // ── Export ─────────────────────────────────────────────
 
-    handleExport() {
+    async handleExport() {
       this.showExportModal = false;
-      alert(`Export as ${this.exportForm.format} — wire to /api/users/export`);
+      try {
+        const res = await UserService.exportUsers({
+          format:         this.exportForm.format,
+          rows:           this.exportForm.rows,
+          include_extras: this.exportForm.include_extras,
+          page:           this.meta.current_page,
+          per_page:       this.advFilters.per_page,
+          search:         this.filters.search || undefined,
+          role:           this.filters.role   || undefined,
+          status:         this.filters.status || undefined,
+          date_from:      this.advFilters.date_from || undefined,
+          date_to:        this.advFilters.date_to   || undefined,
+        });
+
+        const ext = this.exportForm.format === "Excel" ? "xlsx"
+                  : this.exportForm.format === "CSV"    ? "csv"
+                  : "pdf";
+
+        const blob = new Blob([res.data]);
+        const url  = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `users_export_${Date.now()}.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        this.fetchError = this.getErrorMessage(err, "Failed to export users.");
+      }
     },
 
     // ── Helpers ────────────────────────────────────────────
@@ -1367,77 +1389,61 @@ export default {
   color: #d97706;
   flex-shrink: 0;
 }
-
 @media (max-width: 575.98px) {
   .btn-header {
     width: 100%;
     justify-content: center;
   }
-
   .search-input,
   .filter-select {
     height: 40px;
   }
-
   .btn-icon-only {
     width: 100%;
   }
-
   .action-btns {
     flex-wrap: wrap;
   }
-
   .action-btn {
     width: 34px;
     height: 34px;
   }
-
   .table-footer {
     align-items: stretch;
   }
-
   .table-footer nav {
     width: 100%;
   }
-
   .table-footer .pagination {
     justify-content: center;
     flex-wrap: wrap;
   }
-
   .delete-user-card {
     width: 100%;
   }
 }
-
 @media (max-width: 420px) {
   .page-title {
     font-size: 1.15rem;
   }
-
   .page-subtitle {
     font-size: 0.8rem;
   }
-
   .stat-card-body {
     padding: 1rem;
   }
-
   .stat-value {
     font-size: 1.6rem;
   }
-
   .search-input,
   .filter-select {
     font-size: 0.8rem;
   }
-
   .users-table thead th,
   .users-table tbody td {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
-
   .bfp-form-grid {
     grid-template-columns: 1fr;
   }

@@ -9,7 +9,6 @@
         <button class="btn btn-outline-danger btn-sm" @click="showFilterModal = true">
           <i class="bi bi-sliders"></i> Filters<span v-if="activeFilterCount" class="badge bg-danger ms-1">{{ activeFilterCount }}</span>
         </button>
-        <button class="btn btn-outline-secondary btn-sm" :disabled="isLoading" @click="showPrintModal = true"><i class="bi bi-printer"></i> Print</button>
         <button class="btn btn-outline-secondary btn-sm" :disabled="isLoading || !canExport" @click="showExcelModal = true"><i class="bi bi-file-earmark-excel"></i> Excel</button>
         <button class="btn btn-danger btn-sm" :disabled="isLoading || !canExport" @click="showPdfModal = true"><i class="bi bi-file-earmark-pdf"></i> PDF Export</button>
       </div>

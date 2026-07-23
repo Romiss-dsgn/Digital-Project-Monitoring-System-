@@ -164,7 +164,7 @@
                       <td><small class="text-secondary fst-italic">{{ log.remarks || '-' }}</small></td>
                       <td>
                         <button class="btn btn-sm btn-outline-secondary p-1 lh-1" @click="showDetail(log)">
-                          <i class="bi bi-info-circle"></i>
+                          <i class="material-icons-round" style="font-size:1rem;">visibility</i>
                         </button>
                       </td>
                     </tr>
@@ -408,6 +408,13 @@ const AVATAR_COLORS = [
   "#3b4fc4","#7c5cbf","#c0392b","#e67e22",
   "#27ae60","#0288d1","#d81b60","#00838f",
 ];
+
+// The display timezone for all audit timestamps. The backend (Laravel/MySQL)
+// commonly returns naive datetime strings (e.g. "2026-07-19 05:41:07") with
+// no timezone marker. Browsers then parse that as *local* time, which is
+// wrong if the stored value is actually UTC — this is what was causing the
+// displayed time to lag behind the real time. We normalize below.
+const DISPLAY_TIMEZONE = "Asia/Manila";
 
 export default {
   name: "AuditTrail",
@@ -674,16 +681,31 @@ export default {
     },
 
     // Helpers
+
+    // Normalizes a timestamp string coming from the API into something the
+    // Date constructor will reliably interpret as UTC. If the string already
+    // carries a timezone marker ("Z" or a +/-HH:MM offset) it's left as-is.
+    // Otherwise (e.g. "2026-07-19 05:41:07" from Laravel/MySQL) we treat it
+    // as UTC and append "Z" so it isn't misread as local time.
+    toUtcDate(dt) {
+      if (!dt) return null;
+      if (dt instanceof Date) return dt;
+      const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(dt);
+      const isoLike = dt.includes("T") ? dt : dt.replace(" ", "T");
+      return new Date(hasTimezone ? isoLike : `${isoLike}Z`);
+    },
     formatDate(dt) {
-      if (!dt) return "-";
-      return new Date(dt).toLocaleDateString("en-US", {
-        month: "short", day: "2-digit", year: "numeric",
+      const d = this.toUtcDate(dt);
+      if (!d) return "-";
+      return d.toLocaleDateString("en-US", {
+        month: "short", day: "2-digit", year: "numeric", timeZone: DISPLAY_TIMEZONE,
       });
     },
     formatTime(dt) {
-      if (!dt) return "";
-      return new Date(dt).toLocaleTimeString("en-US", {
-        hour: "2-digit", minute: "2-digit", second: "2-digit",
+      const d = this.toUtcDate(dt);
+      if (!d) return "";
+      return d.toLocaleTimeString("en-US", {
+        hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: DISPLAY_TIMEZONE,
       });
     },
     initials(name) {
