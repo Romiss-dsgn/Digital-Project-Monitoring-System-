@@ -960,9 +960,38 @@ export default {
 
     // ── Export ─────────────────────────────────────────────
 
-    handleExport() {
+    async handleExport() {
       this.showExportModal = false;
-      alert(`Export as ${this.exportForm.format} — wire to /api/users/export`);
+      try {
+        const res = await UserService.exportUsers({
+          format:         this.exportForm.format,
+          rows:           this.exportForm.rows,
+          include_extras: this.exportForm.include_extras,
+          page:           this.meta.current_page,
+          per_page:       this.advFilters.per_page,
+          search:         this.filters.search || undefined,
+          role:           this.filters.role   || undefined,
+          status:         this.filters.status || undefined,
+          date_from:      this.advFilters.date_from || undefined,
+          date_to:        this.advFilters.date_to   || undefined,
+        });
+
+        const ext = this.exportForm.format === "Excel" ? "xlsx"
+                  : this.exportForm.format === "CSV"    ? "csv"
+                  : "pdf";
+
+        const blob = new Blob([res.data]);
+        const url  = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `users_export_${Date.now()}.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        this.fetchError = this.getErrorMessage(err, "Failed to export users.");
+      }
     },
 
     // ── Helpers ────────────────────────────────────────────

@@ -90,6 +90,15 @@ const UserService = {
     });
   },
 
+  // GET /api/v2/admin/users/export
+  exportUsers(params = {}) {
+    return axios.get(`${BASE}/users/export`, {
+      headers: authHeader(),
+      params,
+      responseType: "blob",
+    });
+  },
+
 };
 
 export default UserService;
