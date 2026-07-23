@@ -8,6 +8,11 @@ use App\Models\Role;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Symfony\Component\HttpFoundation\Response;
 use Carbon\Carbon;
 
@@ -109,7 +114,7 @@ class UserManagementController extends Controller
             'email' => ['required', 'email', 'unique:users'],
             'password' => ['required', 'min:8'],
             'badge_number' => ['nullable'],
-            'contact_number' => ['nullable'],
+            'contact_number' => ['nullable', 'string', 'regex:/^63[9]\d{9}$/'],
             'position' => ['nullable'],
             'office_unit' => ['nullable'],
             'role_id' => ['nullable', 'exists:roles,id'],
@@ -259,5 +264,175 @@ class UserManagementController extends Controller
         );
 
         return $admin;
+    }
+
+    // ── Export ─────────────────────────────────────────────
+    public function export(Request $request)
+    {
+        $this->authorizeAdmin($request);
+
+        $request->validate([
+            'format' => 'required|in:Excel,CSV,PDF',
+            'rows'   => 'required|in:Filtered users,Current page,All users',
+        ]);
+
+        $rowsMode = $request->query('rows');
+
+        $baseQuery = fn () => User::query()
+            ->with('role')
+            ->when($request->query('search'), function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhere('badge_number', 'like', "%{$search}%")
+                        ->orWhere('position', 'like', "%{$search}%")
+                        ->orWhere('office_unit', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->query('role'), fn($q, $role) =>
+                $q->whereHas('role', fn($r) => $r->where('name', $role))
+            )
+            ->when($request->query('status') === 'active', fn($q) =>
+                $q->where('is_active', true)
+            )
+            ->when($request->query('status') === 'inactive', fn($q) =>
+                $q->where('is_active', false)->whereNotNull('rejected_at')
+            )
+            ->when($request->query('status') === 'pending', fn($q) =>
+                $q->where('is_active', false)->whereNull('rejected_at')
+            )
+            ->orderBy('created_at', 'desc');
+
+        if ($rowsMode === 'All users') {
+            $users = User::query()->with('role')->orderBy('created_at', 'desc')->get();
+        } elseif ($rowsMode === 'Current page') {
+            $page    = $request->integer('page', 1);
+            $perPage = $request->integer('per_page', 10);
+            $users   = $baseQuery()->forPage($page, $perPage)->get();
+        } else {
+            $users = $baseQuery()->get();
+        }
+
+        $data          = $users->map(fn($u) => $this->formatUser($u));
+        $includeExtras = $request->boolean('include_extras');
+        $format        = strtolower($request->format);
+        $filename      = 'users_' . now()->format('Ymd_His');
+
+        if ($format === 'csv') {
+            return $this->exportUsersCsv($data, $filename, $includeExtras);
+        }
+
+        if ($format === 'excel') {
+            return $this->exportUsersExcel($data, $filename, $includeExtras);
+        }
+
+        if ($format === 'pdf') {
+            return $this->exportUsersPdf($data, $filename, $includeExtras);
+        }
+    }
+
+    private function exportUsersCsv($users, $filename, $includeExtras)
+    {
+        $headers = [
+            "Content-Type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename={$filename}.csv",
+        ];
+        $callback = function () use ($users, $includeExtras) {
+            $file    = fopen("php://output", "w");
+            $columns = ["Name", "Username", "Email", "Badge Number", "Position", "Status"];
+            if ($includeExtras) {
+                $columns = array_merge($columns, ["Role", "Unit", "Joined Date", "Last Active"]);
+            }
+            fputcsv($file, $columns);
+            foreach ($users as $u) {
+                $row = [
+                    $u['name'], $u['username'], $u['email'],
+                    $u['badge_number'], $u['position'], strtoupper($u['status']),
+                ];
+                if ($includeExtras) {
+                    $row = array_merge($row, [
+                        $u['role'] ?? 'N/A',
+                        $u['office_unit'] ?? 'N/A',
+                        $u['accepted_at'] ?? 'N/A',
+                        $u['last_active'] ?? 'Never',
+                    ]);
+                }
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function exportUsersExcel($users, $filename, $includeExtras)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet       = $spreadsheet->getActiveSheet();
+        $sheet->setTitle("Users");
+
+        $cols = ["A" => "Name", "B" => "Username", "C" => "Email", "D" => "Badge Number", "E" => "Position", "F" => "Status"];
+        if ($includeExtras) {
+            $cols["G"] = "Role";
+            $cols["H"] = "Unit";
+            $cols["I"] = "Joined Date";
+            $cols["J"] = "Last Active";
+        }
+
+        $lastCol = array_key_last($cols);
+        $sheet->mergeCells("A1:{$lastCol}1");
+        $sheet->setCellValue("A1", "BFP Region II - User List Export");
+        $sheet->getStyle("A1")->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle("A1")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A1")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB("1a2a4a");
+        $sheet->getStyle("A1")->getFont()->getColor()->setRGB("FFFFFF");
+
+        $sheet->mergeCells("A2:{$lastCol}2");
+        $sheet->setCellValue("A2", "Generated: " . now()->format("F d, Y h:i A"));
+        $sheet->getStyle("A2")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $headerRow = 4;
+        foreach ($cols as $col => $header) {
+            $sheet->setCellValue("{$col}{$headerRow}", $header);
+            $sheet->getStyle("{$col}{$headerRow}")->getFont()->setBold(true);
+            $sheet->getStyle("{$col}{$headerRow}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB("c0392b");
+            $sheet->getStyle("{$col}{$headerRow}")->getFont()->getColor()->setRGB("FFFFFF");
+        }
+
+        $row = $headerRow + 1;
+        foreach ($users as $u) {
+            $sheet->setCellValue("A{$row}", $u['name']);
+            $sheet->setCellValue("B{$row}", $u['username']);
+            $sheet->setCellValue("C{$row}", $u['email']);
+            $sheet->setCellValue("D{$row}", $u['badge_number']);
+            $sheet->setCellValue("E{$row}", $u['position']);
+            $sheet->setCellValue("F{$row}", strtoupper($u['status']));
+            if ($includeExtras) {
+                $sheet->setCellValue("G{$row}", $u['role'] ?? 'N/A');
+                $sheet->setCellValue("H{$row}", $u['office_unit'] ?? 'N/A');
+                $sheet->setCellValue("I{$row}", $u['accepted_at'] ?? 'N/A');
+                $sheet->setCellValue("J{$row}", $u['last_active'] ?? 'Never');
+            }
+            $row++;
+        }
+
+        foreach (array_keys($cols) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer   = new Xlsx($spreadsheet);
+        $tempFile = tempnam(sys_get_temp_dir(), 'users_export');
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, "{$filename}.xlsx", [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
+
+    private function exportUsersPdf($users, $filename, $includeExtras)
+    {
+        $html = view('exports.users', compact('users', 'includeExtras', 'filename'))->render();
+        $pdf  = Pdf::loadHTML($html)->setPaper('a4', 'landscape');
+        return $pdf->download("{$filename}.pdf");
     }
 }

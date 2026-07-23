@@ -157,7 +157,7 @@ class ContractManagementTest extends TestCase
         $project = Project::create([
             'project_code' => 'TEST-PROJ-' . uniqid(),
             'project_name' => 'Feature Test Project',
-            'status' => 'Ongoing',
+            'status' => 'ongoing',
             'is_archived' => false,
         ]);
         $contractor = Contractor::create([

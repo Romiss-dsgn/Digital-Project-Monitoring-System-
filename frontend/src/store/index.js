@@ -22,6 +22,7 @@ export default createStore({
     showFooter: true,
     showMain: true,
     isDarkMode: false,
+    mobileSidenavOpen: false,
     navbarFixed:
       "position-sticky blur shadow-blur left-auto top-1 z-index-sticky px-0 mx-4",
     absolute: "position-absolute px-4 mx-0 w-100 z-index-2",
@@ -32,6 +33,23 @@ export default createStore({
     },
     navbarMinimize(state) {
       const sidenav_show = document.querySelector(".g-sidenav-show");
+      const isMobile = window.innerWidth <= 1199.98;
+
+      if (!sidenav_show) {
+        return;
+      }
+
+      if (isMobile) {
+        state.mobileSidenavOpen = !state.mobileSidenavOpen;
+        sidenav_show.classList.toggle("mobile-sidenav-open", state.mobileSidenavOpen);
+        sidenav_show.classList.remove("g-sidenav-pinned");
+        document.body.classList.toggle("mobile-sidenav-lock", state.mobileSidenavOpen);
+        return;
+      }
+
+      state.mobileSidenavOpen = false;
+      document.body.classList.remove("mobile-sidenav-lock");
+      sidenav_show.classList.remove("mobile-sidenav-open");
 
       if (sidenav_show.classList.contains("g-sidenav-pinned")) {
         sidenav_show.classList.remove("g-sidenav-pinned");
@@ -40,6 +58,15 @@ export default createStore({
         sidenav_show.classList.add("g-sidenav-pinned");
         state.isPinned = false;
       }
+    },
+    closeMobileSidenav(state) {
+      state.mobileSidenavOpen = false;
+      const sidenav_show = document.querySelector(".g-sidenav-show");
+
+      if (sidenav_show) {
+        sidenav_show.classList.remove("mobile-sidenav-open");
+      }
+      document.body.classList.remove("mobile-sidenav-lock");
     },
     navbarFixed(state) {
       if (state.isNavFixed === false) {

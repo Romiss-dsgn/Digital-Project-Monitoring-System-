@@ -153,6 +153,7 @@ Route::prefix("v2")->middleware("json.api")->group(function () {
         Route::patch("/access-requests/{accessRequest}/reject", [UserAccessController::class, "reject"])->middleware("permission:access_requests,approve");
 
         Route::get("/users/stats",              [UserManagementController::class, "stats"])->middleware("permission:users,view");
+        Route::get("/users/export",             [UserManagementController::class, "export"])->middleware("permission:users,export");
         Route::get("/users",                    [UserManagementController::class, "index"])->middleware("permission:users,view");
         Route::post("/users",                   [UserManagementController::class, "store"])->middleware("permission:users,create");
         Route::get("/users/{user}",             [UserManagementController::class, "show"])->middleware("permission:users,view");

@@ -10,14 +10,14 @@
       </nav>
 
       <!-- ── Page Header ────────────────────────────────────────── -->
-      <div class="row mb-4 align-items-center">
+      <div class="row mb-4 align-items-center gy-3">
         <div class="col">
           <h4 class="page-title mb-1">User Management</h4>
           <p class="page-subtitle mb-0">
             Manage personnel access, define institutional roles, and monitor system activity.
           </p>
         </div>
-        <div class="col-auto d-flex gap-2">
+        <div class="col-12 col-lg-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
           <button class="btn btn-outline-dark btn-header" @click="showExportModal = true">
             <i class="material-icons-round">download</i> Export List
           </button>
@@ -29,7 +29,7 @@
 
       <!-- ── Stat Cards ──────────────────────────────────────────── -->
       <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -47,7 +47,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -62,7 +62,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -80,7 +80,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-card-body">
               <div class="stat-info">
@@ -101,7 +101,7 @@
         <div class="card-body py-2 px-3">
           <div class="row align-items-center g-2">
 
-            <div class="col-md-5 col-lg-4">
+            <div class="col-12 col-md-5 col-lg-4">
               <div class="search-wrap">
                 <i class="material-icons-round search-icon">search</i>
                 <input
@@ -114,7 +114,7 @@
               </div>
             </div>
 
-            <div class="col-6 col-md-3 col-lg-2">
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
               <div class="select-wrap">
                 <select class="form-control filter-select" v-model="filters.role" @change="fetchUsers">
                   <option value="">All Roles</option>
@@ -124,7 +124,7 @@
               </div>
             </div>
 
-            <div class="col-6 col-md-3 col-lg-2">
+            <div class="col-12 col-sm-6 col-md-3 col-lg-2">
               <div class="select-wrap">
                 <select class="form-control filter-select" v-model="filters.status" @change="fetchUsers">
                   <option value="">All Statuses</option>
@@ -136,7 +136,7 @@
               </div>
             </div>
 
-            <div class="col-auto ms-auto">
+            <div class="col-12 col-sm-auto ms-sm-auto">
               <button class="btn btn-sm btn-icon-only" title="Advanced Filters" @click="showAdvancedFilterModal = true">
                 <i class="material-icons-round">tune</i>
               </button>
@@ -253,7 +253,7 @@
           </div>
 
           <!-- ── Pagination ──────────────────────────────────────── -->
-          <div class="table-footer d-flex align-items-center justify-content-between px-3 py-2">
+          <div class="table-footer d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 px-3 py-2">
             <span class="text-secondary small">
               Showing {{ meta.from ?? 0 }} to {{ meta.to ?? 0 }} of {{ meta.total ?? 0 }} entries
             </span>
@@ -346,8 +346,9 @@
             <label class="bfp-label">Contact Number</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">call</i>
-              <input class="bfp-input" type="text" v-model="form.contact_number" placeholder="09XXXXXXXXX" />
+              <input class="bfp-input" type="text" :value="form.contact_number" @input="handleContactNumberInput" maxlength="10" placeholder="9XXXXXXXXX (10 digits, no leading 0)" />
             </div>
+            <span class="bfp-error" v-if="errors.contact_number">{{ errors.contact_number[0] }}</span>
           </div>
         </div>
       </div>
@@ -387,14 +388,7 @@
             </div>
           </div>
 
-          <!-- Status: pending notice for Add, dropdown for Edit -->
-          <div class="bfp-field-half" v-if="!editingUser">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-pending-notice">
-              <i class="material-icons-round">hourglass_top</i>
-              Account will be set as <strong>Pending</strong> until accepted by admin
-            </div>
-          </div>
+          <!-- Status: dropdown for Edit only (pending notice for Add has been removed) -->
           <div class="bfp-field-half" v-if="editingUser">
             <label class="bfp-label">Status</label>
             <div class="bfp-input-wrap">
@@ -632,6 +626,9 @@
 import BfpModal from "@/components/BfpModal.vue";
 import UserService from "@/services/user.service";
 
+const PH_COUNTRY_CODE = "63";
+const CONTACT_NUMBER_MAX_LENGTH = 10;
+
 export default {
   name: "UserManagement",
   components: { BfpModal },
@@ -724,6 +721,20 @@ export default {
   },
 
   methods: {
+    stripCountryCode(value) {
+      let digits = String(value || "").replace(/\D/g, "");
+      if (digits.startsWith(PH_COUNTRY_CODE)) {
+        digits = digits.slice(PH_COUNTRY_CODE.length);
+      } else if (digits.startsWith("0")) {
+        digits = digits.slice(1);
+      }
+      return digits.slice(0, CONTACT_NUMBER_MAX_LENGTH);
+    },
+    handleContactNumberInput(event) {
+      const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, CONTACT_NUMBER_MAX_LENGTH);
+      this.form.contact_number = digitsOnly;
+      event.target.value = digitsOnly;
+    },
     getErrorMessage(err, fallback) {
       return err.response?.data?.message || err.message || fallback;
     },
@@ -766,7 +777,7 @@ export default {
     async fetchRoles() {
       try {
         const res = await UserService.getRoles();
-        this.roles = res.data;
+        this.roles = res.data.data;
       } catch (err) {
         this.fetchError = this.getErrorMessage(err, "Failed to load roles.");
       }
@@ -803,7 +814,7 @@ export default {
         username:       user.username,
         email:          user.email,
         badge_number:   user.badge_number || "",
-        contact_number: user.contact_number || "",
+        contact_number: this.stripCountryCode(user.contact_number || ""),
         position:       user.position || "",
         office_unit:    user.office_unit || "",
         role_id:        user.role_id || "",
@@ -826,11 +837,23 @@ export default {
     async submitUserForm() {
       this.saving = true;
       this.errors = {};
+      const localDigits = this.stripCountryCode(this.form.contact_number);
+      if (localDigits && localDigits.length !== CONTACT_NUMBER_MAX_LENGTH) {
+        this.saving = false;
+        this.errors = {
+          contact_number: [`Contact number must be ${CONTACT_NUMBER_MAX_LENGTH} digits.`],
+        };
+        return;
+      }
+      const payload = {
+        ...this.form,
+        contact_number: localDigits ? `${PH_COUNTRY_CODE}${localDigits}` : "",
+      };
       try {
         if (this.editingUser) {
-          await UserService.updateUser(this.editingUser.id, this.form);
+          await UserService.updateUser(this.editingUser.id, payload);
         } else {
-          await UserService.createUser(this.form);
+          await UserService.createUser(payload);
         }
         this.showUserModal = false;
         await this.fetchUsers(this.meta.current_page);
@@ -937,9 +960,38 @@ export default {
 
     // ── Export ─────────────────────────────────────────────
 
-    handleExport() {
+    async handleExport() {
       this.showExportModal = false;
-      alert(`Export as ${this.exportForm.format} — wire to /api/users/export`);
+      try {
+        const res = await UserService.exportUsers({
+          format:         this.exportForm.format,
+          rows:           this.exportForm.rows,
+          include_extras: this.exportForm.include_extras,
+          page:           this.meta.current_page,
+          per_page:       this.advFilters.per_page,
+          search:         this.filters.search || undefined,
+          role:           this.filters.role   || undefined,
+          status:         this.filters.status || undefined,
+          date_from:      this.advFilters.date_from || undefined,
+          date_to:        this.advFilters.date_to   || undefined,
+        });
+
+        const ext = this.exportForm.format === "Excel" ? "xlsx"
+                  : this.exportForm.format === "CSV"    ? "csv"
+                  : "pdf";
+
+        const blob = new Blob([res.data]);
+        const url  = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `users_export_${Date.now()}.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        this.fetchError = this.getErrorMessage(err, "Failed to export users.");
+      }
     },
 
     // ── Helpers ────────────────────────────────────────────
@@ -1336,5 +1388,64 @@ export default {
   font-size: 1rem;
   color: #d97706;
   flex-shrink: 0;
+}
+@media (max-width: 575.98px) {
+  .btn-header {
+    width: 100%;
+    justify-content: center;
+  }
+  .search-input,
+  .filter-select {
+    height: 40px;
+  }
+  .btn-icon-only {
+    width: 100%;
+  }
+  .action-btns {
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .table-footer {
+    align-items: stretch;
+  }
+  .table-footer nav {
+    width: 100%;
+  }
+  .table-footer .pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .delete-user-card {
+    width: 100%;
+  }
+}
+@media (max-width: 420px) {
+  .page-title {
+    font-size: 1.15rem;
+  }
+  .page-subtitle {
+    font-size: 0.8rem;
+  }
+  .stat-card-body {
+    padding: 1rem;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+  }
+  .search-input,
+  .filter-select {
+    font-size: 0.8rem;
+  }
+  .users-table thead th,
+  .users-table tbody td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .bfp-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

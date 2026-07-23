@@ -1603,23 +1603,6 @@ export default {
   opacity: 1;
 }
 
-.dropdown-menu {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
-}
-
-.dropdown-item {
-  align-items: center;
-  border-radius: 0.5rem;
-  display: flex;
-  padding: 0.45rem 0.75rem;
-}
-
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
 .preview-icon { color: #0f766e; }

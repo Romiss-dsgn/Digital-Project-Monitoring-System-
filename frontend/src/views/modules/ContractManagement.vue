@@ -18,7 +18,7 @@
                   compliance in real-time.
                 </p>
               </div>
-              <div class="d-flex gap-2">
+              <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center">
                 <button v-if="permissions.create" class="btn btn-primary btn-sm" @click="openCreateContractModal">
                   <i class="material-icons-round" style="font-size:15px;vertical-align:-3px">add</i>
                   New Contract
@@ -35,7 +35,7 @@
         <!-- Stats Cards -->
         <div class="col-lg-6">
           <div class="row g-3">
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">ONGOING PROJECTS</p>
@@ -43,7 +43,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">PENDING REVIEW</p>
@@ -52,7 +52,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">TOTAL VALUE</p>
@@ -61,7 +61,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6 col-lg-3">
               <div class="card stat-card h-100">
                 <div class="card-body p-3">
                   <p class="stat-label">DOCS COMPLIANCE</p>
@@ -80,11 +80,11 @@
       <div class="row mb-4">
         <div class="col-12">
           <div class="card">
-            <div class="card-header pt-3 px-4">
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-3">
+            <div class="card-header pt-3 px-3 px-sm-4">
+              <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-2">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 gap-sm-3">
                   <span class="fw-bold" style="font-size:0.875rem;color:#374151;">Contract Records</span>
-                  <div class="d-flex gap-1">
+                  <div class="d-flex flex-wrap gap-1">
                     <button
                       v-for="tab in ['All', 'Active', 'Expired']"
                       :key="tab"
@@ -156,38 +156,52 @@
                         </div>
                       </td>
                       <td class="text-end">
-                        <div class="contract-actions-wrap">
+                        <div class="contract-actions-menu">
                           <button
                             class="btn btn-sm btn-icon btn-light text-secondary"
                             type="button"
                             :aria-expanded="openActionMenuId === contract.id"
                             aria-label="Contract actions"
-                            @click.stop="toggleContractActions(contract.id, $event)"
+                            title="Contract actions"
+                            @click.stop="toggleActionMenu(contract.id, $event)"
                           >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                          <ul
+                          <div
                             v-if="openActionMenuId === contract.id"
-                            class="dropdown-menu dropdown-menu-end shadow-sm contract-actions-menu"
+                            class="contract-action-menu"
+                            :style="{
+                              top: `${actionMenuPosition.top}px`,
+                              left: `${actionMenuPosition.left}px`,
+                            }"
+                            role="menu"
                             @click.stop
                           >
-                            <li>
-                              <a class="dropdown-item" href="#" @click.prevent="handleViewContract(contract)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i> View
-                              </a>
-                            </li>
-                            <li v-if="permissions.edit">
-                              <a class="dropdown-item" href="#" @click.prevent="handleEditContract(contract)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i> Edit
-                              </a>
-                            </li>
-                            <li v-if="permissions.delete"><hr class="dropdown-divider" /></li>
-                            <li v-if="permissions.delete">
-                              <a class="dropdown-item text-danger" href="#" @click.prevent="handleDeleteContract(contract)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i> Archive
-                              </a>
-                            </li>
-                          </ul>
+                            <button class="contract-action-menu-item" type="button" role="menuitem" @click="handleViewContract(contract)">
+                              <i class="material-icons-round dropdown-icon view-icon">visibility</i>
+                              View
+                            </button>
+                            <button
+                              v-if="permissions.edit"
+                              class="contract-action-menu-item"
+                              type="button"
+                              role="menuitem"
+                              @click="handleEditContract(contract)"
+                            >
+                              <i class="material-icons-round dropdown-icon edit-icon">edit</i>
+                              Edit
+                            </button>
+                            <button
+                              v-if="permissions.delete"
+                              class="contract-action-menu-item danger"
+                              type="button"
+                              role="menuitem"
+                              @click="handleDeleteContract(contract)"
+                            >
+                              <i class="material-icons-round dropdown-icon">archive</i>
+                              Archive
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -196,11 +210,11 @@
               </div>
 
               <!-- Pagination -->
-              <div class="d-flex align-items-center justify-content-between px-4 py-3 border-top">
+              <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 px-3 px-sm-4 py-3 border-top">
                 <span class="text-secondary small">
                   Showing {{ paginationFrom }}-{{ paginationTo }} of {{ filteredContracts.length }} contract records
                 </span>
-                <div class="d-flex gap-1">
+                <div class="d-flex flex-wrap gap-1">
                   <button class="btn btn-sm btn-light border pagination-btn" :disabled="currentPage === 1" @click="currentPage--">
                     <i class="material-icons-round" style="font-size:16px;vertical-align:-3px">chevron_left</i>
                   </button>
@@ -226,7 +240,7 @@
         <!-- Quick Upload → opens Upload Batch modal -->
         <div class="col-lg-12 mb-4">
           <div class="card h-100">
-            <div class="card-body p-4">
+            <div class="card-body p-3 p-sm-4">
               <h6 class="fw-bold mb-1" style="font-size:0.9rem;">Upload Files</h6>
               <p class="text-secondary small mb-3">
                 Drag and drop any contract-related document (PDF, DOCX, XLSX) to automatically link it to the relevant project record.
@@ -761,7 +775,6 @@ export default {
       isSaving: false,
       isUploading: false,
       apiError: "",
-      openActionMenuId: null,
       projects: [],
       contractors: [],
       selectedContract: null,
@@ -835,6 +848,11 @@ export default {
       contractStatusOptions: ['Draft', 'Pending Review', 'Active', 'Delayed', 'Completed', 'Rejected', 'Terminated', 'Expired'],
       complianceStatusOptions: ['Full Compliance', 'Minor Issues', 'Major Issues', 'Pending Review'],
       contracts: [],
+      openActionMenuId: null,
+      actionMenuPosition: {
+        top: 0,
+        left: 0,
+      },
     };
   },
   computed: {
@@ -864,11 +882,56 @@ export default {
   async mounted() {
     await this.loadContractManagement();
     document.addEventListener("click", this.closeActionMenu);
+    window.addEventListener("resize", this.closeActionMenu);
+    window.addEventListener("scroll", this.closeActionMenu, true);
   },
   beforeUnmount() {
     document.removeEventListener("click", this.closeActionMenu);
+    window.removeEventListener("resize", this.closeActionMenu);
+    window.removeEventListener("scroll", this.closeActionMenu, true);
   },
   methods: {
+    toggleActionMenu(contractId, event) {
+      if (this.openActionMenuId === contractId) {
+        this.closeActionMenu();
+        return;
+      }
+
+      this.positionActionMenu(event.currentTarget);
+      this.openActionMenuId = contractId;
+    },
+    positionActionMenu(trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const menuWidth = 148;
+      const menuHeight = 132;
+      const margin = 8;
+      const viewportPadding = 8;
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      );
+      const opensUp = rect.bottom + menuHeight + margin > window.innerHeight;
+
+      this.actionMenuPosition = {
+        top: opensUp ? Math.max(viewportPadding, rect.top - menuHeight - margin) : rect.bottom + margin,
+        left,
+      };
+    },
+    closeActionMenu() {
+      this.openActionMenuId = null;
+    },
+    handleViewContract(contract) {
+      this.closeActionMenu();
+      this.viewContract(contract);
+    },
+    handleEditContract(contract) {
+      this.closeActionMenu();
+      this.editContract(contract);
+    },
+    handleDeleteContract(contract) {
+      this.closeActionMenu();
+      this.deleteContract(contract);
+    },
     openCreateContractModal() {
       this.apiError = "";
       this.contractForm = emptyContractForm();
@@ -885,24 +948,6 @@ export default {
       this.saveResultStatus = "success";
       this.saveResultTitle = "";
       this.saveResultMessage = "";
-    },
-    toggleContractActions(contractId) {
-      this.openActionMenuId = this.openActionMenuId === contractId ? null : contractId;
-    },
-    closeActionMenu() {
-      this.openActionMenuId = null;
-    },
-    handleViewContract(contract) {
-      this.closeActionMenu();
-      this.viewContract(contract);
-    },
-    handleEditContract(contract) {
-      this.closeActionMenu();
-      this.editContract(contract);
-    },
-    handleDeleteContract(contract) {
-      this.closeActionMenu();
-      this.deleteContract(contract);
     },
     async loadContractManagement() {
       this.isLoading = true;
@@ -1584,36 +1629,45 @@ export default {
 /* ════════════════════════════════════════════
    DROPDOWN
 ════════════════════════════════════════════ */
-.dropdown-menu {
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
-}
-
-.contract-actions-wrap {
-  position: relative;
-  display: inline-flex;
-  justify-content: flex-end;
-}
-
 .contract-actions-menu {
-  display: block;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.35rem);
-  z-index: 1060;
+  display: inline-flex;
+  position: relative;
 }
-
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
+.contract-action-menu {
+  position: fixed;
+  min-width: 148px;
+  padding: 0.35rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  z-index: 1200;
+}
+.contract-action-menu-item {
   display: flex;
   align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 34px;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: left;
 }
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
+.contract-action-menu-item:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+.contract-action-menu-item.danger {
+  color: #dc2626;
+}
+.contract-action-menu-item.danger:hover {
+  background: #fef2f2;
+}
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
 .edit-icon { color: #d97706; }
@@ -1834,8 +1888,65 @@ export default {
 @media (max-width: 576px) {
   .bfp-form-grid { grid-template-columns: 1fr; }
   .bfp-field-half { grid-column: span 1; }
+  .quick-upload-area { padding: 24px 16px; }
+  .tab-pill { padding: 4px 10px; font-size: 0.75rem; }
+  .pagination-btn { width: 30px; height: 30px; }
+  .contract-action-menu {
+    min-width: 136px;
+    max-width: calc(100vw - 1.5rem);
+  }
+  .bfp-modal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .bfp-modal-header-left {
+    width: 100%;
+  }
+  .bfp-modal-close {
+    align-self: flex-end;
+  }
+  .bfp-modal-stripe {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 8px 18px;
+  }
+  .bfp-modal-body { padding: 16px 18px; }
   .bfp-modal-footer { flex-direction: column; gap: 10px; align-items: stretch; }
-  .bfp-footer-actions { justify-content: flex-end; }
+  .bfp-footer-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .bfp-btn-cancel,
+  .bfp-btn-save {
+    width: 100%;
+    justify-content: center;
+  }
+  .bfp-footer-note { width: 100%; }
+  .bfp-upload-area { padding: 24px 16px; }
+  .bfp-format-pills { flex-wrap: wrap; }
+  .bfp-file-item { align-items: flex-start; flex-wrap: wrap; }
+  .bfp-file-name { white-space: normal; overflow: visible; text-overflow: initial; }
+  .bfp-file-size { margin-left: 30px; }
+}
+
+@media (max-width: 420px) {
+  .stat-label { font-size: 10px; }
+  .stat-value { font-size: 1.5rem; }
+  .stat-sub,
+  .compliance-sub { font-size: 10px; }
+  .bfp-modal-title { font-size: 15px; }
+  .bfp-modal-agency { font-size: 10px; }
+  .bfp-section-label { font-size: 10px; padding: 6px 10px; }
+  .bfp-upload-title { font-size: 13px; }
+  .bfp-upload-sub { font-size: 11px; }
+  .stitch-table thead th,
+  .stitch-table tbody td {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 
 /* ════════════════════════════════════════════

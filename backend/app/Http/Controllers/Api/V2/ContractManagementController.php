@@ -93,7 +93,7 @@ class ContractManagementController extends Controller
             'data' => [
                 'ongoing_projects' => Project::query()
                     ->where('is_archived', false)
-                    ->where('status', 'Ongoing')
+                    ->whereIn('status', ['ongoing', 'on_time'])
                     ->count(),
                 'active_contracts' => (clone $contracts)->where('status', 'Active')->count(),
                 'pending_review' => (clone $contracts)->where('status', 'Pending Review')->count(),

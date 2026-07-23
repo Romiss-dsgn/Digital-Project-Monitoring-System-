@@ -357,12 +357,44 @@ export default {
 
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 576px) {
+    .forgot-page {
+        background-attachment: scroll;
+    }
+
     .forgot-card {
         padding: 2rem 1.25rem;
     }
 
+    .forgot-center {
+        padding: 1.5rem 0.75rem;
+    }
+
     .forgot-title {
         font-size: 1.25rem;
+    }
+
+    .forgot-footer {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .forgot-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .recovery-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    .recovery-icon i {
+        font-size: 1.65rem;
+    }
+
+    .forgot-title h4 {
+        font-size: 1.1rem;
     }
 }
 </style>

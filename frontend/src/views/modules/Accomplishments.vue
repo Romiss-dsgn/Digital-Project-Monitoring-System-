@@ -109,7 +109,7 @@
             <div class="card-header pb-0 d-flex align-items-center justify-content-between">
               <h6>Project Milestones &amp; Accomplishments</h6>
               <div class="d-flex gap-2">
-                <button v-if="permissions.export" class="btn btn-sm btn-icon btn-light text-secondary" @click="showExportModal = true">
+                <button v-if="permissions.export" class="btn btn-sm btn-icon btn-light text-secondary" @click="openExportModal">
                   <i class="material-icons-round">download</i>
                 </button>
                 <button class="btn btn-sm btn-icon btn-light text-secondary" @click="showPrintModal = true">
@@ -240,7 +240,7 @@
       </div>
     </div>
 
-    <!-- ── Upload / Edit Modal ───────────────────────────────────────────────── -->
+    <!-- Upload / Edit Modal -->
     <BfpModal
       :show="showUploadReportModal"
       :title="accomplishmentForm.id ? 'Edit Accomplishment' : 'Add Accomplishment Report'"
@@ -360,7 +360,7 @@
       </div>
     </BfpModal>
 
-    <!-- ── Filter Modal ──────────────────────────────────────────────────────── -->
+    <!-- Filter Modal -->
     <BfpModal
       :show="showFilterModal"
       title="Accomplishment Filters"
@@ -399,7 +399,7 @@
       </div>
     </BfpModal>
 
-    <!-- ── Print Modal ───────────────────────────────────────────────────────── -->
+    <!-- Print Modal -->
     <BfpModal
       :show="showPrintModal"
       title="Print Accomplishment Summary"
@@ -415,15 +415,15 @@
       </div>
     </BfpModal>
 
-    <!-- ── Export Modal ──────────────────────────────────────────────────────── -->
+    <!-- Export Modal -->
     <BfpModal
       :show="showExportModal"
       title="Export Accomplishments"
       stripe="MILESTONE EXPORT"
-      confirm-text="Export"
+      :confirm-text="isExporting ? 'Exporting...' : 'Export'"
       confirm-icon="download"
       @close="showExportModal = false"
-      @confirm="exportCsv"
+      @confirm="exportReport"
     >
       <div class="bfp-section">
         <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
@@ -432,12 +432,31 @@
             <label class="bfp-label">Format</label>
             <div class="bfp-input-wrap">
               <i class="material-icons-round bfp-input-icon">file_download</i>
-              <select class="bfp-input bfp-select">
-                <option>CSV</option>
+              <select v-model="exportFormat" class="bfp-input bfp-select">
+                <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
+                <option value="xlsx">Excel (XLSX)</option>
               </select>
             </div>
           </div>
-          <p class="text-secondary small bfp-field-full mb-0">CSV exports include the currently filtered milestone records.</p>
+
+          <!-- Month filter -->
+          <div class="bfp-field-half">
+            <label class="bfp-label">Month</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">calendar_month</i>
+              <select v-model="exportMonth" class="bfp-input bfp-select">
+                <option value="">All months</option>
+                <option v-for="month in availableExportMonths" :key="month.value" :value="month.value">
+                  {{ month.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <p class="text-secondary small bfp-field-full mb-0">
+            {{ exportMonth ? 'Exports records with a target date in the selected month.' : 'Exports include the currently filtered milestone records, formatted like the standard Contract Summary Report.' }}
+          </p>
         </div>
       </div>
     </BfpModal>
@@ -448,6 +467,9 @@
 import StatusBadge from "@/components/StatusBadge.vue";
 import BfpModal from "@/components/BfpModal.vue";
 import accomplishmentService from "@/services/accomplishment.service";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const emptyAccomplishmentForm = () => ({
   id: null,
@@ -478,11 +500,14 @@ export default {
       isLoading: false,
       isSaving: false,
       isLoadingModalProjects: false,
+      isExporting: false,
       apiError: "",
       currentPage: 1,
       rowsPerPage: 10,
+      exportFormat: "csv",
+      exportMonth: "", // "YYYY-MM" or "" for all
       accomplishments: [],
-      // Projects without an active accomplishment report yet — used as the
+      // Projects without an active accomplishment report yet are used as the
       // dropdown source when creating a *new* report, and to gate the
       // "Upload Report" button / empty-state messaging.
       projects: [],
@@ -543,6 +568,31 @@ export default {
     },
     paginationTo() {
       return Math.min(this.currentPage * this.rowsPerPage, this.filteredAccomplishments.length);
+    },
+
+    // Distinct months present in the table's target dates, newest first
+    availableExportMonths() {
+      const seen = new Map();
+      this.accomplishments.forEach((item) => {
+        if (!item.target_date) return;
+        const key = item.target_date.slice(0, 7); // "YYYY-MM"
+        if (!seen.has(key)) {
+          const label = new Intl.DateTimeFormat("en-PH", { month: "long", year: "numeric" })
+            .format(new Date(`${key}-01T00:00:00`));
+          seen.set(key, label);
+        }
+      });
+      return Array.from(seen.entries())
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .map(([value, label]) => ({ value, label }));
+    },
+
+    // What actually gets exported: table filters + month filter combined
+    exportRows() {
+      if (!this.exportMonth) return this.filteredAccomplishments;
+      return this.filteredAccomplishments.filter(
+        (item) => item.target_date && item.target_date.slice(0, 7) === this.exportMonth
+      );
     },
   },
 
@@ -714,9 +764,36 @@ export default {
       window.print();
     },
 
+    openExportModal() {
+      this.exportMonth = "";
+      this.showExportModal = true;
+    },
+
+    // ── Export dispatcher ──────────────────────────────────────────────
+    async exportReport() {
+      if (this.isExporting) return;
+      this.isExporting = true;
+      this.apiError = "";
+
+      try {
+        if (this.exportFormat === "pdf") {
+          this.exportPdf();
+        } else if (this.exportFormat === "xlsx") {
+          this.exportExcel();
+        } else {
+          this.exportCsv();
+        }
+        this.showExportModal = false;
+      } catch (error) {
+        this.apiError = "Unable to generate export. Please try again.";
+      } finally {
+        this.isExporting = false;
+      }
+    },
+
     exportCsv() {
       const headers = ["Project", "Milestone", "Target Date", "Progress", "Status", "Remarks"];
-      const rows = this.filteredAccomplishments.map((item) => [
+      const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
         item.target_date,
@@ -729,10 +806,124 @@ export default {
       const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
       const link = window.document.createElement("a");
       link.href = url;
-      link.download = "project-accomplishments.csv";
+      link.download = "accomplishment-summary.csv";
       link.click();
       URL.revokeObjectURL(url);
-      this.showExportModal = false;
+    },
+
+    exportExcel() {
+      const headers = ["Project", "Milestone", "Target Date", "Progress %", "Status", "Remarks"];
+      const rows = this.exportRows.map((item) => [
+        item.project_name,
+        item.milestone_title,
+        item.target_date,
+        item.percent_complete,
+        item.status,
+        item.remarks || "",
+      ]);
+
+      const summaryRows = [
+        ["ACCOMPLISHMENT SUMMARY REPORT"],
+        [`Report ID: ${this.buildReportId()}`, "", `Generated: ${this.formatDateTime(new Date().toISOString())}`],
+        [],
+        ["Milestones", "Overall Progress", "Delayed Tasks"],
+        [
+          `${this.summary.milestones_completed} / ${this.summary.milestones_total}`,
+          `${this.summary.overall_progress}%`,
+          this.summary.delayed_tasks,
+        ],
+        [],
+        headers,
+        ...rows,
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(summaryRows);
+      worksheet["!cols"] = [
+        { wch: 28 },
+        { wch: 24 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 30 },
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Accomplishments");
+      XLSX.writeFile(workbook, "accomplishment-summary.xlsx");
+    },
+
+    exportPdf() {
+      const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      const maroon = [122, 22, 32]; // matches the sample Contract Summary Report header
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 40;
+
+      // Title
+      doc.setTextColor(...maroon);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("ACCOMPLISHMENT SUMMARY REPORT", margin, 50);
+
+      // Subheader line
+      doc.setTextColor(120, 120, 120);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(
+        `Report ID: ${this.buildReportId()}   |   Generated: ${this.formatDateTime(new Date().toISOString())}`,
+        margin,
+        68
+      );
+
+      // Summary boxes
+      const boxY = 90;
+      const boxW = (pageWidth - margin * 2 - 20) / 3;
+      const boxes = [
+        { label: "Milestones", value: `${this.summary.milestones_completed} / ${this.summary.milestones_total}` },
+        { label: "Overall Progress", value: `${this.summary.overall_progress}%` },
+        { label: "Delayed Tasks", value: `${this.summary.delayed_tasks}` },
+      ];
+
+      boxes.forEach((box, i) => {
+        const x = margin + i * (boxW + 10);
+        doc.setFillColor(245, 247, 250);
+        doc.rect(x, boxY, boxW, 55, "F");
+        doc.setTextColor(140, 140, 140);
+        doc.setFontSize(8);
+        doc.text(box.label, x + 12, boxY + 20);
+        doc.setTextColor(31, 38, 51);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(String(box.value), x + 12, boxY + 40);
+        doc.setFont("helvetica", "normal");
+      });
+
+      // Table
+      const headers = [["Project", "Milestone", "Target Date", "Progress", "Status"]];
+      const rows = this.exportRows.map((item) => [
+        item.project_name,
+        item.milestone_title,
+        this.formatDate(item.target_date),
+        `${item.percent_complete}%`,
+        item.status,
+      ]);
+
+      autoTable(doc, {
+        head: headers,
+        body: rows,
+        startY: boxY + 80,
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 9, cellPadding: 6 },
+        headStyles: { fillColor: maroon, textColor: 255, fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+      });
+
+      doc.save("accomplishment-summary.pdf");
+    },
+
+    buildReportId() {
+      const now = new Date();
+      const stamp = now.toISOString().replace(/[-:T.]/g, "").slice(0, 14);
+      return `BFP-ACC-${stamp}`;
     },
 
     errorMessage(error, fallback) {
@@ -751,23 +942,6 @@ export default {
   background: #f7fafc;
   min-height: 100vh;
 }
-
-/* ── Dropdown menu ── */
-.dropdown-menu {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
-  min-width: 140px;
-  padding: 0.3rem;
-}
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
-  display: flex;
-  align-items: center;
-}
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
 
 .dropdown-icon { font-size: 1rem; }
 .view-icon { color: #2563eb; }
@@ -824,7 +998,7 @@ export default {
   border: 1px solid #dfe4ed;
 }
 
-/* ── Summary Cards ── */
+/* Summary Cards */
 .summary-card {
   box-shadow: 0 4px 15px rgba(15, 23, 42, 0.08) !important;
 }
@@ -867,7 +1041,7 @@ export default {
   color: #94a3b8;
 }
 
-/* ── Featured Project Card ── */
+/* Featured Project Card */
 .featured-project-card {
   background: linear-gradient(135deg, #1e3a6e, #2563eb) !important;
   color: #fff !important;
@@ -915,7 +1089,7 @@ export default {
   color: rgba(255,255,255,0.75);
 }
 
-/* ── Progress bar variants ── */
+/* Progress bar variants */
 .progress-bar-wrapper {
   width: 120px;
   min-width: 80px;
@@ -940,7 +1114,7 @@ export default {
   white-space: nowrap;
 }
 
-/* ── Report Links ── */
+/* Report Links */
 .report-link {
   font-size: 0.8rem;
   color: #64748b;
@@ -954,7 +1128,7 @@ export default {
 .report-icon-upload{ font-size: 0.95rem; color: #2563eb; }
 .report-icon-warn  { font-size: 0.95rem; color: #f59e0b; }
 
-/* ── Pagination ── */
+/* Pagination */
 .btn-pagination {
   width: 32px;
   height: 32px;
@@ -972,7 +1146,7 @@ export default {
 }
 .btn-pagination:hover:not(.active) { background: #f1f5f9; }
 
-/* ── Timeline ── */
+/* Timeline */
 .timeline {
   position: relative;
   padding-left: 0;

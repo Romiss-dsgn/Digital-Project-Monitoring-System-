@@ -1,17 +1,18 @@
 <template>
   <div class="module-page">
     <div class="container-fluid py-4">
+      <div v-if="errorMessage" class="alert alert-danger py-2 px-3 mb-3">{{ errorMessage }}</div>
       <!-- Header -->
-      <div class="row mb-4 align-items-center">
-        <div class="col-lg-8">
+      <div class="row mb-4 align-items-center gy-3">
+        <div class="col-12 col-lg-8">
           <h4 class="mb-0">Variation Orders Monitoring</h4>
           <p class="text-secondary small">Track, review, and manage contract changes and financial impacts.</p>
         </div>
-        <div class="col-lg-4 text-end d-flex gap-2 justify-content-end">
-          <button class="btn btn-outline-secondary btn-sm" @click="showFilterModal = true">
+        <div class="col-12 col-lg-4 d-flex flex-column flex-sm-row justify-content-lg-end align-items-stretch align-items-sm-center gap-2">
+          <button class="btn btn-outline-secondary btn-sm w-100 w-sm-auto" @click="showFilterModal = true">
             <i class="material-icons-round">filter_list</i> Filter
           </button>
-          <button class="btn btn-primary btn-sm" @click="showRequestModal = true">
+          <button class="btn btn-primary btn-sm w-100 w-sm-auto" @click="showRequestModal = true">
             <i class="material-icons-round">add</i> New VO Request
           </button>
         </div>
@@ -63,15 +64,15 @@
       <div class="row">
         <div class="col-12">
           <div class="card">
-            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+            <div class="card-header pb-0 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-2">
               <h6>Active Variation Orders</h6>
-              <div class="d-flex gap-2 align-items-center">
-                <div class="btn-group btn-group-sm" role="group">
+              <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center w-100 w-lg-auto">
+                <div class="btn-group btn-group-sm vo-status-group" role="group">
                   <button type="button" class="btn" :class="filterStatus === '' ? 'btn-dark' : 'btn-outline-secondary'" @click="setQuickFilter('')">All</button>
                   <button type="button" class="btn" :class="filterStatus === 'Submitted' ? 'btn-dark' : 'btn-outline-secondary'" @click="setQuickFilter('Submitted')">Requests</button>
                   <button type="button" class="btn" :class="filterStatus === 'Under Review' ? 'btn-dark' : 'btn-outline-secondary'" @click="setQuickFilter('Under Review')">Approvals</button>
                 </div>
-                <button class="btn btn-sm btn-icon btn-light text-secondary">
+                <button class="btn btn-sm btn-icon btn-light text-secondary vo-more-btn">
                   <i class="material-icons-round">more_vert</i>
                 </button>
               </div>
@@ -108,51 +109,74 @@
                       </td>
                       <td><status-badge :status="order.status" /></td>
                       <td class="align-middle text-end">
-                        <div class="vo-actions-wrap">
+                        <div class="vo-actions-menu">
                           <button
                             class="btn btn-sm btn-icon btn-light text-secondary"
                             type="button"
-                            @click.stop="toggleOrderActions(order.id, $event)"
+                            :aria-expanded="openActionMenuId === order.id"
+                            title="Variation order actions"
+                            @click.stop="toggleActionMenu(order.id, $event)"
                           >
                             <i class="material-icons-round">more_vert</i>
                           </button>
-                          <ul
+                          <div
                             v-if="openActionMenuId === order.id"
-                            class="vo-actions-menu shadow-sm"
+                            class="vo-action-menu"
+                            :style="{
+                              top: `${actionMenuPosition.top}px`,
+                              left: `${actionMenuPosition.left}px`,
+                            }"
+                            role="menu"
                             @click.stop
                           >
-                            <li>
-                              <a class="dropdown-item" href="#" @click.prevent="handleViewOrder(order)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon view-icon">visibility</i>
-                                View
-                              </a>
-                            </li>
-                            <li v-if="order.status === 'Draft'">
-                              <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_create }" href="#" @click.prevent="handleSubmitOrder(order)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">send</i>
-                                Submit
-                              </a>
-                            </li>
-                            <li v-if="order.status === 'Submitted' || order.status === 'Under Review'">
-                              <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_approve }" href="#" @click.prevent="handleReviewOrder(order)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">rate_review</i>
-                                Review
-                              </a>
-                            </li>
-                            <li v-if="order.status !== 'Draft' && order.status !== 'Approved' && order.status !== 'Rejected'">
-                              <a class="dropdown-item" :class="{ 'disabled-link': !permissions.can_edit }" href="#" @click.prevent="handleEditOrder(order)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon edit-icon">edit</i>
-                                Edit
-                              </a>
-                            </li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li>
-                              <a class="dropdown-item text-danger" :class="{ 'disabled-link': !permissions.can_delete }" href="#" @click.prevent="handleArchiveOrder(order)">
-                                <i class="material-icons-round align-middle me-2 dropdown-icon">archive</i>
-                                Archive
-                              </a>
-                            </li>
-                          </ul>
+                            <button class="vo-action-menu-item" type="button" role="menuitem" @click="handleViewOrder(order)">
+                              <i class="material-icons-round dropdown-icon view-icon">visibility</i>
+                              View
+                            </button>
+                            <button
+                              v-if="order.status === 'Draft'"
+                              class="vo-action-menu-item"
+                              :disabled="!permissions.can_create"
+                              type="button"
+                              role="menuitem"
+                              @click="handleSubmitOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon">send</i>
+                              Submit
+                            </button>
+                            <button
+                              v-if="order.status === 'Submitted' || order.status === 'Under Review'"
+                              class="vo-action-menu-item"
+                              :disabled="!permissions.can_approve"
+                              type="button"
+                              role="menuitem"
+                              @click="handleReviewOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon">rate_review</i>
+                              Review
+                            </button>
+                            <button
+                              v-if="order.status !== 'Draft' && order.status !== 'Approved' && order.status !== 'Rejected'"
+                              class="vo-action-menu-item"
+                              :disabled="!permissions.can_edit"
+                              type="button"
+                              role="menuitem"
+                              @click="handleEditOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon edit-icon">edit</i>
+                              Edit
+                            </button>
+                            <button
+                              class="vo-action-menu-item danger"
+                              :disabled="!permissions.can_delete"
+                              type="button"
+                              role="menuitem"
+                              @click="handleArchiveOrder(order)"
+                            >
+                              <i class="material-icons-round dropdown-icon">archive</i>
+                              Archive
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -166,9 +190,9 @@
               </div>
 
               <!-- Pagination -->
-              <div v-if="pagination.total > 0" class="d-flex justify-content-between align-items-center mt-3 px-2">
+              <div v-if="pagination.total > 0" class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mt-3 px-2">
                 <span class="text-secondary small">Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} Variation Orders</span>
-                <nav>
+                <nav class="w-100 w-sm-auto">
                   <ul class="pagination pagination-sm mb-0">
                     <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
                       <a class="page-link" href="#" @click.prevent="loadOrders(pagination.current_page - 1)">&laquo;</a>
@@ -189,7 +213,7 @@
 
       <!-- Analytics Bottom Row -->
       <div class="row mt-4">
-        <div class="col-md-6 mb-3">
+        <div class="col-12 col-md-6 mb-3">
           <div class="card h-100">
             <div class="card-header pb-0">
               <h6>Approval Efficiency</h6>
@@ -223,16 +247,16 @@
             </div>
           </div>
         </div>
-        <div class="col-md-6 mb-3">
+        <div class="col-12 col-md-6 mb-3">
           <div class="card h-100">
-            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+            <div class="card-header pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
               <h6>Monthly Impact</h6>
               <i class="material-icons-round text-secondary" style="font-size:1.1rem">bar_chart</i>
             </div>
-<div class="card-body">
-               <div v-for="(month, index) in monthlyBreakdown" :key="month.month + index" class="monthly-row mb-3">
-                 <div class="d-flex justify-content-between mb-1">
-                   <span class="small">{{ month.month }}</span>
+            <div class="card-body">
+                <div v-for="(month, index) in monthlyBreakdown" :key="month.month + index" class="monthly-row mb-3">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="small">{{ month.month }}</span>
                    <strong class="small">{{ formatCurrency(month.amount) }}</strong>
                  </div>
                  <div class="monthly-bar-bg">
@@ -567,7 +591,6 @@ export default {
       showFilterModal: false,
       showReviewModal: false,
       showSaveResultModal: false,
-      openActionMenuId: null,
       orders: [],
       contracts: [],
       summary: {},
@@ -618,6 +641,11 @@ export default {
         remarks: '',
       },
       errorMessage: '',
+      openActionMenuId: null,
+      actionMenuPosition: {
+        top: 0,
+        left: 0,
+      },
     };
   },
   computed: {
@@ -641,16 +669,41 @@ export default {
     this.loadSummary();
     this.loadOrders(1);
     document.addEventListener('click', this.closeActionMenu);
+    window.addEventListener('resize', this.closeActionMenu);
+    window.addEventListener('scroll', this.closeActionMenu, true);
   },
   beforeUnmount() {
     document.removeEventListener('click', this.closeActionMenu);
+    window.removeEventListener('resize', this.closeActionMenu);
+    window.removeEventListener('scroll', this.closeActionMenu, true);
   },
   methods: {
-    toggleOrderActions(orderId, event) {
-      if (event) {
-        event.stopPropagation();
+    toggleActionMenu(orderId, event) {
+      if (this.openActionMenuId === orderId) {
+        this.closeActionMenu();
+        return;
       }
-      this.openActionMenuId = this.openActionMenuId === orderId ? null : orderId;
+
+      this.positionActionMenu(event.currentTarget);
+      this.openActionMenuId = orderId;
+    },
+
+    positionActionMenu(trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const menuWidth = 150;
+      const menuHeight = 186;
+      const margin = 8;
+      const viewportPadding = 8;
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      );
+      const opensUp = rect.bottom + menuHeight + margin > window.innerHeight;
+
+      this.actionMenuPosition = {
+        top: opensUp ? Math.max(viewportPadding, rect.top - menuHeight - margin) : rect.bottom + margin,
+        left,
+      };
     },
 
     closeActionMenu() {
@@ -670,8 +723,9 @@ export default {
           can_export: raw.export ?? false,
         };
         this.contracts = options.contracts || [];
+        this.errorMessage = '';
       } catch (error) {
-        console.error('Failed to load variation order permissions:', error);
+        this.setError(error, 'Failed to load variation order permissions.');
       }
     },
 
@@ -682,8 +736,9 @@ export default {
          if (data.monthly_breakdown) {
            this.monthlyBreakdown = data.monthly_breakdown;
          }
+         this.errorMessage = '';
        } catch (error) {
-         console.error('Failed to load variation order summary:', error);
+         this.setError(error, 'Failed to load variation order summary.');
        }
      },
 
@@ -699,8 +754,9 @@ export default {
         const response = await variationOrderService.getVariationOrders(params);
         this.orders = response.data || [];
         this.pagination = response.meta || this.pagination;
+        this.errorMessage = '';
       } catch (error) {
-        console.error('Failed to load variation orders:', error);
+        this.setError(error, 'Failed to load variation orders.');
       } finally {
         this.isLoadingOrders = false;
       }
@@ -962,7 +1018,8 @@ export default {
         const response = await variationOrderService.getVariationOrder(order.id);
         const data = response?.data?.data || response?.data || {};
         if (!data.id) {
-          console.warn('[VariationOrders] Unexpected detail response shape', response);
+          this.errorMessage = 'Unable to load variation order details.';
+          return;
         }
         this.detailOrder = data;
         this.resetDocumentUpload();
@@ -1034,8 +1091,14 @@ export default {
     },
 
     showError(error) {
-      const message = error?.response?.data?.message || error.message || 'Something went wrong.';
+      const message = this.setError(error, 'Something went wrong.');
       alert(message);
+    },
+
+    setError(error, fallback) {
+      const message = error?.response?.data?.message || error.message || fallback;
+      this.errorMessage = message;
+      return message;
     },
 
     editOrder(order) {
@@ -1066,48 +1129,54 @@ export default {
 </script>
 
 <style scoped>
-.vo-actions-wrap {
-  position: relative;
-  display: inline-flex;
-}
-
 .vo-actions-menu {
-  position: absolute;
-  top: calc(100% + 0.35rem);
-  right: 0;
-  z-index: 1050;
-  list-style: none;
-  margin: 0;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  font-size: 0.85rem;
+  display: inline-flex;
+  position: relative;
+}
+
+.vo-action-menu {
+  position: fixed;
   min-width: 150px;
-  padding: 0.3rem;
-  background: #fff;
+  padding: 0.35rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  z-index: 1200;
 }
 
-.vo-actions-menu .dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
+.vo-action-menu-item {
   display: flex;
   align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 34px;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: left;
 }
 
-.vo-actions-menu .dropdown-item:hover { background: #f3f4f6; }
-.vo-actions-menu .dropdown-item.text-danger:hover { background: #fef2f2; }
-
-.dropdown-item {
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.75rem;
-  display: flex;
-  align-items: center;
+.vo-action-menu-item:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #111827;
 }
-.dropdown-item:hover { background: #f3f4f6; }
-.dropdown-item.text-danger:hover { background: #fef2f2; }
 
-.disabled-link {
-  opacity: 0.5;
-  pointer-events: none;
+.vo-action-menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.vo-action-menu-item.danger {
+  color: #dc2626;
+}
+
+.vo-action-menu-item.danger:hover:not(:disabled) {
+  background: #fef2f2;
 }
 
 .dropdown-icon { font-size: 1rem; }
@@ -1190,6 +1259,10 @@ export default {
   background: transparent;
   border-bottom: 1px solid #e0e5ee;
   padding: 1.5rem;
+}
+
+.vo-status-group {
+  flex-wrap: wrap;
 }
 
 .table { font-size: 0.875rem; }
@@ -1309,5 +1382,54 @@ export default {
 .document-meta {
   font-size: 0.75rem;
   color: #5a6270;
+}
+
+@media (max-width: 576px) {
+  .vo-status-group {
+    width: 100%;
+  }
+
+  .vo-status-group > .btn {
+    flex: 1 1 0;
+  }
+
+  .vo-more-btn {
+    width: 100%;
+  }
+
+  .vo-actions-menu > .btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .vo-action-menu {
+    min-width: 160px;
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .pipeline-labels {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    justify-content: flex-start;
+  }
+
+  .pipeline-labels span {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 120px;
+  }
+
+  .monthly-row .d-flex {
+    gap: 8px;
+  }
+
+  .document-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .document-info {
+    align-items: flex-start;
+  }
 }
 </style>

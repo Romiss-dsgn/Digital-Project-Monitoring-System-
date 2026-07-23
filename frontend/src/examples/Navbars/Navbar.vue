@@ -14,13 +14,6 @@
       </label>
 
       <div class="contrack-actions">
-        <button class="contrack-icon" type="button" aria-label="Notifications">
-          <span class="material-symbols-rounded">notifications</span>
-        </button>
-        <button class="contrack-icon" type="button" aria-label="Help">
-          <span class="material-symbols-rounded">help</span>
-        </button>
-
         <div class="contrack-profile" ref="profileRef">
           <div class="contrack-profile__text">
             <strong>{{ displayName }}</strong>
@@ -137,12 +130,13 @@ export default {
 <style scoped>
 .contrack-header {
   width: 100%;
-  min-height: 80px;
+  min-height: var(--contrack-shell-header-height);
   background: #ffffff;
   border-radius: 0;
   border-bottom: 1px solid #eef0f4;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-  z-index: 20;
+  position: relative;
+  z-index: 1040;
 }
 
 .contrack-header__inner {
@@ -150,7 +144,7 @@ export default {
   grid-template-columns: max-content minmax(220px, 560px) 1fr;
   align-items: center;
   gap: 2rem;
-  min-height: 80px;
+  min-height: var(--contrack-shell-header-height);
   padding: 0 1.75rem;
 }
 
@@ -160,6 +154,7 @@ export default {
   font-size: 1.9rem;
   font-weight: 900;
   line-height: 1;
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -397,8 +392,8 @@ export default {
 
 @media (max-width: 1199.98px) {
   .contrack-header__inner {
-    grid-template-columns: 38px max-content 1fr;
-    gap: 1rem;
+    grid-template-columns: 44px max-content 1fr;
+    gap: 0.85rem;
   }
   .contrack-search {
     display: none;
@@ -407,17 +402,50 @@ export default {
 
 @media (max-width: 767.98px) {
   .contrack-header__inner {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 0.75rem;
     padding: 0 1rem;
   }
+  .contrack-header__inner {
+    min-height: var(--contrack-shell-header-height);
+  }
   .contrack-title {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .contrack-menu,
+  .contrack-avatar {
+    width: 44px;
+    height: 44px;
   }
   .contrack-actions {
     gap: 0.65rem;
+    min-width: 0;
   }
   .contrack-profile__text,
   .contrack-icon {
     display: none;
+  }
+  .contrack-profile {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .contrack-dropdown {
+    width: min(240px, calc(100vw - 1rem));
+    max-width: calc(100vw - 1rem);
+  }
+}
+
+@media (max-width: 430px) {
+  .contrack-header__inner {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+  }
+
+  .contrack-title {
+    font-size: 1rem;
   }
 }
 </style>

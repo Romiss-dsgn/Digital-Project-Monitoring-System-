@@ -21,18 +21,18 @@ The MVP should prove these workflows first:
 
 | Module | Status | Notes |
 | --- | --- | --- |
-| Dashboard | Partial | UI exists. Needs real metrics from connected modules. |
-| User Management | In progress | Backend admin endpoints exist. Frontend module is active branch work. |
+| Dashboard | MVP connected | Summary/export endpoints read connected projects, contracts, cashflow, VOs, documents, and alerts. |
+| User Management | MVP connected | Admin users, roles, stats, access request approval/rejection, and frontend management screen are connected. |
 | Infrastructure Plans | MVP connected | DB-backed project register, summary cards, filters, create/edit/archive flow, audit logging, and UI cleanup are active. This remains the only project creation workflow. |
 | Engineering Plans | MVP connected | DB-backed listing, summary cards, pagination, project dropdown, upload, download, review status updates, archive, and audit logging exist. |
 | Contract Management | MVP connected | DB-backed CRUD/archive, documents, summary, permissions, audit logs, seeders, tests. |
 | Project Accomplishments | MVP connected | DB-backed CRUD/archive/validate, documents, summary, project progress sync, seeders, tests. |
-| Cashflows | Not connected | UI exists. Backend tables/models exist. |
-| Variation Orders | Not connected | UI exists. Backend tables/models exist. |
-| Reports | Not connected | UI exists. Needs reporting endpoints. |
-| Audit Logs | Partial | Audit log writing exists. Read-only audit module API pending. |
-| Notifications | Not connected | UI and tables/models exist. Workflow pending. |
-| Contractor Performance | Not connected | UI and table/model exist. Workflow pending. |
+| Cashflows | MVP connected | Cashflow periods, invoices, payments, summaries, options, documents, and seed data are connected. |
+| Variation Orders | MVP connected | VO CRUD/lifecycle, documents, summaries, contract revised amount impact, seed data, and tests are connected. |
+| Reports | MVP connected | Admin report endpoints and frontend views read connected source module data. |
+| Audit Logs | MVP connected | Important writes are logged and the read-only audit API/frontend module is connected. |
+| Notifications | Out of MVP | Hidden/redirected until the workflow is intentionally built. |
+| Contractor Performance | Out of MVP | Hidden/redirected until contractor rating workflow is intentionally built. |
 
 ## Recommended Final Module Structure
 
@@ -202,179 +202,50 @@ Reason:
 
 ## Recommended Next Work Sequence
 
-### 1. Centralize Project Creation And Project Selection
+### 1. Keep The QA Dataset Small And Repeatable
 
-Owner: `infrastructure-plans`, `engineering-plans`, or `project-plans` branch.
+The default seed should remain useful for E2E, not a fake production database.
 
-Current progress:
+- Keep 3 users, 3 contractors, 3 projects, 3 contracts, 3 VOs, 3 cashflow periods, 3 invoices, and 3 accomplishments.
+- Keep engineering plans and document tables empty after seed.
+- Create PDF/DOCX/PNG records during E2E upload tests.
+- Rerun `migrate:fresh --seed` when checking cross-module flow.
 
-- Infrastructure Plans now owns project creation/edit/archive and reads the project register from `projects`.
-- Infrastructure Plans now has aligned page header, stable pagination, usable filters, DB-backed summary cards, regional distribution, and recent updates.
-- Engineering Plans now requires an existing `project_id` before upload.
-- Engineering Plans now loads project options from the backend instead of using dot/placeholder labels.
-- Engineering Plans list, cards, pagination, download, review status, and archive actions now read/write `engineering_plans`.
-- Infrastructure Plans remains the correct place to create project records.
+### 2. Expand Test Coverage Around Connected Modules
 
-Backend:
+Current backend tests cover core project, contract, cashflow, variation order, and accomplishment behavior. The next tests should protect the highest-risk summaries and exports.
 
-- Infrastructure Plans is the only place that creates/updates project records.
-- Confirm Engineering Plans continues to require a valid `project_id`.
-- Confirm Project Accomplishments requires a valid `project_id`.
-- Keep project dropdown options reusable for Engineering Plans and Project Accomplishments.
+- Add/keep feature tests for dashboard summary and export.
+- Add/keep feature tests for seeded variation order lifecycle and contract revised amount behavior.
+- Add/keep feature tests for report endpoints and audit log filters.
+- Run tests through `scripts/qa/run-backend-tests.ps1` so the local development database is not used as the test database.
 
-Frontend:
+### 3. Run E2E Before Each Staging Merge
 
-- `Add New Project` stays only in Infrastructure Plans.
-- Do not add project creation modals in Engineering Plans or Project Accomplishments.
-- Clear module descriptions are shown under page titles.
-- If no project records exist, show an empty state that tells the user to create a project in Infrastructure Plans first.
-- Keep Engineering Plans project selection required for upload.
-- Make Project Accomplishments project selection required for reports.
+Use the runbook in `SYSTEM_AUDIT_AND_E2E_TEST_PLAN.md`.
 
-Tests:
+- Run API smoke with `scripts/qa/api-smoke.ps1`.
+- Run engineering permissions smoke with `scripts/qa/test-engineering-plan-permissions.ps1`.
+- Run backend tests with `scripts/qa/run-backend-tests.ps1`.
+- Run frontend build with `npm run build` from `frontend/`.
+- Check browser DevTools for 401/403/404/422/500 errors and action-menu issues.
 
-- Engineering plan upload fails if `project_id` is missing.
-- Accomplishment report creation fails if `project_id` is missing.
-- Project dropdowns load from the same project source.
+### 4. Keep Out-Of-MVP Screens Hidden
 
-### 2. Stabilize User Management
+Notifications and Contractor Performance are not in the current MVP. Do not expose them in the sidebar until real APIs, permissions, seed rules, and E2E scenarios exist.
 
-Owner: `user-management` branch.
+- Legacy direct routes can redirect to Dashboard.
+- Do not add new static rows for those screens.
+- Revisit them only after the connected MVP flow is stable.
 
-Backend:
+### 5. Polish Connected UI Flows
 
-- Confirm admin user CRUD works.
-- Confirm accept/reject access requests.
-- Confirm role dropdown uses `roles`.
-- Confirm active/inactive user updates.
+Use Vue-controlled row action overlays on connected table modules so row menus work consistently at the top, middle, and bottom of tables.
 
-Frontend:
-
-- Remove static user rows.
-- Load users from `/api/v2/admin/users`.
-- Add user create/edit/status actions.
-- Show role and active status.
-
-Tests:
-
-- Admin can list users.
-- Admin can create/update/deactivate user.
-- Non-admin is rejected if permissions are enforced.
-
-### 3. Finish Project Plans Foundation
-
-Owner: `infrastructure-plans` or `project-plans` branch.
-
-Backend:
-
-- `ProjectController` supports list, filters, create, update, and archive.
-- `ProjectController` returns project summary metrics with the list response.
-- `ProjectController` writes audit logs for create/update/archive.
-- Next backend improvement: add a dedicated project options endpoint if more modules need lighter dropdown data.
-
-Frontend:
-
-- Infrastructure Plans uses `project.service.js` and no longer depends on static register data.
-- Infrastructure Plans has create/edit/archive project flow.
-- Infrastructure Plans page header, table overflow, pagination, and empty states are cleaned up.
-- Engineering Plans project dropdown uses real projects.
-
-Tests:
-
-- Project CRUD.
-- Project archive.
-- Project list filters.
-
-### 4. Finish Engineering Plans
-
-Owner: `engineering-plans` branch.
-
-Backend:
-
-- Show endpoint exists.
-- Download endpoint exists for stored upload files.
-- Status/review endpoint exists for approved, revision required, and for review states.
-- Archive endpoint exists.
-- Audit logging exists for create, review, and archive actions.
-
-Frontend:
-
-- Engineering document list remains DB-backed.
-- Loading/empty/error states exist.
-- Download/review/archive actions are connected.
-- Upload modal remains connected and requires an existing project.
-- Pagination now uses compact round controls aligned with Infrastructure Plans.
-
-Tests:
-
-- Upload stores private file.
-- Review changes status.
-- Download requires auth.
-
-### 5. Build Financial Management
-
-Owner: new `financial-management` branch.
-
-Start with Variation Orders because it changes contract value.
-
-Backend:
-
-- Variation order CRUD.
-- VO document upload.
-- VO approval/rejection.
-- Approved VO should affect revised contract amount or be included in contract financial summary.
-
-Frontend:
-
-- Replace static VO table.
-- Add VO create/edit/approve/reject.
-- Show contract link and amount impact.
-
-Then add Cashflows:
-
-- Cashflow periods by contract.
-- Billing/payment status.
-- Disbursement summary.
-- Budget vs expenditure chart from DB.
-
-Tests:
-
-- VO approval updates financial summary.
-- Cashflow summary calculates totals from DB.
-
-### 6. Records and Reports
-
-Owner: new `records-reports` branch.
-
-Backend:
-
-- Audit log index endpoint.
-- Report summary endpoints.
-- Filters by module, user, date, project, contract.
-
-Frontend:
-
-- Replace static reports/audit logs.
-- Add export-ready views.
-
-Tests:
-
-- Audit logs are created by write actions.
-- Audit logs are read-only.
-
-### 7. Dashboard Metrics
-
-Owner: new `dashboard-metrics` branch.
-
-Backend:
-
-- Dashboard summary endpoint.
-- Pull from projects, contracts, accomplishments, variation orders, cashflows, documents.
-
-Frontend:
-
-- Replace static cards/charts.
-- Add loading and empty states.
+- Keep table actions independent from Bootstrap dropdown JavaScript.
+- Keep long text truncated or intentionally wrapped.
+- Keep loading, empty, error, and permission-denied states visible.
+- Keep write buttons disabled while requests are in progress.
 
 ## Branching Workflow
 

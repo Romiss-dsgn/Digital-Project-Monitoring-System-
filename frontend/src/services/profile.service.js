@@ -17,15 +17,5 @@ export default {
     const newJson = dataFormatter.serialize({ stuff: profile })
     const response = await axios.patch(API_URL + "/me", newJson, { headers: authHeader() })
     return dataFormatter.deserialize(response.data);
-  },
-
-  async uploadPic(pic, userId) {
-    const postUrl = API_URL + "/uploads/users/" + userId + "/profile-image";
-    const response = await axios.post(postUrl,
-      { attachment: pic },
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    );
-    return response.data;
   }
-
 }

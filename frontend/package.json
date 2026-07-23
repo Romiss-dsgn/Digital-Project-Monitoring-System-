@@ -26,11 +26,14 @@
     "chart.js": "3.6.0",
     "core-js": "3.6.5",
     "jsona": "^1.11.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "sweetalert2": "^11.7.1",
     "vee-validate": "4.7.4",
     "vue": "3.2.0",
     "vue-router": "4.0.14",
     "vuex": "4.0.2",
+    "xlsx": "^0.18.5",
     "yup": "^1.0.0"
   },
   "devDependencies": {

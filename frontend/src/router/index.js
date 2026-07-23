@@ -5,30 +5,20 @@ import { clearStoredAuthToken, hasStoredAuthToken } from "@/services/auth-token"
 // Lazy route imports keep module screens out of the initial bundle.
 // This makes the login/dashboard load lighter while each module is still loaded on demand.
 const Dashboard = () => import("../views/Dashboard.vue");
-const Tables = () => import("../views/Tables.vue");
-const Billing = () => import("../views/Billing.vue");
-const RTL = () => import("../views/Rtl.vue");
-const Notifications = () => import("../views/Notifications.vue");
-const Profile = () => import("../views/Profile.vue");
-const SignIn = () => import("../views/SignIn.vue");
-const SignUp = () => import("../views/SignUp.vue");
 const Login = () => import("../views/examples-api/Login.vue");
 const Signup = () => import("../views/examples-api/Signup.vue");
 const PasswordForgot = () => import("../views/examples-api/PasswordForgot.vue");
 const PasswordReset = () => import("../views/examples-api/PasswordReset.vue");
-const UserProfile = () => import("../views/examples-api/profile/UserProfile.vue");
-const Users = () => import("../views/examples-api/users/UsersList.vue");
 const ContractManagement = () => import("../views/modules/ContractManagement.vue");
 const CashflowManagement = () => import("../views/modules/CashflowManagement.vue");
 const EngineeringPlans = () => import("../views/modules/EngineeringPlans.vue");
 const VariationOrders = () => import("../views/modules/VariationOrders.vue");
 const Accomplishments = () => import("../views/modules/Accomplishments.vue");
-const ContractorPerformance = () => import("../views/modules/ContractorPerformance.vue");
 const AuditTrail = () => import("../views/modules/AuditTrail.vue");
-const NotificationsInbox = () => import("../views/modules/NotificationsInbox.vue");
 const InfrastructurePlans = () => import("../views/modules/InfrastructurePlans.vue");
 const Reports = () => import("../views/modules/Reports.vue");
 const Settings = () => import("../views/modules/Settings.vue");
+const UserProfile = () => import("../views/examples-api/profile/UserProfile.vue");
 const UserManagement = () => import("../views/modules/UserManagement.vue");
 
 const routes = [
@@ -44,40 +34,31 @@ const routes = [
   },
   {
     path: "/tables",
-    name: "Tables",
-    component: Tables,
+    redirect: "/dashboard",
   },
   {
     path: "/billing",
-    name: "Billing",
-    component: Billing,
+    redirect: "/dashboard",
   },
   {
     path: "/rtl-page",
-    name: "RTL",
-    component: RTL,
+    redirect: "/dashboard",
   },
   {
     path: "/notifications",
-    name: "Notifications",
-    component: Notifications,
+    redirect: "/dashboard",
   },
   {
     path: "/profile",
-    name: "Profile",
-    component: Profile,
+    redirect: "/settings",
   },
   {
     path: "/sign-in",
-    name: "SignIn",
-    component: SignIn,
-    meta: { public: true, hideAppShell: true },
+    redirect: "/login",
   },
   {
     path: "/sign-up",
-    name: "SignUp",
-    component: SignUp,
-    meta: { public: true, hideAppShell: true },
+    redirect: "/signup",
   },
   {
     path: "/login",
@@ -106,12 +87,11 @@ const routes = [
   {
     path: "/user-profile",
     name: "User Profile",
-    component: UserProfile
+    component: UserProfile,
   },
   {
     path: '/users',
-    name: "Users",
-    component: Users
+    redirect: "/user-management",
   },
   // Module routes
   {
@@ -157,8 +137,7 @@ const routes = [
   },
   {
     path: "/contractor-performance",
-    name: "contractor-performance",
-    component: ContractorPerformance
+    redirect: "/dashboard",
   },
   {
     path: "/audit-trail",
@@ -167,14 +146,16 @@ const routes = [
   },
   {
     path: "/notifications-inbox",
-    name: "notifications-inbox",
-    component: NotificationsInbox
-  }
-
-  ,{
+    redirect: "/dashboard",
+  },
+  {
     path: "/user-management",
     name: "user-management",
     component: UserManagement
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: "/dashboard",
   }
 ];
 
@@ -184,7 +165,7 @@ const router = createRouter({
   linkActiveClass: "active",
 });
 
-const authPageNames = ["Login", "Signup", "SignIn", "SignUp"];
+const authPageNames = ["Login", "Signup"];
 
 async function clearLocalSession() {
   clearStoredAuthToken();

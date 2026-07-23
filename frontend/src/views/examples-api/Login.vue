@@ -700,10 +700,20 @@ export default {
 
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 576px) {
+    .login-page {
+        background-attachment: scroll;
+    }
+
     .brand-inner {
         flex-direction: column;
         text-align: center;
         padding: 12px 16px;
+    }
+
+    .brand-subtitle-row {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.35rem;
     }
 
     .brand-title {
@@ -713,6 +723,12 @@ export default {
         text-align: center;
     }
 
+    .brand-subtitle {
+        white-space: normal;
+        font-size: 0.65rem;
+        letter-spacing: 1.5px;
+    }
+
     .brand-line {
         width: 30px;
     }
@@ -720,6 +736,36 @@ export default {
     .login-center {
         padding-top: 2rem;
         padding-bottom: 2rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .login-center {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .brand-inner {
+        padding: 10px 14px;
+    }
+
+    .brand-line {
+        width: 22px;
+    }
+
+    .login-title h4 {
+        font-size: 1.05rem;
+    }
+
+    .login-footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.35rem 0.5rem;
     }
 }
 </style>

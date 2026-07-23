@@ -30,7 +30,7 @@ export default {
   async getAccomplishments(params = {}) {
     const response = await axios.get(`${API_URL}/project-accomplishments`, {
       headers: authHeader(),
-      params: { per_page: 100, ...params },
+      params: { per_page: 10, ...params },
     });
 
     return response.data;

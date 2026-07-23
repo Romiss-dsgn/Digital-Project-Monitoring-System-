@@ -49,12 +49,13 @@ backend/
 | Contract Management | Contracts CRUD/archive, document upload/download/status/archive, summary/options endpoints, audit logging, tests. |
 | Project Accomplishments | Accomplishment CRUD/archive/validation, document upload/download, project progress sync, summary/options endpoints, tests. |
 | Engineering Plans | DB-backed list/stats/show endpoints, request validation, file service, project-linked upload/store endpoint, authenticated download, review status update, archive, audit logging, and seeder exist. |
-| Cashflows | Tables/models exist. Controller/API work pending. |
-| Variation Orders | Tables/models exist. Controller/API work pending. |
-| Reports | Tables/models foundation exists through source modules. Report controller/API pending. |
-| Audit Logs | Audit table/model/service exists. Dedicated read-only audit module API pending. |
-| Notifications | Tables/models exist. Notification generation/API pending. |
-| Contractor Performance | Table/model exists. Controller/API pending. |
+| Dashboard | DB-backed summary/export endpoints for the MVP dashboard. |
+| Cashflows | Cashflow periods, invoices, invoice documents, payments, summaries, options, audit logging, seed data, and tests are present. |
+| Variation Orders | VO CRUD/lifecycle, documents, approval impact on contract revised amount, summaries, audit logging, seed data, and tests are present. |
+| Reports | DB-backed admin report endpoints read connected project, contract, cashflow, and VO data. |
+| Audit Logs | Audit table/model/service and read-only admin audit API are present. |
+| Notifications | Out of MVP for now. Tables/models may remain for future use. |
+| Contractor Performance | Out of MVP for now. Table/model may remain for future use. |
 
 ## API Routes
 
@@ -109,6 +110,47 @@ POST   /api/v2/project-accomplishments/{accomplishment}/documents
 GET    /api/v2/accomplishment-documents/{document}/download
 ```
 
+Cashflows, invoices, and payments:
+
+```text
+GET    /api/v2/cashflow-periods/summary
+GET    /api/v2/cashflow-periods/options
+GET    /api/v2/cashflow-periods
+POST   /api/v2/cashflow-periods
+GET    /api/v2/cashflow-periods/{period}
+PATCH  /api/v2/cashflow-periods/{period}
+DELETE /api/v2/cashflow-periods/{period}
+GET    /api/v2/cashflow-periods/{period}/invoices
+GET    /api/v2/invoices/summary
+GET    /api/v2/invoices/options
+GET    /api/v2/invoices
+POST   /api/v2/invoices
+GET    /api/v2/invoices/{invoice}
+PATCH  /api/v2/invoices/{invoice}
+PATCH  /api/v2/invoices/{invoice}/verify
+PATCH  /api/v2/invoices/{invoice}/approve
+DELETE /api/v2/invoices/{invoice}
+POST   /api/v2/invoices/{invoice}/documents
+GET    /api/v2/invoice-documents/{document}/download
+POST   /api/v2/payments
+```
+
+Variation Orders:
+
+```text
+GET    /api/v2/variation-orders/summary
+GET    /api/v2/variation-orders/options
+GET    /api/v2/variation-orders
+POST   /api/v2/variation-orders
+GET    /api/v2/variation-orders/{order}
+PATCH  /api/v2/variation-orders/{order}
+PATCH  /api/v2/variation-orders/{order}/submit
+PATCH  /api/v2/variation-orders/{order}/review
+DELETE /api/v2/variation-orders/{order}
+POST   /api/v2/variation-orders/{order}/documents
+GET    /api/v2/variation-order-documents/{document}/download
+```
+
 Admin:
 
 ```text
@@ -125,12 +167,23 @@ DELETE /api/v2/admin/users/{user}
 POST   /api/v2/admin/users/{user}/accept
 DELETE /api/v2/admin/users/{user}/reject
 GET    /api/v2/admin/roles
+GET    /api/v2/admin/dashboard/summary
+GET    /api/v2/admin/dashboard/export
+GET    /api/v2/admin/projects/options
 GET    /api/v2/admin/engineering-plans
 POST   /api/v2/admin/engineering-plans
 GET    /api/v2/admin/projects
 POST   /api/v2/admin/projects
 PATCH  /api/v2/admin/projects/{project}
 DELETE /api/v2/admin/projects/{project}
+GET    /api/v2/admin/reports/project-status
+GET    /api/v2/admin/reports/{reportType}
+GET    /api/v2/admin/reports/{reportType}/export
+GET    /api/v2/admin/audit-logs
+GET    /api/v2/admin/audit-logs/stats
+GET    /api/v2/admin/audit-logs/modules
+GET    /api/v2/admin/audit-logs/roles
+POST   /api/v2/admin/audit-logs/export
 ```
 
 Check routes:
@@ -179,6 +232,11 @@ Current data-heavy MVP tables:
 - `project_accomplishments`
 - `accomplishment_documents`
 - `engineering_plans`
+- `cashflow_periods`
+- `invoices`
+- `payments`
+- `variation_orders`
+- `variation_order_documents`
 - `audit_logs`
 - `users`
 - `roles`
@@ -202,6 +260,8 @@ ContractManagementSeeder
 ProjectAccomplishmentsSeeder
 ProjectsSeeder
 EngineeringPlansSeeder
+VariationOrdersSeeder
+CashflowSeeder
 ```
 
 Run all seeders:
@@ -222,6 +282,16 @@ Seeded admin account:
 admin@contrackpro.test
 password
 ```
+
+QA seed users:
+
+```text
+admin@contrackpro.test       password
+qa.engineer@contrackpro.test password
+qa.monitor@contrackpro.test  password
+```
+
+The seed data is intentionally small and file-free. A fresh seed creates 3 users, 3 contractors, 3 projects, 3 contracts, 3 VOs, 3 cashflow periods, 3 invoices, 1 payment, and 3 accomplishments. Engineering plans and document tables start empty so upload workflows are tested with real files.
 
 ## Permissions
 
@@ -300,6 +370,13 @@ Run tests:
 
 ```powershell
 docker compose exec backend php artisan test
+```
+
+Preferred backend test runner with an isolated MySQL test database:
+
+```powershell
+cd ..
+powershell -ExecutionPolicy Bypass -File .\scripts\qa\run-backend-tests.ps1
 ```
 
 Run selected tests:

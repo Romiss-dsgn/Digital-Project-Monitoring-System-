@@ -1,5 +1,6 @@
 module.exports = {
   productionSourceMap: false,
+  transpileDependencies: ["jspdf", "fast-png", "iobuffer"],
   configureWebpack: {
     performance: {
       hints: false,
