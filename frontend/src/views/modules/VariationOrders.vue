@@ -68,9 +68,9 @@
               <h6>Active Variation Orders</h6>
               <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center w-100 w-lg-auto">
                 <div class="btn-group btn-group-sm vo-status-group" role="group">
-                  <button type="button" class="btn btn-dark" @click="filterStatus = ''">All</button>
-                  <button type="button" class="btn btn-outline-secondary" @click="filterStatus = 'Submitted'">Requests</button>
-                  <button type="button" class="btn btn-outline-secondary" @click="filterStatus = 'Under Review'">Approvals</button>
+                  <button type="button" class="btn" :class="filterStatus === '' ? 'btn-dark' : 'btn-outline-secondary'" @click="setQuickFilter('')">All</button>
+                  <button type="button" class="btn" :class="filterStatus === 'Submitted' ? 'btn-dark' : 'btn-outline-secondary'" @click="setQuickFilter('Submitted')">Requests</button>
+                  <button type="button" class="btn" :class="filterStatus === 'Under Review' ? 'btn-dark' : 'btn-outline-secondary'" @click="setQuickFilter('Under Review')">Approvals</button>
                 </div>
                 <button class="btn btn-sm btn-icon btn-light text-secondary vo-more-btn">
                   <i class="material-icons-round">more_vert</i>
@@ -354,29 +354,35 @@
       @confirm="applyFilters"
     >
       <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">tune</i> Status & Stage</div>
-        <div class="bfp-filter-grid">
-          <label class="bfp-check-option"><input type="checkbox" v-model="filters.draft"> Draft</label>
-          <label class="bfp-check-option"><input type="checkbox" v-model="filters.submitted"> Submitted</label>
-          <label class="bfp-check-option"><input type="checkbox" v-model="filters.under_review"> Under Review</label>
-          <label class="bfp-check-option"><input type="checkbox" v-model="filters.approved"> Approved</label>
-        </div>
-      </div>
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Date & Amount</div>
+        <div class="bfp-section-label"><i class="material-icons-round">search</i> Search & Status</div>
         <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Requested From</label>
+          <div class="bfp-field-full">
+            <label class="bfp-label">Search</label>
             <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="filters.requested_from" />
+              <i class="material-icons-round bfp-input-icon">search</i>
+              <input class="bfp-input" type="text" v-model.trim="filters.search" placeholder="VO number, description, or contract title" />
             </div>
           </div>
           <div class="bfp-field-half">
-            <label class="bfp-label">Minimum Cost Impact</label>
+            <label class="bfp-label">Status</label>
             <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">payments</i>
-              <input class="bfp-input" type="number" v-model="filters.min_amount" placeholder="0" />
+              <i class="material-icons-round bfp-input-icon">flag</i>
+              <select class="bfp-input bfp-select" v-model="filters.status">
+                <option value="">All Statuses</option>
+                <option v-for="status in statuses" :key="status" :value="status">{{ status }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="bfp-field-half">
+            <label class="bfp-label">Contract</label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">folder</i>
+              <select class="bfp-input bfp-select" v-model="filters.contract_id">
+                <option value="">All Contracts</option>
+                <option v-for="contract in contracts" :key="contract.id" :value="contract.id">
+                  {{ contract.contract_number }} - {{ contract.contract_title }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
@@ -411,6 +417,31 @@
             <div class="bfp-input-wrap">
               <textarea class="bfp-input bfp-textarea" rows="3" v-model="approvalRemarks" placeholder="Add remarks for this decision"></textarea>
             </div>
+          </div>
+        </div>
+      </div>
+    </BfpModal>
+
+    <BfpModal
+      :show="showSaveResultModal"
+      :title="saveResultTitle || 'Variation Order Status'"
+      stripe="DATA SUBMISSION RESULT"
+      :confirm-text="saveResultStatus === 'success' ? 'OK' : 'Try Again'"
+      :confirm-icon="saveResultStatus === 'success' ? 'check_circle' : 'error'"
+      :show-cancel="false"
+      @close="closeSaveResultModal"
+      @confirm="closeSaveResultModal"
+    >
+      <div class="bfp-section mb-0">
+        <div class="bfp-section-label">
+          <i class="material-icons-round">{{ saveResultStatus === 'success' ? 'check_circle' : 'error' }}</i>
+          {{ saveResultStatus === 'success' ? 'Add Successful' : 'Add Failed' }}
+        </div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field-full">
+            <p class="mb-0 text-secondary">
+              {{ saveResultMessage }}
+            </p>
           </div>
         </div>
       </div>
@@ -559,6 +590,7 @@ export default {
       showRequestModal: false,
       showFilterModal: false,
       showReviewModal: false,
+      showSaveResultModal: false,
       orders: [],
       contracts: [],
       summary: {},
@@ -578,14 +610,11 @@ export default {
         can_approve: false,
       },
       filterStatus: '',
+      isLoadingOrders: false,
       filters: {
-        draft: true,
-        submitted: true,
-        under_review: true,
-        approved: true,
-        rejected: false,
-        requested_from: '',
-        min_amount: '',
+        search: '',
+        status: '',
+        contract_id: '',
       },
       newOrder: {
         vo_number: '',
@@ -599,6 +628,9 @@ export default {
       selectedOrder: null,
       reviewAction: 'Approved',
       approvalRemarks: '',
+      saveResultStatus: 'success',
+      saveResultTitle: '',
+      saveResultMessage: '',
       monthlyBreakdown: [],
       showDetailModal: false,
       detailOrder: null,
@@ -678,31 +710,6 @@ export default {
       this.openActionMenuId = null;
     },
 
-    handleViewOrder(order) {
-      this.closeActionMenu();
-      this.viewOrder(order);
-    },
-
-    handleSubmitOrder(order) {
-      this.closeActionMenu();
-      this.submitOrder(order);
-    },
-
-    handleReviewOrder(order) {
-      this.closeActionMenu();
-      this.openReviewModal(order);
-    },
-
-    handleEditOrder(order) {
-      this.closeActionMenu();
-      this.editOrder(order);
-    },
-
-    handleArchiveOrder(order) {
-      this.closeActionMenu();
-      this.archiveOrder(order);
-    },
-
     async loadPermissions() {
       try {
         const options = await variationOrderService.getOptions();
@@ -736,17 +743,22 @@ export default {
      },
 
     async loadOrders(page = 1) {
+      this.isLoadingOrders = true;
       try {
-        const params = { page };
-        if (this.filterStatus) {
-          params.status = this.filterStatus;
-        }
+        const params = {
+          page,
+          search: this.filters.search || undefined,
+          status: this.filters.status || this.filterStatus || undefined,
+          contract_id: this.filters.contract_id || undefined,
+        };
         const response = await variationOrderService.getVariationOrders(params);
         this.orders = response.data || [];
         this.pagination = response.meta || this.pagination;
         this.errorMessage = '';
       } catch (error) {
         this.setError(error, 'Failed to load variation orders.');
+      } finally {
+        this.isLoadingOrders = false;
       }
     },
 
@@ -818,9 +830,38 @@ export default {
       this.showRequestModal = true;
     },
 
-    applyFilters() {
+    openSaveResultModal(status, title, message) {
+      this.saveResultStatus = status;
+      this.saveResultTitle = title;
+      this.saveResultMessage = message;
+      this.showSaveResultModal = true;
+    },
+
+    closeSaveResultModal() {
+      this.showSaveResultModal = false;
+      this.saveResultStatus = 'success';
+      this.saveResultTitle = '';
+      this.saveResultMessage = '';
+    },
+
+    async applyFilters() {
       this.showFilterModal = false;
-      this.loadOrders(1);
+      await this.loadOrders(1);
+    },
+
+    async setQuickFilter(status) {
+      this.filterStatus = status;
+      this.filters.status = status;
+      await this.loadOrders(1);
+    },
+
+    resetFilters() {
+      this.filterStatus = '';
+      this.filters = {
+        search: '',
+        status: '',
+        contract_id: '',
+      };
     },
 
     async createVariationOrder() {
@@ -836,10 +877,16 @@ export default {
 
         this.showRequestModal = false;
         this.resetNewOrder();
-        this.loadOrders(1);
-        this.loadSummary();
+        await this.loadOrders(1);
+        await this.loadSummary();
+        this.openSaveResultModal(
+          'success',
+          'Variation Order Added',
+          'The variation order was added successfully.'
+        );
       } catch (error) {
-        this.showError(error);
+        const message = error?.response?.data?.message || error?.message || 'Unable to add variation order.';
+        this.openSaveResultModal('error', 'Add Failed', message);
       }
     },
 
@@ -857,10 +904,16 @@ export default {
 
         this.showRequestModal = false;
         this.editingOrder = null;
-        this.loadOrders(this.pagination.current_page);
-        this.loadSummary();
+        await this.loadOrders(this.pagination.current_page);
+        await this.loadSummary();
+        this.openSaveResultModal(
+          'success',
+          'Variation Order Updated',
+          'The variation order was updated successfully.'
+        );
       } catch (error) {
-        this.showError(error);
+        const message = error?.response?.data?.message || error?.message || 'Unable to update variation order.';
+        this.openSaveResultModal('error', 'Update Failed', message);
       }
     },
 
@@ -868,9 +921,16 @@ export default {
       if (!confirm(`Are you sure you want to submit variation order ${order.vo_number}?`)) return;
       try {
         await variationOrderService.submitVariationOrder(order.id);
-        this.loadOrders(this.pagination.current_page);
+        await this.loadOrders(this.pagination.current_page);
+        await this.loadSummary();
+        this.openSaveResultModal(
+          'success',
+          'Variation Order Submitted',
+          `Variation order ${order.vo_number} was submitted successfully.`
+        );
       } catch (error) {
-        this.showError(error);
+        const message = error?.response?.data?.message || error?.message || 'Unable to submit variation order.';
+        this.openSaveResultModal('error', 'Submit Failed', message);
       }
     },
 
@@ -879,6 +939,31 @@ export default {
       this.reviewAction = 'Approved';
       this.approvalRemarks = '';
       this.showReviewModal = true;
+    },
+
+    handleViewOrder(order) {
+      this.closeActionMenu();
+      this.viewOrder(order);
+    },
+
+    handleSubmitOrder(order) {
+      this.closeActionMenu();
+      this.submitOrder(order);
+    },
+
+    handleReviewOrder(order) {
+      this.closeActionMenu();
+      this.openReviewModal(order);
+    },
+
+    handleEditOrder(order) {
+      this.closeActionMenu();
+      this.editOrder(order);
+    },
+
+    handleArchiveOrder(order) {
+      this.closeActionMenu();
+      this.archiveOrder(order);
     },
 
     async reviewOrder() {
@@ -898,10 +983,16 @@ export default {
         );
 
         this.showReviewModal = false;
-        this.loadOrders(this.pagination.current_page);
-        this.loadSummary();
+        await this.loadOrders(this.pagination.current_page);
+        await this.loadSummary();
+        this.openSaveResultModal(
+          'success',
+          'Variation Order Reviewed',
+          `Variation order ${this.selectedOrder.vo_number} was reviewed successfully.`
+        );
       } catch (error) {
-        this.showError(error);
+        const message = error?.response?.data?.message || error?.message || 'Unable to review variation order.';
+        this.openSaveResultModal('error', 'Review Failed', message);
       }
     },
 
@@ -909,9 +1000,16 @@ export default {
       if (!confirm(`Are you sure you want to archive variation order ${order.vo_number}?`)) return;
       try {
         await variationOrderService.archiveVariationOrder(order.id);
-        this.loadOrders(this.pagination.current_page);
+        await this.loadOrders(this.pagination.current_page);
+        await this.loadSummary();
+        this.openSaveResultModal(
+          'success',
+          'Variation Order Archived',
+          `Variation order ${order.vo_number} was archived successfully.`
+        );
       } catch (error) {
-        this.showError(error);
+        const message = error?.response?.data?.message || error?.message || 'Unable to archive variation order.';
+        this.openSaveResultModal('error', 'Archive Failed', message);
       }
     },
 
@@ -971,8 +1069,14 @@ export default {
           documents: [uploaded, ...(this.detailOrder.documents || [])],
         };
         this.resetDocumentUpload();
+        this.openSaveResultModal(
+          'success',
+          'Document Uploaded',
+          'The variation order document was uploaded successfully.'
+        );
       } catch (error) {
-        this.showError(error);
+        const message = error?.response?.data?.message || error?.message || 'Unable to upload document.';
+        this.openSaveResultModal('error', 'Upload Failed', message);
       } finally {
         this.uploadingDocument = false;
       }

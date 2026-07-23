@@ -463,6 +463,69 @@
       </div>
     </BfpModal>
 
+    <BfpModal
+      :show="showRevisionModal"
+      title="Revision Required"
+      stripe="REVISION REMARKS"
+      confirm-text="Submit Revision"
+      confirm-icon="save"
+      :loading="isSavingRevision"
+      @close="closeRevisionModal"
+      @confirm="submitRevision"
+    >
+      <div class="bfp-section mb-0">
+        <div class="bfp-section-label">
+          <i class="material-icons-round">edit_document</i>
+          Revision Notes
+        </div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field bfp-field-full">
+            <label class="bfp-label" for="revision-remarks">
+              Remarks <span class="bfp-required">*</span>
+            </label>
+            <div class="bfp-input-wrap">
+              <i class="material-icons-round bfp-input-icon">notes</i>
+              <textarea
+                id="revision-remarks"
+                v-model="revisionRemarks"
+                class="bfp-input bfp-textarea"
+                rows="4"
+                placeholder="Explain what needs to be revised..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </BfpModal>
+
+    <BfpModal
+      :show="showApprovalModal"
+      title="Approve Engineering Plan"
+      stripe="APPROVAL CONFIRMATION"
+      confirm-text="Mark Approved"
+      confirm-icon="check_circle"
+      :loading="isSavingApproval"
+      @close="closeApprovalModal"
+      @confirm="submitApproval"
+    >
+      <div class="bfp-section mb-0">
+        <div class="bfp-section-label">
+          <i class="material-icons-round">check_circle</i>
+          Approval Review
+        </div>
+        <div class="bfp-form-grid">
+          <div class="bfp-field bfp-field-full">
+            <div class="bfp-input-wrap">
+              <p class="mb-0 text-secondary">
+                You are about to mark <strong>{{ approvalTargetDocument?.filename || "this engineering plan" }}</strong> as approved.
+                This will update the document status to approved and move it out of the revision queue.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </BfpModal>
+
   </div>
 </template>
 
@@ -494,14 +557,21 @@ export default {
       showUploadPlanModal: false,
       showFilterModal: false,
       showPreviewModal: false,
+      showRevisionModal: false,
+      showApprovalModal: false,
       planUploadDragOver: false,
       selectedPlanFiles: [],
       busyPlanId: null,
+      isSavingRevision: false,
+      isSavingApproval: false,
       previewDocument: null,
       previewUrl: "",
       previewKind: "",
       previewMimeType: "",
       previewError: "",
+      revisionTargetDocument: null,
+      revisionRemarks: "",
+      approvalTargetDocument: null,
       isPreviewLoading: false,
       openActionMenuId: null,
       actionMenuPosition: {
@@ -703,11 +773,24 @@ export default {
 
     handlePreviewDocument(doc) {
       this.closeActionMenu();
+      this.closeRevisionModal();
       this.previewDocumentFile(doc);
     },
 
     handleUpdateDocumentStatus(doc, status) {
       this.closeActionMenu();
+      this.closePreviewModal();
+
+      if (status === "revision") {
+        this.openRevisionModal(doc);
+        return;
+      }
+
+      if (status === "approved") {
+        this.openApprovalModal(doc);
+        return;
+      }
+
       this.updateDocumentStatus(doc, status);
     },
 
@@ -1008,6 +1091,30 @@ export default {
       this.revokePreviewUrl();
     },
 
+    openRevisionModal(doc) {
+      this.revisionTargetDocument = doc;
+      this.revisionRemarks = doc.remarks || "";
+      this.showRevisionModal = true;
+    },
+
+    closeRevisionModal() {
+      this.showRevisionModal = false;
+      this.revisionTargetDocument = null;
+      this.revisionRemarks = "";
+      this.isSavingRevision = false;
+    },
+
+    openApprovalModal(doc) {
+      this.approvalTargetDocument = doc;
+      this.showApprovalModal = true;
+    },
+
+    closeApprovalModal() {
+      this.showApprovalModal = false;
+      this.approvalTargetDocument = null;
+      this.isSavingApproval = false;
+    },
+
     async previewDocumentFile(doc) {
       if (this.busyPlanId) return;
 
@@ -1073,7 +1180,41 @@ export default {
       }
     },
 
-    async updateDocumentStatus(doc, status) {
+    async submitRevision() {
+      if (!this.revisionTargetDocument || this.isSavingRevision) {
+        return;
+      }
+
+      const remarks = (this.revisionRemarks || "").trim();
+      if (!remarks) {
+        alert("Please enter revision remarks before submitting.");
+        return;
+      }
+
+      this.isSavingRevision = true;
+      try {
+        await this.updateDocumentStatus(this.revisionTargetDocument, "revision", remarks, true);
+        this.closeRevisionModal();
+      } finally {
+        this.isSavingRevision = false;
+      }
+    },
+
+    async submitApproval() {
+      if (!this.approvalTargetDocument || this.isSavingApproval) {
+        return;
+      }
+
+      this.isSavingApproval = true;
+      try {
+        await this.updateDocumentStatus(this.approvalTargetDocument, "approved", null, true);
+        this.closeApprovalModal();
+      } finally {
+        this.isSavingApproval = false;
+      }
+    },
+
+    async updateDocumentStatus(doc, status, remarksOverride = null, skipConfirm = false) {
       if (this.busyPlanId) return;
 
       if (!this.canApprove) {
@@ -1087,17 +1228,13 @@ export default {
         for_review: "send this plan back to review",
       };
 
-      if (!confirm(`Are you sure you want to ${labels[status] || "update this plan"}?`)) {
+      if (!skipConfirm && !confirm(`Are you sure you want to ${labels[status] || "update this plan"}?`)) {
         return;
       }
 
       const remarks = status === "revision"
-        ? prompt("Revision remarks", doc.remarks || "")
-        : doc.remarks || "";
-
-      if (status === "revision" && remarks === null) {
-        return;
-      }
+        ? (remarksOverride ?? doc.remarks ?? "")
+        : (doc.remarks || "");
 
       this.busyPlanId = doc.id;
       try {
