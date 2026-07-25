@@ -183,7 +183,7 @@
                     :disabled="pagination.current_page === 1"
                     @click="changePage(pagination.current_page - 1)"
                   >
-                    <i class="bi bi-chevron-left"></i>
+                    <i class="material-icons-round" style="font-size: 1rem;">chevron_left</i>
                   </button>
                   <button
                     v-for="page in visiblePages"
@@ -199,7 +199,7 @@
                     :disabled="pagination.current_page === pagination.last_page"
                     @click="changePage(pagination.current_page + 1)"
                   >
-                    <i class="bi bi-chevron-right"></i>
+                    <i class="material-icons-round" style="font-size: 1rem;">chevron_right</i>
                   </button>
                 </div>
               </div>

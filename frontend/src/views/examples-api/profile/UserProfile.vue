@@ -28,8 +28,6 @@
         </div>
         <div class="card-body pt-2 pb-4 px-4">
           <info />
-          <hr class="profile-divider my-4">
-          <password />
         </div>
       </div>
 
@@ -39,11 +37,10 @@
 
 <script>
 import Info from "./Info.vue";
-import Password from "./Password.vue";
 
 export default {
   name: "User Profile",
-  components: { Info, Password },
+  components: { Info },
   computed: {
     profile() {
       return this.$store.getters["profile/getUserProfile"] || {};

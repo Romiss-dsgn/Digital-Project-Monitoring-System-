@@ -220,7 +220,7 @@
                     {{ period.period_label }}
                   </option>
                 </select>
-                <button class="btn btn-sm btn-primary d-flex align-items-center gap-1 cashflow-action-trigger" @click="openAddInvoiceModal">
+                <button class="btn btn-sm btn-primary d-flex align-items-center justify-content-center gap-1 cashflow-action-trigger flex-shrink-0" style="white-space: nowrap;" @click="openAddInvoiceModal">
                   <i class="material-icons-round" style="font-size: 1rem;">add</i>
                   Add Invoice
                 </button>
