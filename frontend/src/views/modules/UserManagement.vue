@@ -293,7 +293,7 @@
     ═══════════════════════════════════════════════════════════ -->
 
     <!-- Add / Edit User Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showUserModal"
       :title="editingUser ? 'Edit System User' : 'Add System User'"
       :stripe="editingUser ? 'EDIT USER RECORD' : 'USER ACCESS REGISTRATION'"
@@ -304,84 +304,84 @@
       @close="closeUserModal"
       @confirm="submitUserForm"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">person</i> User Identity</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Full Name <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">badge</i>
-              <input class="bfp-input" type="text" v-model="form.name" placeholder="Complete name" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">person</i> User Identity</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Full Name <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">badge</i>
+              <input class="tuao-input" type="text" v-model="form.name" placeholder="Complete name" />
             </div>
-            <span class="bfp-error" v-if="errors.name">{{ errors.name[0] }}</span>
+            <span class="tuao-error" v-if="errors.name">{{ errors.name[0] }}</span>
           </div>
 
-          <div class="bfp-field-half">
-            <label class="bfp-label">Username <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">alternate_email</i>
-              <input class="bfp-input" type="text" v-model="form.username" placeholder="system.username" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Username <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">alternate_email</i>
+              <input class="tuao-input" type="text" v-model="form.username" placeholder="system.username" />
             </div>
-            <span class="bfp-error" v-if="errors.username">{{ errors.username[0] }}</span>
+            <span class="tuao-error" v-if="errors.username">{{ errors.username[0] }}</span>
           </div>
 
-          <div class="bfp-field-full">
-            <label class="bfp-label">Email Address <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">mail</i>
-              <input class="bfp-input" type="email" v-model="form.email" placeholder="user@bfp.gov.ph" />
+          <div class="tuao-field-full">
+            <label class="tuao-label">Email Address <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">mail</i>
+              <input class="tuao-input" type="email" v-model="form.email" placeholder="user@bfp.gov.ph" />
             </div>
-            <span class="bfp-error" v-if="errors.email">{{ errors.email[0] }}</span>
+            <span class="tuao-error" v-if="errors.email">{{ errors.email[0] }}</span>
           </div>
 
-          <div class="bfp-field-half">
-            <label class="bfp-label">Badge Number</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">fingerprint</i>
-              <input class="bfp-input" type="text" v-model="form.badge_number" placeholder="BFP-2026-0000" />
-            </div>
-          </div>
-
-          <div class="bfp-field-half">
-            <label class="bfp-label">Contact Number</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">call</i>
-              <input class="bfp-input" type="text" :value="form.contact_number" @input="handleContactNumberInput" maxlength="10" placeholder="9XXXXXXXXX (10 digits, no leading 0)" />
-            </div>
-            <span class="bfp-error" v-if="errors.contact_number">{{ errors.contact_number[0] }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">apartment</i> Assignment</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Position / Designation</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">work</i>
-              <input class="bfp-input" type="text" v-model="form.position" placeholder="e.g. Planning Engineer" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Badge Number</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">fingerprint</i>
+              <input class="tuao-input" type="text" v-model="form.badge_number" placeholder="BFP-2026-0000" />
             </div>
           </div>
 
-          <div class="bfp-field-half">
-            <label class="bfp-label">Office / Unit</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">business</i>
-              <input class="bfp-input" type="text" v-model="form.office_unit" placeholder="e.g. BFP Region II - Engineering Planning Unit" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Contact Number</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">call</i>
+              <input class="tuao-input" type="text" :value="form.contact_number" @input="handleContactNumberInput" maxlength="10" placeholder="9XXXXXXXXX (10 digits, no leading 0)" />
             </div>
+            <span class="tuao-error" v-if="errors.contact_number">{{ errors.contact_number[0] }}</span>
           </div>
         </div>
       </div>
 
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">admin_panel_settings</i> Access Control</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Role</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">verified_user</i>
-              <select class="bfp-input bfp-select" v-model="form.role_id">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">apartment</i> Assignment</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Position / Designation</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">work</i>
+              <input class="tuao-input" type="text" v-model="form.position" placeholder="e.g. Planning Engineer" />
+            </div>
+          </div>
+
+          <div class="tuao-field-half">
+            <label class="tuao-label">Office / Unit</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">business</i>
+              <input class="tuao-input" type="text" v-model="form.office_unit" placeholder="e.g. LGU Tuao - Engineering Planning Unit" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">admin_panel_settings</i> Access Control</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Role</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">verified_user</i>
+              <select class="tuao-input tuao-select" v-model="form.role_id">
                 <option value="">Select Role</option>
                 <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.name }}</option>
               </select>
@@ -389,11 +389,11 @@
           </div>
 
           <!-- Status: dropdown for Edit only (pending notice for Add has been removed) -->
-          <div class="bfp-field-half" v-if="editingUser">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">toggle_on</i>
-              <select class="bfp-input bfp-select" v-model="form.status">
+          <div class="tuao-field-half" v-if="editingUser">
+            <label class="tuao-label">Status</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">toggle_on</i>
+              <select class="tuao-input tuao-select" v-model="form.status">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="pending">Pending</option>
@@ -402,32 +402,32 @@
           </div>
 
           <template v-if="!editingUser">
-            <div class="bfp-field-half">
-              <label class="bfp-label">Password <span class="bfp-required">*</span></label>
-              <div class="bfp-input-wrap">
-                <i class="material-icons-round bfp-input-icon">lock</i>
-                <input class="bfp-input" :type="showPw ? 'text' : 'password'" v-model="form.password" placeholder="Min. 8 characters" />
-                <i class="material-icons-round bfp-input-suffix" style="cursor:pointer" @click="showPw = !showPw">
+            <div class="tuao-field-half">
+              <label class="tuao-label">Password <span class="tuao-required">*</span></label>
+              <div class="tuao-input-wrap">
+                <i class="material-icons-round tuao-input-icon">lock</i>
+                <input class="tuao-input" :type="showPw ? 'text' : 'password'" v-model="form.password" placeholder="Min. 8 characters" />
+                <i class="material-icons-round tuao-input-suffix" style="cursor:pointer" @click="showPw = !showPw">
                   {{ showPw ? 'visibility_off' : 'visibility' }}
                 </i>
               </div>
-              <span class="bfp-error" v-if="errors.password">{{ errors.password[0] }}</span>
+              <span class="tuao-error" v-if="errors.password">{{ errors.password[0] }}</span>
             </div>
 
-            <div class="bfp-field-half">
-              <label class="bfp-label">Confirm Password <span class="bfp-required">*</span></label>
-              <div class="bfp-input-wrap">
-                <i class="material-icons-round bfp-input-icon">lock_outline</i>
-                <input class="bfp-input" :type="showPw ? 'text' : 'password'" v-model="form.password_confirmation" placeholder="Repeat password" />
+            <div class="tuao-field-half">
+              <label class="tuao-label">Confirm Password <span class="tuao-required">*</span></label>
+              <div class="tuao-input-wrap">
+                <i class="material-icons-round tuao-input-icon">lock_outline</i>
+                <input class="tuao-input" :type="showPw ? 'text' : 'password'" v-model="form.password_confirmation" placeholder="Repeat password" />
               </div>
             </div>
           </template>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Delete Confirm Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showDeleteModal"
       title="Delete User"
       stripe="CONFIRM DELETION"
@@ -438,7 +438,7 @@
       @close="showDeleteModal = false"
       @confirm="deleteUser"
     >
-      <div class="bfp-section">
+      <div class="tuao-section">
         <div class="delete-confirm-body">
           <i class="material-icons-round delete-warn-icon">warning</i>
           <p>You are about to permanently delete the account of:</p>
@@ -452,10 +452,10 @@
           <p class="text-danger mt-2 small">This action <strong>cannot</strong> be undone.</p>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- ── Accept Confirm Modal ────────────────────────────────── -->
-    <BfpModal
+    <TuaoModal
       :show="showAcceptModal"
       title="Accept User"
       stripe="CONFIRM ACCOUNT APPROVAL"
@@ -465,7 +465,7 @@
       @close="showAcceptModal = false"
       @confirm="acceptUser"
     >
-      <div class="bfp-section">
+      <div class="tuao-section">
         <div class="delete-confirm-body">
           <i class="material-icons-round" style="font-size:3rem;color:#16a34a;margin-bottom:.5rem;">verified_user</i>
           <p>You are about to <strong>accept</strong> the account registration of:</p>
@@ -481,10 +481,10 @@
           </p>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- ── Reject Confirm Modal ────────────────────────────────── -->
-    <BfpModal
+    <TuaoModal
       :show="showRejectModal"
       title="Reject User"
       stripe="CONFIRM ACCOUNT REJECTION"
@@ -495,7 +495,7 @@
       @close="showRejectModal = false"
       @confirm="rejectUser"
     >
-      <div class="bfp-section">
+      <div class="tuao-section">
         <div class="delete-confirm-body">
           <i class="material-icons-round delete-warn-icon" style="color:#c0392b;">block</i>
           <p>You are about to <strong>reject and permanently delete</strong> the account of:</p>
@@ -509,10 +509,10 @@
           <p class="text-danger mt-2 small">This action <strong>cannot</strong> be undone.</p>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Advanced Filters Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showAdvancedFilterModal"
       title="Advanced Filters"
       stripe="USER SEARCH PARAMETERS"
@@ -521,28 +521,28 @@
       @close="showAdvancedFilterModal = false"
       @confirm="applyAdvancedFilters"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">tune</i> Filter Criteria</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Date Joined (From)</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="advFilters.date_from" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">tune</i> Filter Criteria</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Date Joined (From)</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="advFilters.date_from" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Date Joined (To)</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="advFilters.date_to" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Date Joined (To)</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="advFilters.date_to" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Sort By</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">sort</i>
-              <select class="bfp-input bfp-select" v-model="advFilters.sort_by">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Sort By</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">sort</i>
+              <select class="tuao-input tuao-select" v-model="advFilters.sort_by">
                 <option value="created_at">Date Joined</option>
                 <option value="name">Name</option>
                 <option value="last_active_at">Last Active</option>
@@ -550,21 +550,21 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Direction</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">swap_vert</i>
-              <select class="bfp-input bfp-select" v-model="advFilters.sort_dir">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Direction</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">swap_vert</i>
+              <select class="tuao-input tuao-select" v-model="advFilters.sort_dir">
                 <option value="desc">Newest First</option>
                 <option value="asc">Oldest First</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Rows Per Page</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">table_rows</i>
-              <select class="bfp-input bfp-select" v-model="advFilters.per_page">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Rows Per Page</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">table_rows</i>
+              <select class="tuao-input tuao-select" v-model="advFilters.per_page">
                 <option :value="10">10</option>
                 <option :value="25">25</option>
                 <option :value="50">50</option>
@@ -574,10 +574,10 @@
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Export Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showExportModal"
       title="Export Users"
       stripe="USER LIST EXPORT"
@@ -586,44 +586,44 @@
       @close="showExportModal = false"
       @confirm="handleExport"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Format</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">file_download</i>
-              <select class="bfp-input bfp-select" v-model="exportForm.format">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Format</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">file_download</i>
+              <select class="tuao-input tuao-select" v-model="exportForm.format">
                 <option>Excel</option>
                 <option>CSV</option>
                 <option>PDF</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Rows</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">table_rows</i>
-              <select class="bfp-input bfp-select" v-model="exportForm.rows">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Rows</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">table_rows</i>
+              <select class="tuao-input tuao-select" v-model="exportForm.rows">
                 <option>Filtered users</option>
                 <option>Current page</option>
                 <option>All users</option>
               </select>
             </div>
           </div>
-          <label class="bfp-check-option bfp-field-full">
+          <label class="tuao-check-option tuao-field-full">
             <input type="checkbox" v-model="exportForm.include_extras" checked />
             Include role, unit, joined date, and last active columns
           </label>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
   </div>
 </template>
 
 <script>
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 import UserService from "@/services/user.service";
 
 const PH_COUNTRY_CODE = "63";
@@ -631,7 +631,7 @@ const CONTACT_NUMBER_MAX_LENGTH = 10;
 
 export default {
   name: "UserManagement",
-  components: { BfpModal },
+  components: { TuaoModal },
 
   data() {
     return {
@@ -1355,7 +1355,7 @@ export default {
 }
 
 /* BFP modal form helpers */
-.bfp-input-suffix {
+.tuao-input-suffix {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -1363,7 +1363,7 @@ export default {
   color: #a0aec0;
   font-size: 1rem;
 }
-.bfp-error {
+.tuao-error {
   display: block;
   color: #c0392b;
   font-size: 0.72rem;
@@ -1371,7 +1371,7 @@ export default {
 }
 
 /* NEW: Pending notice inside modal */
-.bfp-pending-notice {
+.tuao-pending-notice {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1384,7 +1384,7 @@ export default {
   margin-top: 4px;
   min-height: 38px;
 }
-.bfp-pending-notice .material-icons-round {
+.tuao-pending-notice .material-icons-round {
   font-size: 1rem;
   color: #d97706;
   flex-shrink: 0;
@@ -1444,7 +1444,7 @@ export default {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
-  .bfp-form-grid {
+  .tuao-form-grid {
     grid-template-columns: 1fr;
   }
 }

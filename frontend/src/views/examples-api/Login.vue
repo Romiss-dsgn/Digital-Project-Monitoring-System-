@@ -1,12 +1,12 @@
 <template>
-    <div class="login-page">
+    <div class="login-page" :style="{ backgroundImage: backgroundImageUrl }">
         <div class="brand-bar">
             <div class="brand-inner">
                 <div class="brand-logo">
-                    <img :src="logo" alt="BFP Logo" class="logo-image" />
+                    <img :src="logo" alt="LGU Tuao Logo" class="logo-image" />
                 </div>
                 <div class="brand-texts">
-                    <span class="brand-title">Bureau of Fire Protection Region II</span>
+                    <span class="brand-title">Municipality of Tuao</span>
                     <div class="brand-subtitle-row">
                         <span class="brand-line"></span>
                         <span class="brand-subtitle">Digital Project Monitoring System</span>
@@ -82,7 +82,7 @@
                     </div>
                     <div>
                         <h5>Forgot Password?</h5>
-                        <p>Bureau of Fire Protection Region II</p>
+                        <p>Municipality of Tuao</p>
                     </div>
                     <button class="contact-modal-close" @click="showForgotModal = false">
                         <i class="material-icons-round">close</i>
@@ -102,7 +102,7 @@
                         <i class="material-icons-round">email</i>
                         <div>
                             <span class="contact-label">Email Address</span>
-                            <a href="mailto:itsupport@bfp2.gov.ph" class="contact-value contact-link">itsupport@bfp2.gov.ph</a>
+                            <a href="mailto:itsupport@tuao.gov.ph" class="contact-value contact-link">itsupport@tuao.gov.ph</a>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -132,7 +132,7 @@
                     </div>
                     <div>
                         <h5>IT Support Contact</h5>
-                        <p>Bureau of Fire Protection Region II</p>
+                        <p>Municipality of Tuao</p>
                     </div>
                     <button class="contact-modal-close" @click="showContactModal = false">
                         <i class="material-icons-round">close</i>
@@ -143,14 +143,14 @@
                         <i class="material-icons-round">person</i>
                         <div>
                             <span class="contact-label">System Administrator</span>
-                            <span class="contact-value">IT Admin — BFP Region II</span>
+                            <span class="contact-value">IT Admin — LGU Tuao</span>
                         </div>
                     </div>
                     <div class="contact-item">
                         <i class="material-icons-round">email</i>
                         <div>
                             <span class="contact-label">Email Address</span>
-                            <a href="mailto:itsupport@bfp2.gov.ph" class="contact-value contact-link">itsupport@bfp2.gov.ph</a>
+                            <a href="mailto:itsupport@tuao.gov.ph" class="contact-value contact-link">itsupport@tuao.gov.ph</a>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -178,8 +178,8 @@
 
 <script>
 import showSwal from "@/mixins/showSwal";
-import logo from "@/assets/img/BFP 11.png";
-import bgImage from "@/assets/img/bg.png";
+import logo from "@/assets/img/LGU TUAO logo.jpeg";
+import bgImage from "@/assets/img/LGU Tuao bg.jpg";
 
 export default {
     name: "Login",
@@ -195,7 +195,7 @@ export default {
     },
     computed: {
         backgroundImageUrl() {
-            return `linear-gradient(180deg, rgba(200,17,32,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
+            return `linear-gradient(180deg, rgba(13,71,161,.50) 0%, rgba(8,30,70,.60) 100%), url("${this.bgImage}")`;
         },
         loggedIn() {
             return this.$store.state.auth.loggedIn;
@@ -244,7 +244,6 @@ export default {
 /* ─── Page Layout ─────────────────────────────────────────── */
 .login-page {
     min-height: 100vh;
-    background-image: v-bind(backgroundImageUrl);
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -259,14 +258,14 @@ export default {
     width: 100%;
     background: linear-gradient(
         135deg,
-        rgba(190, 20, 20, 0.45) 0%,
-        rgba(160, 15, 15, 0.40) 40%,
-        rgba(15, 40, 100, 0.45) 100%
+        rgba(13, 71, 161, 0.55) 0%,
+        rgba(21, 101, 192, 0.45) 40%,
+        rgba(8, 30, 70, 0.55) 100%
     );
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border-top: 3px solid rgba(80, 130, 220, 0.85);
-    border-bottom: 4px solid #FFD700;
+    border-top: 3px solid rgba(255, 255, 255, 0.85);
+    border-bottom: 4px solid #ffffff;
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.15),
         0 6px 24px rgba(0, 0, 0, 0.25);
@@ -285,8 +284,8 @@ export default {
     width: 82px;
     height: 82px;
     border-radius: 50%;
-    border: 3px solid #FFD700;
-    outline: 2px solid rgba(80, 130, 220, 0.6);
+    border: 3px solid #ffffff;
+    outline: 2px solid rgba(21, 101, 192, 0.6);
     outline-offset: 3px;
     background: #fff;
     display: flex;
@@ -295,7 +294,7 @@ export default {
     flex-shrink: 0;
     overflow: hidden;
     box-shadow:
-        0 0 0 6px rgba(255, 215, 0, 0.18),
+        0 0 0 6px rgba(255, 255, 255, 0.18),
         0 4px 18px rgba(0, 0, 0, 0.4);
 }
 
@@ -322,7 +321,7 @@ export default {
     letter-spacing: 2.5px;
     text-transform: uppercase;
     text-shadow:
-        0 0 18px rgba(255, 215, 0, 0.45),
+        0 0 18px rgba(255, 255, 255, 0.45),
         1px 2px 8px rgba(0, 0, 0, 0.55);
     white-space: nowrap;
 }
@@ -338,24 +337,24 @@ export default {
     display: inline-block;
     height: 2px;
     width: 55px;
-    background: linear-gradient(to right, rgba(80, 130, 220, 0.3), #FFD700);
+    background: linear-gradient(to right, rgba(21, 101, 192, 0.3), #ffffff);
     border-radius: 2px;
 }
 
 .brand-line.right {
-    background: linear-gradient(to left, rgba(80, 130, 220, 0.3), #FFD700);
+    background: linear-gradient(to left, rgba(21, 101, 192, 0.3), #ffffff);
 }
 
 .brand-subtitle {
     font-family: 'Cinzel', serif;
     font-size: 0.78rem;
     font-weight: 700;
-    color: #FFE566;
+    color: #cfe3ff;
     letter-spacing: 4px;
     text-transform: uppercase;
     white-space: nowrap;
     text-shadow:
-        0 0 12px rgba(255, 215, 0, 0.7),
+        0 0 12px rgba(255, 255, 255, 0.7),
         0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
@@ -372,7 +371,7 @@ export default {
     width: min(100%, 440px);
     border-radius: 1.25rem;
     overflow: hidden;
-    border-top: 3px solid rgba(80, 130, 220, 0.6) !important;
+    border-top: 3px solid rgba(21, 101, 192, 0.6) !important;
 }
 
 .card-body {
@@ -413,8 +412,8 @@ export default {
 }
 
 .form-control:focus {
-    border-color: rgba(80, 130, 220, 0.6);
-    box-shadow: 0 0 0 3px rgba(80, 130, 220, 0.15);
+    border-color: rgba(21, 101, 192, 0.6);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
 }
 
 /* ─── Password Toggle ─────────────────────────────────────── */
@@ -440,7 +439,7 @@ export default {
 }
 
 .password-toggle-btn:hover {
-    color: #1a4fa0;
+    color: #0d3b78;
 }
 
 .password-toggle-btn .material-icons-round {
@@ -451,7 +450,7 @@ export default {
 
 /* ─── Links & Buttons ─────────────────────────────────────── */
 .forgot-link {
-    color: #c0392b;
+    color: #1565c0;
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
@@ -459,29 +458,29 @@ export default {
 }
 
 .forgot-link:hover {
-    color: #1a4fa0;
+    color: #0d3b78;
     text-decoration: underline;
 }
 
 .access-link {
-    color: #c0392b;
+    color: #1565c0;
     font-weight: 600;
     text-decoration: none;
 }
 
 .access-link:hover {
-    color: #1a4fa0;
+    color: #0d3b78;
     text-decoration: underline;
 }
 
 .btn-login {
-    background: linear-gradient(135deg, #c0392b 0%, #1a4fa0 100%);
+    background: linear-gradient(135deg, #1565c0 0%, #0d3b78 100%);
     border: none;
     padding: 0.95rem 1rem;
     border-radius: 0.85rem;
     font-weight: 700;
     letter-spacing: 1.5px;
-    box-shadow: 0 8px 24px rgba(160, 20, 20, 0.25);
+    box-shadow: 0 8px 24px rgba(13, 59, 120, 0.25);
     transition: opacity 0.2s;
 }
 
@@ -500,7 +499,7 @@ export default {
 }
 
 .contact-support-link {
-    color: #c0392b;
+    color: #1565c0;
     font-weight: 600;
     cursor: pointer;
     transition: color 0.15s;
@@ -508,7 +507,7 @@ export default {
 }
 
 .contact-support-link:hover {
-    color: #1a4fa0;
+    color: #0d3b78;
     text-decoration: underline;
 }
 
@@ -516,7 +515,7 @@ export default {
 .contact-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(15, 25, 50, 0.55);
+    background: rgba(8, 30, 70, 0.55);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     display: flex;
@@ -532,7 +531,7 @@ export default {
     width: min(100%, 420px);
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    border-top: 3px solid #c0392b;
+    border-top: 3px solid #1565c0;
     animation: modal-in 0.2s ease;
 }
 
@@ -553,7 +552,7 @@ export default {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #c0392b, #1a4fa0);
+    background: linear-gradient(135deg, #1565c0, #0d3b78);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -616,7 +615,7 @@ export default {
 
 .contact-item > .material-icons-round {
     font-size: 1.15rem;
-    color: #c0392b;
+    color: #1565c0;
     margin-top: 0.1rem;
     flex-shrink: 0;
 }
@@ -642,14 +641,14 @@ export default {
 }
 
 .contact-link {
-    color: #1a4fa0;
+    color: #0d3b78;
     text-decoration: none;
     font-weight: 600;
 }
 
 .contact-link:hover {
     text-decoration: underline;
-    color: #c0392b;
+    color: #1565c0;
 }
 
 .contact-modal-footer {
@@ -670,14 +669,14 @@ export default {
     display: flex;
     align-items: flex-start;
     gap: 1.3rem;
-    background: linear-gradient(135deg, rgba(192, 57, 43, 0.07), rgba(26, 79, 160, 0.07));
-    border: 1px solid rgba(192, 57, 43, 0.2);
+    background: linear-gradient(135deg, rgba(21, 101, 192, 0.07), rgba(13, 59, 120, 0.07));
+    border: 1px solid rgba(21, 101, 192, 0.2);
     border-radius: 0.85rem;
     padding: 1rem;
 }
 
 .forgot-reminder-banner > .material-icons-round {
-    color: #c0392b;
+    color: #1565c0;
     font-size: 0.85rem;
     flex-shrink: 0;
     margin-top: 0.15rem;

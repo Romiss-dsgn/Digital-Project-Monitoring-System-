@@ -32,7 +32,7 @@
                 <div class="text-secondary small">Report ID: #{{ report.report_id }}</div>
               </div>
               <div class="text-end">
-                <div class="fw-semibold small">BFP Region II</div>
+                <div class="fw-semibold small">LGU Tuao</div>
                 <div class="text-secondary small">Date Generated: {{ generatedAt }}</div>
               </div>
             </div>
@@ -62,14 +62,14 @@
               </table>
             </div>
 
-            <div class="footer-preview"><span>Certified by: BFP Region II Administrative Officer</span><span class="badge bg-dark">OFFICIAL REPORT</span></div>
+            <div class="footer-preview"><span>Certified by: LGU Tuao Administrative Officer</span><span class="badge bg-dark">OFFICIAL REPORT</span></div>
           </div>
         </div>
       </div>
     </div></div>
 
     <!-- Filters Modal (Select Report Type + Refine Results) -->
-    <BfpModal :show="showFilterModal" title="Report Filters" stripe="CONFIGURE REPORT" confirm-text="Apply Filters" confirm-icon="filter_alt" @close="showFilterModal=false" @confirm="applyFilters">
+    <TuaoModal :show="showFilterModal" title="Report Filters" stripe="CONFIGURE REPORT" confirm-text="Apply Filters" confirm-icon="filter_alt" @close="showFilterModal=false" @confirm="applyFilters">
       <h6 class="fw-semibold mb-2 small text-uppercase text-secondary">1. Select Report Type</h6>
       <div class="d-flex flex-column gap-2 mb-4">
         <label v-for="report in reportTypes" :key="report.value" class="report-type-option" :class="{ active: draftReport === report.value }">
@@ -79,56 +79,56 @@
       </div>
 
       <h6 class="fw-semibold mb-2 small text-uppercase text-secondary">2. Refine Results</h6>
-      <div class="bfp-form-grid">
-        <div class="bfp-field-half">
-          <label class="bfp-label">Date From</label>
-          <input v-model="draftDateFrom" type="date" class="bfp-input" />
+      <div class="tuao-form-grid">
+        <div class="tuao-field-half">
+          <label class="tuao-label">Date From</label>
+          <input v-model="draftDateFrom" type="date" class="tuao-input" />
         </div>
-        <div class="bfp-field-half">
-          <label class="bfp-label">Date To</label>
-          <input v-model="draftDateTo" type="date" class="bfp-input" />
+        <div class="tuao-field-half">
+          <label class="tuao-label">Date To</label>
+          <input v-model="draftDateTo" type="date" class="tuao-input" />
         </div>
       </div>
       <div class="mb-3">
-        <label class="bfp-label">Project Portfolio</label>
-        <select v-model="draftPortfolio" class="bfp-input bfp-select">
+        <label class="tuao-label">Project Portfolio</label>
+        <select v-model="draftPortfolio" class="tuao-input tuao-select">
           <option value="all">All active projects</option>
           <option value="ongoing">Ongoing / on-track projects</option>
           <option value="completed">Completed projects</option>
         </select>
       </div>
       <div class="mb-2">
-        <label class="bfp-label">Lead Contractor</label>
-        <select v-model="draftContractor" class="bfp-input bfp-select">
+        <label class="tuao-label">Lead Contractor</label>
+        <select v-model="draftContractor" class="tuao-input tuao-select">
           <option value="">All registered contractors</option>
           <option v-for="contractor in contractors" :key="contractor.id" :value="contractor.id">{{ contractor.company_name }}</option>
         </select>
       </div>
       <div v-if="filterError" class="text-danger small mt-2">{{ filterError }}</div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal :show="showPrintModal" title="Print Report" stripe="REPORT PRINT SETUP" confirm-text="Print Report" confirm-icon="print" @close="showPrintModal=false" @confirm="printReport">
-      <div class="bfp-form-grid">
-        <div class="bfp-field-half"><label class="bfp-label">Paper Size</label><select v-model="printPaper" class="bfp-input bfp-select"><option value="a4">A4</option><option value="letter">Letter</option><option value="legal">Legal</option></select></div>
-        <div class="bfp-field-half"><label class="bfp-label">Orientation</label><select v-model="printOrientation" class="bfp-input bfp-select"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div>
+    <TuaoModal :show="showPrintModal" title="Print Report" stripe="REPORT PRINT SETUP" confirm-text="Print Report" confirm-icon="print" @close="showPrintModal=false" @confirm="printReport">
+      <div class="tuao-form-grid">
+        <div class="tuao-field-half"><label class="tuao-label">Paper Size</label><select v-model="printPaper" class="tuao-input tuao-select"><option value="a4">A4</option><option value="letter">Letter</option><option value="legal">Legal</option></select></div>
+        <div class="tuao-field-half"><label class="tuao-label">Orientation</label><select v-model="printOrientation" class="tuao-input tuao-select"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div>
       </div>
-    </BfpModal>
-    <BfpModal :show="showExcelModal" title="Export Report to Excel" stripe="SPREADSHEET EXPORT" confirm-text="Export Excel" confirm-icon="grid_on" @close="showExcelModal=false" @confirm="exportExcel">
+    </TuaoModal>
+    <TuaoModal :show="showExcelModal" title="Export Report to Excel" stripe="SPREADSHEET EXPORT" confirm-text="Export Excel" confirm-icon="grid_on" @close="showExcelModal=false" @confirm="exportExcel">
       <p class="mb-0 small">The current report type and filters will be exported to an Excel workbook.</p>
-    </BfpModal>
-    <BfpModal :show="showPdfModal" title="PDF Export" stripe="OFFICIAL REPORT PACKAGE" confirm-text="Generate PDF" confirm-icon="picture_as_pdf" @close="showPdfModal=false" @confirm="exportPdf">
+    </TuaoModal>
+    <TuaoModal :show="showPdfModal" title="PDF Export" stripe="OFFICIAL REPORT PACKAGE" confirm-text="Generate PDF" confirm-icon="picture_as_pdf" @close="showPdfModal=false" @confirm="exportPdf">
       <p class="mb-0 small">The current report type and filters will be exported as an official PDF.</p>
-    </BfpModal>
+    </TuaoModal>
   </div></div>
 </template>
 
 <script>
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 import ReportService from "@/services/report.service";
 
 export default {
   name: "Reports",
-  components: { BfpModal },
+  components: { TuaoModal },
   data() {
     return {
       showFilterModal: false,
@@ -309,9 +309,9 @@ export default {
 .report-table thead th{font-size:.82rem;border-bottom:2px solid #dee2e6}
 .report-table tbody td{font-size:.85rem;vertical-align:middle}
 .footer-preview{display:flex;justify-content:space-between;align-items:center;font-size:.75rem;color:#777}
-.bfp-form-grid{display:flex;gap:.75rem}
-.bfp-field-half{flex:1}
-.bfp-label{font-size:.78rem;font-weight:600;color:#555;display:block;margin-bottom:.25rem}
-.bfp-input{width:100%;border:1px solid #dcdcdc;border-radius:.4rem;padding:.4rem .6rem;font-size:.85rem}
-.bfp-select{background:#fff}
+.tuao-form-grid{display:flex;gap:.75rem}
+.tuao-field-half{flex:1}
+.tuao-label{font-size:.78rem;font-weight:600;color:#555;display:block;margin-bottom:.25rem}
+.tuao-input{width:100%;border:1px solid #dcdcdc;border-radius:.4rem;padding:.4rem .6rem;font-size:.85rem}
+.tuao-select{background:#fff}
 </style>

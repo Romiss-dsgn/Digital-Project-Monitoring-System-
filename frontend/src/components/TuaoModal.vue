@@ -1,39 +1,39 @@
 <template>
   <Teleport to="body">
-    <Transition name="bfp-modal-fade">
-      <div v-if="show" class="bfp-modal-overlay" @click.self="$emit('close')">
-        <div class="bfp-modal" :style="{ width }" role="dialog" aria-modal="true">
-          <div class="bfp-modal-header">
-            <div class="bfp-modal-header-left">
-              <div class="bfp-modal-emblem">
-                <img :src="bfpLogo" alt="BFP Logo" class="bfp-logo-img" />
+    <Transition name="tuao-modal-fade">
+      <div v-if="show" class="tuao-modal-overlay" @click.self="$emit('close')">
+        <div class="tuao-modal" :style="{ width }" role="dialog" aria-modal="true">
+          <div class="tuao-modal-header">
+            <div class="tuao-modal-header-left">
+              <div class="tuao-modal-emblem">
+                <img :src="tuaoLogo" alt="LGU Tuao Logo" class="tuao-logo-img" />
               </div>
               <div>
-                <p class="bfp-modal-agency">{{ agency }}</p>
-                <h5 class="bfp-modal-title">{{ title }}</h5>
+                <p class="tuao-modal-agency">{{ agency }}</p>
+                <h5 class="tuao-modal-title">{{ title }}</h5>
               </div>
             </div>
-            <button class="bfp-modal-close" type="button" @click="$emit('close')" aria-label="Close modal">
+            <button class="tuao-modal-close" type="button" @click="$emit('close')" aria-label="Close modal">
               <i class="material-icons-round">close</i>
             </button>
           </div>
 
-          <div class="bfp-modal-stripe">
+          <div class="tuao-modal-stripe">
             <span>{{ region }}</span>
             <span>{{ stripe }}</span>
           </div>
 
-          <div class="bfp-modal-body">
+          <div class="tuao-modal-body">
             <slot />
           </div>
 
-          <div v-if="showFooter" class="bfp-modal-footer">
-            <div class="bfp-footer-note">
+          <div v-if="showFooter" class="tuao-modal-footer">
+            <div class="tuao-footer-note">
               <slot name="note">{{ note }}</slot>
             </div>
-            <div class="bfp-footer-actions">
-              <button class="bfp-btn-cancel" type="button" :disabled="loading" @click="$emit('close')">{{ cancelText }}</button>
-              <button class="bfp-btn-save" type="button" :disabled="loading" @click="$emit('confirm')">
+            <div class="tuao-footer-actions">
+              <button class="tuao-btn-cancel" type="button" :disabled="loading" @click="$emit('close')">{{ cancelText }}</button>
+              <button class="tuao-btn-save" type="button" :disabled="loading" @click="$emit('confirm')">
                 <i class="material-icons-round">{{ confirmIcon }}</i>
                 {{ loading ? 'Saving...' : confirmText }}
               </button>
@@ -46,15 +46,15 @@
 </template>
 
 <script>
-import bfpLogo from "@/assets/img/BFP 11.png";
+import tuaoLogo from "@/assets/img/LGU TUAO logo.jpeg";
 
 export default {
-  name: "BfpModal",
+  name: "TuaoModal",
   props: {
     show: { type: Boolean, default: false },
     title: { type: String, required: true },
     stripe: { type: String, default: "OFFICIAL FORM" },
-    agency: { type: String, default: "Bureau of Fire Protection" },
+    agency: { type: String, default: "Municipality of Tuao" },
     region: { type: String, default: "REGION II - CAGAYAN VALLEY" },
     note: { type: String, default: "Fields marked * are required." },
     cancelText: { type: String, default: "Cancel" },
@@ -67,13 +67,13 @@ export default {
   },
   emits: ["close", "confirm"],
   data() {
-    return { bfpLogo };
+    return { tuaoLogo };
   }
 };
 </script>
 
 <style>
-.bfp-modal-overlay {
+.tuao-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(10, 10, 20, 0.6);
@@ -85,7 +85,7 @@ export default {
   padding: 1rem;
 }
 
-.bfp-modal {
+.tuao-modal {
   background: #ffffff;
   border-radius: 16px;
   max-width: 100%;
@@ -97,7 +97,7 @@ export default {
   flex-direction: column;
 }
 
-.bfp-modal-header {
+.tuao-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -106,14 +106,14 @@ export default {
   border-radius: 16px 16px 0 0;
 }
 
-.bfp-modal-header-left {
+.tuao-modal-header-left {
   display: flex;
   align-items: center;
   gap: 14px;
   min-width: 0;
 }
 
-.bfp-modal-emblem {
+.tuao-modal-emblem {
   width: 52px;
   height: 52px;
   background: rgba(255, 255, 255, 0.08);
@@ -126,14 +126,14 @@ export default {
   overflow: hidden;
 }
 
-.bfp-logo-img {
+.tuao-logo-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 11px;
 }
 
-.bfp-modal-agency {
+.tuao-modal-agency {
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -142,14 +142,14 @@ export default {
   margin: 0 0 3px;
 }
 
-.bfp-modal-title {
+.tuao-modal-title {
   font-size: 17px;
   font-weight: 700;
   color: #ffffff;
   margin: 0;
 }
 
-.bfp-modal-close {
+.tuao-modal-close {
   width: 34px;
   height: 34px;
   background: rgba(255, 255, 255, 0.08);
@@ -164,16 +164,16 @@ export default {
   flex-shrink: 0;
 }
 
-.bfp-modal-close:hover {
-  background: rgba(192, 57, 43, 0.6);
+.tuao-modal-close:hover {
+  background: rgba(21, 101, 192, 0.6);
   color: #fff;
   border-color: transparent;
 }
 
-.bfp-modal-close .material-icons-round { font-size: 18px; }
+.tuao-modal-close .material-icons-round { font-size: 18px; }
 
-.bfp-modal-stripe {
-  background: linear-gradient(90deg, #c0392b 0%, #922b21 100%);
+.tuao-modal-stripe {
+  background: linear-gradient(90deg, #1565c0 0%, #0d3b78 100%);
   padding: 7px 22px;
   display: flex;
   justify-content: space-between;
@@ -181,7 +181,7 @@ export default {
   gap: 12px;
 }
 
-.bfp-modal-stripe span {
+.tuao-modal-stripe span {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -189,15 +189,15 @@ export default {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.bfp-modal-body {
+.tuao-modal-body {
   padding: 20px 22px;
   flex: 1;
 }
 
-.bfp-section { margin-bottom: 20px; }
-.bfp-section:last-child { margin-bottom: 0; }
+.tuao-section { margin-bottom: 20px; }
+.tuao-section:last-child { margin-bottom: 0; }
 
-.bfp-section-label {
+.tuao-section-label {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -207,27 +207,27 @@ export default {
   text-transform: uppercase;
   color: #7f1d1d;
   background: #fef2f2;
-  border-left: 3px solid #c0392b;
+  border-left: 3px solid #1565c0;
   padding: 7px 12px;
   border-radius: 0 8px 8px 0;
   margin-bottom: 14px;
 }
 
-.bfp-section-label .material-icons-round {
+.tuao-section-label .material-icons-round {
   font-size: 15px;
-  color: #c0392b;
+  color: #1565c0;
 }
 
-.bfp-form-grid {
+.tuao-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.bfp-field-half { grid-column: span 1; }
-.bfp-field-full { grid-column: 1 / -1; }
+.tuao-field-half { grid-column: span 1; }
+.tuao-field-full { grid-column: 1 / -1; }
 
-.bfp-label {
+.tuao-label {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -238,14 +238,14 @@ export default {
   letter-spacing: 0.01em;
 }
 
-.bfp-required {
-  color: #c0392b;
+.tuao-required {
+  color: #1565c0;
   font-size: 13px;
 }
 
-.bfp-input-wrap { position: relative; }
+.tuao-input-wrap { position: relative; }
 
-.bfp-input-icon {
+.tuao-input-icon {
   position: absolute;
   left: 11px;
   top: 50%;
@@ -255,7 +255,7 @@ export default {
   pointer-events: none;
 }
 
-.bfp-input {
+.tuao-input {
   width: 100%;
   padding: 9px 12px 9px 36px;
   border: 1.5px solid #e5e7eb;
@@ -269,13 +269,13 @@ export default {
   appearance: none;
 }
 
-.bfp-input:focus {
-  border-color: #c0392b;
+.tuao-input:focus {
+  border-color: #1565c0;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
 }
 
-.bfp-select {
+.tuao-select {
   cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -283,14 +283,14 @@ export default {
   padding-right: 32px;
 }
 
-.bfp-textarea {
+.tuao-textarea {
   padding: 10px 12px;
   resize: vertical;
   min-height: 72px;
   line-height: 1.5;
 }
 
-.bfp-modal-footer {
+.tuao-modal-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -301,18 +301,18 @@ export default {
   border-radius: 0 0 16px 16px;
 }
 
-.bfp-footer-note {
+.tuao-footer-note {
   font-size: 11.5px;
   color: #6b7280;
 }
 
-.bfp-footer-actions {
+.tuao-footer-actions {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.bfp-btn-cancel {
+.tuao-btn-cancel {
   padding: 9px 18px;
   border: 1.5px solid #e5e7eb;
   border-radius: 9px;
@@ -324,18 +324,18 @@ export default {
   transition: all 0.15s;
 }
 
-.bfp-btn-cancel:hover {
+.tuao-btn-cancel:hover {
   background: #f3f4f6;
   border-color: #d1d5db;
   color: #374151;
 }
 
-.bfp-btn-save {
+.tuao-btn-save {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 9px 22px;
-  background: #c0392b;
+  background: #1565c0;
   border: none;
   border-radius: 9px;
   font-size: 13px;
@@ -345,21 +345,21 @@ export default {
   transition: all 0.15s;
 }
 
-.bfp-btn-save:hover {
+.tuao-btn-save:hover {
   background: #a93226;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(192, 57, 43, 0.35);
+  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.35);
 }
 
-.bfp-btn-save .material-icons-round { font-size: 17px; }
+.tuao-btn-save .material-icons-round { font-size: 17px; }
 
-.bfp-filter-grid {
+.tuao-filter-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.bfp-check-option {
+.tuao-check-option {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -372,11 +372,11 @@ export default {
   background: #fafafa;
 }
 
-.bfp-check-option input {
-  accent-color: #c0392b;
+.tuao-check-option input {
+  accent-color: #1565c0;
 }
 
-.bfp-upload-panel {
+.tuao-upload-panel {
   border: 2px dashed #e5e7eb;
   border-radius: 12px;
   padding: 24px 18px;
@@ -384,73 +384,73 @@ export default {
   background: #fafafa;
 }
 
-.bfp-upload-panel .material-icons-round {
+.tuao-upload-panel .material-icons-round {
   font-size: 34px;
-  color: #c0392b;
+  color: #1565c0;
   display: block;
   margin-bottom: 8px;
 }
 
-.bfp-upload-title {
+.tuao-upload-title {
   font-size: 14px;
   font-weight: 700;
   color: #111827;
   margin: 0 0 3px;
 }
 
-.bfp-upload-sub {
+.tuao-upload-sub {
   font-size: 12px;
   color: #9ca3af;
   margin: 0 0 12px;
 }
 
-.bfp-modal::-webkit-scrollbar { width: 5px; }
-.bfp-modal::-webkit-scrollbar-track { background: transparent; }
-.bfp-modal::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+.tuao-modal::-webkit-scrollbar { width: 5px; }
+.tuao-modal::-webkit-scrollbar-track { background: transparent; }
+.tuao-modal::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
 
-.bfp-modal-fade-enter-active,
-.bfp-modal-fade-leave-active {
+.tuao-modal-fade-enter-active,
+.tuao-modal-fade-leave-active {
   transition: opacity 0.2s ease;
 }
 
-.bfp-modal-fade-enter-active .bfp-modal,
-.bfp-modal-fade-leave-active .bfp-modal {
+.tuao-modal-fade-enter-active .tuao-modal,
+.tuao-modal-fade-leave-active .tuao-modal {
   transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.2s ease;
 }
 
-.bfp-modal-fade-enter-from,
-.bfp-modal-fade-leave-to {
+.tuao-modal-fade-enter-from,
+.tuao-modal-fade-leave-to {
   opacity: 0;
 }
 
-.bfp-modal-fade-enter-from .bfp-modal {
+.tuao-modal-fade-enter-from .tuao-modal {
   transform: translateY(24px) scale(0.97);
   opacity: 0;
 }
 
-.bfp-modal-fade-leave-to .bfp-modal {
+.tuao-modal-fade-leave-to .tuao-modal {
   transform: translateY(12px) scale(0.98);
   opacity: 0;
 }
 
 @media (max-width: 576px) {
-  .bfp-form-grid,
-  .bfp-filter-grid {
+  .tuao-form-grid,
+  .tuao-filter-grid {
     grid-template-columns: 1fr;
   }
 
-  .bfp-field-half { grid-column: span 1; }
+  .tuao-field-half { grid-column: span 1; }
 
-  .bfp-modal-footer {
+  .tuao-modal-footer {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .bfp-footer-actions {
+  .tuao-footer-actions {
     justify-content: flex-end;
   }
 
-  .bfp-modal-stripe {
+  .tuao-modal-stripe {
     align-items: flex-start;
     flex-direction: column;
     gap: 3px;

@@ -256,7 +256,7 @@
 
     </div>
 
-    <BfpModal
+    <TuaoModal
       :show="showFilterModal"
       title="Contractor Performance Filters"
       stripe="RATING SEARCH PARAMETERS"
@@ -265,24 +265,24 @@
       @close="showFilterModal = false"
       @confirm="showFilterModal = false"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">engineering</i> Contractor Scope</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Contractor</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">groups</i>
-              <select class="bfp-input bfp-select" v-model="selectedContractor">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">engineering</i> Contractor Scope</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Contractor</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">groups</i>
+              <select class="tuao-input tuao-select" v-model="selectedContractor">
                 <option>All Contractors</option>
                 <option v-for="contractor in contractors" :key="contractor.id">{{ contractor.name }}</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Rating Band</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">workspace_premium</i>
-              <select class="bfp-input bfp-select">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Rating Band</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">workspace_premium</i>
+              <select class="tuao-input tuao-select">
                 <option>All Ratings</option>
                 <option>Excellent</option>
                 <option>Good</option>
@@ -290,18 +290,18 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Minimum Score</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">percent</i>
-              <input class="bfp-input" type="number" min="0" max="100" placeholder="0" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Minimum Score</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">percent</i>
+              <input class="tuao-input" type="number" min="0" max="100" placeholder="0" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Variation Frequency</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">sync_alt</i>
-              <select class="bfp-input bfp-select">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Variation Frequency</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">sync_alt</i>
+              <select class="tuao-input tuao-select">
                 <option>Any Frequency</option>
                 <option>0-1 variation</option>
                 <option>2-3 variations</option>
@@ -311,17 +311,17 @@
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
   </div>
 </template>
 
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 
 export default {
   name: "ContractorPerformance",
-  components: { StatusBadge, BfpModal },
+  components: { StatusBadge, TuaoModal },
   data() {
     return {
       selectedContractor: "All Contractors",

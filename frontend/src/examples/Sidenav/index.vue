@@ -5,6 +5,7 @@
     :class="`${
       isRTL ? 'rotate-caret fixed-end' : 'fixed-start'
     } ${sidebarType}`"
+    :style="{ backgroundImage: backgroundImageUrl }"
   >
     <div class="sidenav-header">
       <i
@@ -23,8 +24,8 @@
           <div class="logo-glow"></div>
         </div>
         <div class="brand-text-wrapper">
-          <span class="font-weight-bold text-white sidebar-brand-text">BFP Region II</span>
-          <span class="sidebar-brand-sub">Bureau of Fire Protection</span>
+          <span class="font-weight-bold text-white sidebar-brand-text">LGU Tuao</span>
+          <span class="sidebar-brand-sub">Municipality of Tuao</span>
         </div>
       </a>
     </div>
@@ -36,7 +37,7 @@
 <script>
 import SidenavList from "./SidenavList.vue";
 import logo from "@/assets/img/system-logo/logo.jpg";
-import bgImage from "@/assets/img/bg.png";
+import bgImage from "@/assets/img/LGU Tuao bg.jpg";
 import { mapState } from "vuex";
 
 export default {
@@ -53,7 +54,7 @@ export default {
   computed: {
     ...mapState(["isRTL", "sidebarType", "isDarkMode"]),
     backgroundImageUrl() {
-      return `url(${this.bgImage})`;
+      return `url("${this.bgImage}")`;
     },
   },
   methods: {
@@ -66,7 +67,6 @@ export default {
 
 <style>
 .sidenav {
-  background-image: v-bind(backgroundImageUrl) !important;
   background-size: cover !important;
   background-position: center !important;
   background-attachment: fixed !important;
@@ -90,8 +90,8 @@ export default {
   inset: 0;
   background: linear-gradient(
     175deg,
-    rgba(180, 14, 26, 0.82) 0%,
-    rgba(120, 10, 20, 0.78) 35%,
+    rgba(21, 101, 192, 0.82) 0%,
+    rgba(13, 59, 120, 0.78) 35%,
     rgba(28, 34, 58, 0.80) 100%
   );
   backdrop-filter: blur(1px);
@@ -128,7 +128,7 @@ export default {
   border-radius: 50%;
   flex-shrink: 0;
   background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(255, 210, 40, 0.92), 0 4px 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.92), 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
 .navbar-brand-img {

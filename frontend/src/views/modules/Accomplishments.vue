@@ -241,7 +241,7 @@
     </div>
 
     <!-- Upload / Edit Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showUploadReportModal"
       :title="accomplishmentForm.id ? 'Edit Accomplishment' : 'Add Accomplishment Report'"
       stripe="MILESTONE REPORT UPLOAD"
@@ -251,33 +251,33 @@
       @confirm="saveAccomplishment"
     >
       <!-- File attachment -->
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Report Attachment</div>
-        <div class="bfp-upload-panel">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">cloud_upload</i> Report Attachment</div>
+        <div class="tuao-upload-panel">
           <i class="material-icons-round">upload_file</i>
-          <p class="bfp-upload-title">Attach accomplishment report</p>
-          <p class="bfp-upload-sub">Accepted formats: PDF, DOCX, JPG, PNG.</p>
+          <p class="tuao-upload-title">Attach accomplishment report</p>
+          <p class="tuao-upload-sub">Accepted formats: PDF, DOCX, JPG, PNG.</p>
           <input type="file" class="form-control form-control-sm" accept=".pdf,.docx,.jpg,.jpeg,.png" @change="handleReportFile" />
         </div>
       </div>
 
       <!-- Milestone details -->
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">flag</i> Milestone Details</div>
-        <div class="bfp-form-grid">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">flag</i> Milestone Details</div>
+        <div class="tuao-form-grid">
 
           <!-- Project -->
-          <div class="bfp-field-half">
-            <label class="bfp-label">Project <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">business</i>
+          <div class="tuao-field-half">
+            <label class="tuao-label">Project <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">business</i>
               <!--
                 Only projects without an existing active accomplishment
                 report are selectable. When editing, the project already
                 tied to this record is included too (fetched separately via
                 include_project_id) so the field doesn't show blank.
               -->
-              <select v-model="accomplishmentForm.project_id" class="bfp-input bfp-select" :disabled="isLoadingModalProjects">
+              <select v-model="accomplishmentForm.project_id" class="tuao-input tuao-select" :disabled="isLoadingModalProjects">
                 <option value="">{{ isLoadingModalProjects ? 'Loading projects...' : 'Select project' }}</option>
                 <option v-for="project in modalProjects" :key="project.id" :value="project.id">
                   {{ project.project_code }} · {{ project.project_name }}
@@ -290,66 +290,66 @@
           </div>
 
           <!-- Milestone Phase -->
-          <div class="bfp-field-half">
-            <label class="bfp-label">Milestone Phase</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">flag</i>
-              <input v-model="accomplishmentForm.milestone_title" class="bfp-input" type="text" placeholder="e.g. Electrical Installation" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Milestone Phase</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">flag</i>
+              <input v-model="accomplishmentForm.milestone_title" class="tuao-input" type="text" placeholder="e.g. Electrical Installation" />
             </div>
           </div>
 
           <!-- Completion % -->
-          <div class="bfp-field-half">
-            <label class="bfp-label">Completion %</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">percent</i>
-              <input v-model.number="accomplishmentForm.percent_complete" class="bfp-input" type="number" min="0" max="100" placeholder="0" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Completion %</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">percent</i>
+              <input v-model.number="accomplishmentForm.percent_complete" class="tuao-input" type="number" min="0" max="100" placeholder="0" />
             </div>
           </div>
 
           <!-- Status -->
-          <div class="bfp-field-half">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">fact_check</i>
-              <select v-model="accomplishmentForm.status" class="bfp-input bfp-select">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Status</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">fact_check</i>
+              <select v-model="accomplishmentForm.status" class="tuao-input tuao-select">
                 <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
               </select>
             </div>
           </div>
 
           <!-- Target Date -->
-          <div class="bfp-field-half">
-            <label class="bfp-label">Target Date <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input v-model="accomplishmentForm.target_date" class="bfp-input" type="date" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Target Date <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input v-model="accomplishmentForm.target_date" class="tuao-input" type="date" />
             </div>
           </div>
 
           <!-- Completion Date -->
-          <div class="bfp-field-half">
-            <label class="bfp-label">Completion Date</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event_available</i>
-              <input v-model="accomplishmentForm.completion_date" class="bfp-input" type="date" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Completion Date</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event_available</i>
+              <input v-model="accomplishmentForm.completion_date" class="tuao-input" type="date" />
             </div>
           </div>
 
           <!-- Description -->
-          <div class="bfp-field-full">
-            <label class="bfp-label">Description</label>
-            <textarea v-model="accomplishmentForm.description" class="bfp-input" rows="2" placeholder="Milestone scope and work completed"></textarea>
+          <div class="tuao-field-full">
+            <label class="tuao-label">Description</label>
+            <textarea v-model="accomplishmentForm.description" class="tuao-input" rows="2" placeholder="Milestone scope and work completed"></textarea>
           </div>
 
           <!-- Remarks -->
-          <div class="bfp-field-full">
-            <label class="bfp-label">Remarks</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">notes</i>
+          <div class="tuao-field-full">
+            <label class="tuao-label">Remarks</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">notes</i>
               <input
                 v-model="accomplishmentForm.remarks"
-                class="bfp-input"
+                class="tuao-input"
                 type="text"
                 placeholder="Optional notes or validation remarks"
               />
@@ -358,10 +358,10 @@
 
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Filter Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showFilterModal"
       title="Accomplishment Filters"
       stripe="MILESTONE SEARCH PARAMETERS"
@@ -370,37 +370,37 @@
       @close="showFilterModal = false"
       @confirm="applyFilters"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">tune</i> Filter Criteria</div>
-        <div class="bfp-filter-grid">
-          <label v-for="status in statusOptions" :key="status" class="bfp-check-option">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">tune</i> Filter Criteria</div>
+        <div class="tuao-filter-grid">
+          <label v-for="status in statusOptions" :key="status" class="tuao-check-option">
             <input v-model="filters.statuses" type="checkbox" :value="status" /> {{ status }}
           </label>
         </div>
       </div>
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Target Date</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">From</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input v-model="filters.target_from" class="bfp-input" type="date" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">date_range</i> Target Date</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">From</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input v-model="filters.target_from" class="tuao-input" type="date" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">To</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event_available</i>
-              <input v-model="filters.target_to" class="bfp-input" type="date" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">To</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event_available</i>
+              <input v-model="filters.target_to" class="tuao-input" type="date" />
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Print Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showPrintModal"
       title="Print Accomplishment Summary"
       stripe="MILESTONE PRINT SETUP"
@@ -409,14 +409,14 @@
       @close="showPrintModal = false"
       @confirm="printSummary"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">print</i> Print Summary</div>
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">print</i> Print Summary</div>
         <p class="text-secondary small mb-0">The browser print dialog will print the current database-backed summary, filters, and milestone table.</p>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Export Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showExportModal"
       title="Export Accomplishments"
       stripe="MILESTONE EXPORT"
@@ -425,14 +425,14 @@
       @close="showExportModal = false"
       @confirm="exportReport"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Format</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">file_download</i>
-              <select v-model="exportFormat" class="bfp-input bfp-select">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">ios_share</i> Export Options</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Format</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">file_download</i>
+              <select v-model="exportFormat" class="tuao-input tuao-select">
                 <option value="csv">CSV</option>
                 <option value="pdf">PDF</option>
                 <option value="xlsx">Excel (XLSX)</option>
@@ -441,11 +441,11 @@
           </div>
 
           <!-- Month filter -->
-          <div class="bfp-field-half">
-            <label class="bfp-label">Month</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">calendar_month</i>
-              <select v-model="exportMonth" class="bfp-input bfp-select">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Month</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">calendar_month</i>
+              <select v-model="exportMonth" class="tuao-input tuao-select">
                 <option value="">All months</option>
                 <option v-for="month in availableExportMonths" :key="month.value" :value="month.value">
                   {{ month.label }}
@@ -454,18 +454,18 @@
             </div>
           </div>
 
-          <p class="text-secondary small bfp-field-full mb-0">
+          <p class="text-secondary small tuao-field-full mb-0">
             {{ exportMonth ? 'Exports records with a target date in the selected month.' : 'Exports include the currently filtered milestone records, formatted like the standard Contract Summary Report.' }}
           </p>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
   </div>
 </template>
 
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 import accomplishmentService from "@/services/accomplishment.service";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -488,7 +488,7 @@ export default {
   name: "Accomplishments",
   components: {
     StatusBadge,
-    BfpModal,
+    TuaoModal,
   },
 
   data() {

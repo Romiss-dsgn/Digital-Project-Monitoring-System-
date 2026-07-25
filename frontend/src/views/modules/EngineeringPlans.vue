@@ -254,7 +254,7 @@
       </div>
     </div>
 
-    <BfpModal
+    <TuaoModal
       v-if="canCreate"
       :show="showUploadPlanModal"
       title="Upload New Engineering Plan"
@@ -265,18 +265,18 @@
       @close="closeUploadModal"
       @confirm="submitEngineeringPlan"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Plan File</div>
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">cloud_upload</i> Plan File</div>
         <div
-          class="bfp-upload-panel"
+          class="tuao-upload-panel"
           :class="{ 'drag-over': planUploadDragOver }"
           @dragover.prevent="planUploadDragOver = true"
           @dragleave.prevent="planUploadDragOver = false"
           @drop.prevent="handlePlanFileDrop"
         >
           <i class="material-icons-round">cloud_upload</i>
-          <p class="bfp-upload-title">Drop plan files here</p>
-          <p class="bfp-upload-sub">Accepted formats: PDF, DWG, PNG, DOCX up to 25MB.</p>
+          <p class="tuao-upload-title">Drop plan files here</p>
+          <p class="tuao-upload-sub">Accepted formats: PDF, DWG, PNG, DOCX up to 25MB.</p>
           <input
             type="file"
             class="form-control form-control-sm"
@@ -300,21 +300,21 @@
         </div>
       </div>
 
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">assignment</i> Document Details</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-full">
-            <label class="bfp-label">Plan Title <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">title</i>
-              <input class="bfp-input" type="text" v-model="engineeringPlanForm.plan_title" placeholder="e.g. Main Building Structural Plan" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">assignment</i> Document Details</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-full">
+            <label class="tuao-label">Plan Title <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">title</i>
+              <input class="tuao-input" type="text" v-model="engineeringPlanForm.plan_title" placeholder="e.g. Main Building Structural Plan" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Project <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">business</i>
-              <select class="bfp-input bfp-select" v-model="engineeringPlanForm.project_id">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Project <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">business</i>
+              <select class="tuao-input tuao-select" v-model="engineeringPlanForm.project_id">
                 <option value="">{{ isLoadingProjects ? "Loading projects..." : "Select a project" }}</option>
                 <option v-for="p in selectableProjects" :key="p.id" :value="p.id">
                   {{ projectOptionLabel(p) }}
@@ -322,27 +322,27 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Plan Type <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">category</i>
-              <select class="bfp-input bfp-select" v-model="engineeringPlanForm.plan_type">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Plan Type <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">category</i>
+              <select class="tuao-input tuao-select" v-model="engineeringPlanForm.plan_type">
                 <option v-for="type in planTypes" :key="type">{{ type }}</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Version</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">history</i>
-              <input class="bfp-input" type="text" v-model="engineeringPlanForm.version" placeholder="e.g. v2.1" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Version</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">history</i>
+              <input class="tuao-input" type="text" v-model="engineeringPlanForm.version" placeholder="e.g. v2.1" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Review Status</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">fact_check</i>
-              <select class="bfp-input bfp-select" v-model="engineeringPlanForm.status">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Review Status</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">fact_check</i>
+              <select class="tuao-input tuao-select" v-model="engineeringPlanForm.status">
                 <option value="for_review">For Review</option>
                 <option value="approved">Approved</option>
                 <option value="revision">Revision Required</option>
@@ -350,18 +350,18 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Remarks</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">notes</i>
-              <input class="bfp-input" type="text" v-model="engineeringPlanForm.remarks" placeholder="Optional notes" />
+          <div class="tuao-field-full">
+            <label class="tuao-label">Remarks</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">notes</i>
+              <input class="tuao-input" type="text" v-model="engineeringPlanForm.remarks" placeholder="Optional notes" />
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showFilterModal"
       title="Engineering Plan Filters"
       stripe="DOCUMENT SEARCH PARAMETERS"
@@ -370,24 +370,24 @@
       @close="showFilterModal = false"
       @confirm="applyFilters"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">tune</i> Filter Criteria</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Document Type</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">description</i>
-              <select class="bfp-input bfp-select" v-model="filterForm.type">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">tune</i> Filter Criteria</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Document Type</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">description</i>
+              <select class="tuao-input tuao-select" v-model="filterForm.type">
                 <option value="">All Documents</option>
                 <option v-for="type in planTypes" :key="type" :value="type">{{ type }}</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">flag</i>
-              <select class="bfp-input bfp-select" v-model="filterForm.status">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Status</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">flag</i>
+              <select class="tuao-input tuao-select" v-model="filterForm.status">
                 <option value="">Any Status</option>
                 <option value="approved">Approved</option>
                 <option value="for_review">For Review</option>
@@ -396,18 +396,18 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Project / Filename</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">search</i>
-              <input class="bfp-input" type="text" v-model="filterForm.search" placeholder="Search plan title, project, or file name" />
+          <div class="tuao-field-full">
+            <label class="tuao-label">Project / Filename</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">search</i>
+              <input class="tuao-input" type="text" v-model="filterForm.search" placeholder="Search plan title, project, or file name" />
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showPreviewModal"
       :title="previewDocument?.filename || 'Engineering Plan Preview'"
       stripe="DOCUMENT PREVIEW"
@@ -461,9 +461,9 @@
           </div>
         </template>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showRevisionModal"
       title="Revision Required"
       stripe="REVISION REMARKS"
@@ -473,22 +473,22 @@
       @close="closeRevisionModal"
       @confirm="submitRevision"
     >
-      <div class="bfp-section mb-0">
-        <div class="bfp-section-label">
+      <div class="tuao-section mb-0">
+        <div class="tuao-section-label">
           <i class="material-icons-round">edit_document</i>
           Revision Notes
         </div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field bfp-field-full">
-            <label class="bfp-label" for="revision-remarks">
-              Remarks <span class="bfp-required">*</span>
+        <div class="tuao-form-grid">
+          <div class="tuao-field tuao-field-full">
+            <label class="tuao-label" for="revision-remarks">
+              Remarks <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">notes</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">notes</i>
               <textarea
                 id="revision-remarks"
                 v-model="revisionRemarks"
-                class="bfp-input bfp-textarea"
+                class="tuao-input tuao-textarea"
                 rows="4"
                 placeholder="Explain what needs to be revised..."
               ></textarea>
@@ -496,9 +496,9 @@
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showApprovalModal"
       title="Approve Engineering Plan"
       stripe="APPROVAL CONFIRMATION"
@@ -508,14 +508,14 @@
       @close="closeApprovalModal"
       @confirm="submitApproval"
     >
-      <div class="bfp-section mb-0">
-        <div class="bfp-section-label">
+      <div class="tuao-section mb-0">
+        <div class="tuao-section-label">
           <i class="material-icons-round">check_circle</i>
           Approval Review
         </div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field bfp-field-full">
-            <div class="bfp-input-wrap">
+        <div class="tuao-form-grid">
+          <div class="tuao-field tuao-field-full">
+            <div class="tuao-input-wrap">
               <p class="mb-0 text-secondary">
                 You are about to mark <strong>{{ approvalTargetDocument?.filename || "this engineering plan" }}</strong> as approved.
                 This will update the document status to approved and move it out of the revision queue.
@@ -524,14 +524,14 @@
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
   </div>
 </template>
 
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 import EngineeringPlanService from "@/services/engineering-plan.service";
 
 const FILE_TYPE_ICON = {
@@ -549,7 +549,7 @@ function normalisePlanType(raw) {
 
 export default {
   name: "EngineeringPlans",
-  components: { StatusBadge, BfpModal },
+  components: { StatusBadge, TuaoModal },
 
   data() {
     return {
@@ -1678,7 +1678,7 @@ export default {
   margin-bottom: 8px;
 }
 
-.bfp-upload-panel.drag-over {
+.tuao-upload-panel.drag-over {
   background: rgba(192, 57, 43, 0.04);
   border-color: #c0392b;
 }

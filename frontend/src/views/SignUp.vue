@@ -116,7 +116,7 @@ import Navbar from "@/examples/PageLayout/Navbar.vue";
 import MaterialInput from "@/components/MaterialInput.vue";
 import MaterialCheckbox from "@/components/MaterialCheckbox.vue";
 import MaterialButton from "@/components/MaterialButton.vue";
-import bgImage from "@/assets/img/bg.png";
+import bgImage from "@/assets/img/LGU Tuao bg.jpg";
 const body = document.getElementsByTagName("body")[0];
 
 export default {

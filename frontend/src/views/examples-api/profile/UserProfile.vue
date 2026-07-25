@@ -9,7 +9,7 @@
           <span class="material-symbols-rounded profile-banner__icon">shield</span>
           <div>
             <h4 class="profile-banner__title">My Profile</h4>
-            <p class="profile-banner__sub">BFP Region II — Bureau of Fire Protection</p>
+            <p class="profile-banner__sub">LGU Tuao — Municipality of Tuao</p>
           </div>
         </div>
       </div>

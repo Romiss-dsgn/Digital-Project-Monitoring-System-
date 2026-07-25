@@ -6,7 +6,7 @@
                     <img :src="logo" alt="BFP Logo" class="logo-image" />
                 </div>
                 <div class="brand-texts">
-                    <span class="brand-title">Bureau of Fire Protection Region II</span>
+                    <span class="brand-title">Municipality of Tuao Region II</span>
                     <div class="brand-subtitle-row">
                         <span class="brand-line"></span>
                         <span class="brand-subtitle">Digital Project Monitoring System</span>
@@ -72,8 +72,8 @@
 <script>
 import showSwal from "@/mixins/showSwal";
 import * as Yup from "yup";
-import logo from "@/assets/img/BFP 11.png";
-import bgImage from "@/assets/img/bg.png";
+import logo from "@/assets/img/LGU TUAO logo.jpeg";
+import bgImage from "@/assets/img/LGU Tuao bg.jpg";
 
 export default {
     name: "PasswordForgot",

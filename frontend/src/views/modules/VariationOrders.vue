@@ -277,7 +277,7 @@
     </div>
 
     <!-- New VO Request Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showRequestModal"
       :title="editingOrder ? 'Edit Variation Order' : 'New Variation Order Request'"
       stripe="VARIATION ORDER REQUEST"
@@ -286,21 +286,21 @@
       @close="showRequestModal = false"
       @confirm="editingOrder ? updateVariationOrder() : createVariationOrder()"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">assignment_add</i> Request Details</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">VO Number <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">tag</i>
-              <input class="bfp-input" type="text" v-model="newOrder.vo_number" placeholder="e.g. VO-2024-001" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">assignment_add</i> Request Details</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">VO Number <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">tag</i>
+              <input class="tuao-input" type="text" v-model="newOrder.vo_number" placeholder="e.g. VO-2024-001" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Contract <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">folder_open</i>
-              <select class="bfp-input bfp-select" v-model="newOrder.contract_id">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Contract <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">folder_open</i>
+              <select class="tuao-input tuao-select" v-model="newOrder.contract_id">
                 <option value="">Select Contract</option>
                 <option v-for="contract in contracts" :key="contract.id" :value="contract.id">
                   {{ contract.contract_number }}
@@ -308,43 +308,43 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Scope Change Description</label>
-            <div class="bfp-input-wrap">
-              <textarea class="bfp-input bfp-textarea" rows="3" v-model="newOrder.description" placeholder="Describe additional works, deductions, or design changes"></textarea>
+          <div class="tuao-field-full">
+            <label class="tuao-label">Scope Change Description</label>
+            <div class="tuao-input-wrap">
+              <textarea class="tuao-input tuao-textarea" rows="3" v-model="newOrder.description" placeholder="Describe additional works, deductions, or design changes"></textarea>
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Reason</label>
-            <div class="bfp-input-wrap">
-              <textarea class="bfp-input bfp-textarea" rows="2" v-model="newOrder.reason" placeholder="Reason for variation order"></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">payments</i> Cost & Time Impact</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Cost Impact <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">payments</i>
-              <input class="bfp-input" type="number" v-model="newOrder.amount_change" placeholder="PHP amount" />
-            </div>
-          </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Time Impact (Days)</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">schedule</i>
-              <input class="bfp-input" type="number" v-model="newOrder.time_impact_days" placeholder="Additional days" />
+          <div class="tuao-field-full">
+            <label class="tuao-label">Reason</label>
+            <div class="tuao-input-wrap">
+              <textarea class="tuao-input tuao-textarea" rows="2" v-model="newOrder.reason" placeholder="Reason for variation order"></textarea>
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">payments</i> Cost & Time Impact</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Cost Impact <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">payments</i>
+              <input class="tuao-input" type="number" v-model="newOrder.amount_change" placeholder="PHP amount" />
+            </div>
+          </div>
+          <div class="tuao-field-half">
+            <label class="tuao-label">Time Impact (Days)</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">schedule</i>
+              <input class="tuao-input" type="number" v-model="newOrder.time_impact_days" placeholder="Additional days" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </TuaoModal>
 
     <!-- Filter Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showFilterModal"
       title="Variation Order Filters"
       stripe="VO SEARCH PARAMETERS"
@@ -353,31 +353,31 @@
       @close="showFilterModal = false"
       @confirm="applyFilters"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">search</i> Search & Status</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-full">
-            <label class="bfp-label">Search</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">search</i>
-              <input class="bfp-input" type="text" v-model.trim="filters.search" placeholder="VO number, description, or contract title" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">search</i> Search & Status</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-full">
+            <label class="tuao-label">Search</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">search</i>
+              <input class="tuao-input" type="text" v-model.trim="filters.search" placeholder="VO number, description, or contract title" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">flag</i>
-              <select class="bfp-input bfp-select" v-model="filters.status">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Status</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">flag</i>
+              <select class="tuao-input tuao-select" v-model="filters.status">
                 <option value="">All Statuses</option>
                 <option v-for="status in statuses" :key="status" :value="status">{{ status }}</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Contract</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">folder</i>
-              <select class="bfp-input bfp-select" v-model="filters.contract_id">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Contract</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">folder</i>
+              <select class="tuao-input tuao-select" v-model="filters.contract_id">
                 <option value="">All Contracts</option>
                 <option v-for="contract in contracts" :key="contract.id" :value="contract.id">
                   {{ contract.contract_number }} - {{ contract.contract_title }}
@@ -387,10 +387,10 @@
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Review Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showReviewModal"
       :title="reviewAction === 'Approved' ? 'Approve Variation Order' : 'Reject Variation Order'"
       stripe="VARIATION ORDER REVIEW"
@@ -399,30 +399,30 @@
       @close="showReviewModal = false"
       @confirm="reviewOrder"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">rate_review</i> Review Decision</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-full">
-            <label class="bfp-label">Review Action</label>
-            <div class="bfp-input-wrap">
-              <select class="bfp-input bfp-select" v-model="reviewAction">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">rate_review</i> Review Decision</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-full">
+            <label class="tuao-label">Review Action</label>
+            <div class="tuao-input-wrap">
+              <select class="tuao-input tuao-select" v-model="reviewAction">
                 <option value="Under Review">Under Review</option>
                 <option value="Approved">Approve</option>
                 <option value="Rejected">Reject</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Approval Remarks</label>
-            <div class="bfp-input-wrap">
-              <textarea class="bfp-input bfp-textarea" rows="3" v-model="approvalRemarks" placeholder="Add remarks for this decision"></textarea>
+          <div class="tuao-field-full">
+            <label class="tuao-label">Approval Remarks</label>
+            <div class="tuao-input-wrap">
+              <textarea class="tuao-input tuao-textarea" rows="3" v-model="approvalRemarks" placeholder="Add remarks for this decision"></textarea>
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showSaveResultModal"
       :title="saveResultTitle || 'Variation Order Status'"
       stripe="DATA SUBMISSION RESULT"
@@ -432,23 +432,23 @@
       @close="closeSaveResultModal"
       @confirm="closeSaveResultModal"
     >
-      <div class="bfp-section mb-0">
-        <div class="bfp-section-label">
+      <div class="tuao-section mb-0">
+        <div class="tuao-section-label">
           <i class="material-icons-round">{{ saveResultStatus === 'success' ? 'check_circle' : 'error' }}</i>
           {{ saveResultStatus === 'success' ? 'Add Successful' : 'Add Failed' }}
         </div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-full">
+        <div class="tuao-form-grid">
+          <div class="tuao-field-full">
             <p class="mb-0 text-secondary">
               {{ saveResultMessage }}
             </p>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- View Order Detail Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showDetailModal"
       :title="'VO Details - ' + (detailOrder?.vo_number || '')"
       stripe="VARIATION ORDER DETAIL"
@@ -457,86 +457,86 @@
       :show-cancel="false"
       @close="closeDetailModal"
     >
-      <div v-if="detailOrder" class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">assignment</i> Order Information</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">VO Number</label>
-            <div class="bfp-input-wrap">
-              <input class="bfp-input" type="text" :value="detailOrder.vo_number" readonly />
+      <div v-if="detailOrder" class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">assignment</i> Order Information</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">VO Number</label>
+            <div class="tuao-input-wrap">
+              <input class="tuao-input" type="text" :value="detailOrder.vo_number" readonly />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Contract</label>
-            <div class="bfp-input-wrap">
-              <input class="bfp-input" type="text" :value="detailOrder.contract_number || detailOrder.contract_title" readonly />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Contract</label>
+            <div class="tuao-input-wrap">
+              <input class="tuao-input" type="text" :value="detailOrder.contract_number || detailOrder.contract_title" readonly />
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Description</label>
-            <div class="bfp-input-wrap">
-              <textarea class="bfp-input bfp-textarea" rows="3" :value="detailOrder.description" readonly></textarea>
+          <div class="tuao-field-full">
+            <label class="tuao-label">Description</label>
+            <div class="tuao-input-wrap">
+              <textarea class="tuao-input tuao-textarea" rows="3" :value="detailOrder.description" readonly></textarea>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Amount Change</label>
-            <div class="bfp-input-wrap">
-              <input class="bfp-input" type="text" :value="formatCurrency(detailOrder.amount_change)" readonly />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Amount Change</label>
+            <div class="tuao-input-wrap">
+              <input class="tuao-input" type="text" :value="formatCurrency(detailOrder.amount_change)" readonly />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Time Impact (Days)</label>
-            <div class="bfp-input-wrap">
-              <input class="bfp-input" type="text" :value="detailOrder.time_impact_days || '-'" readonly />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Time Impact (Days)</label>
+            <div class="tuao-input-wrap">
+              <input class="tuao-input" type="text" :value="detailOrder.time_impact_days || '-'" readonly />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-input-wrap">
-              <input class="bfp-input" type="text" :value="detailOrder.status" readonly />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Status</label>
+            <div class="tuao-input-wrap">
+              <input class="tuao-input" type="text" :value="detailOrder.status" readonly />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Approval Remarks</label>
-            <div class="bfp-input-wrap">
-              <input class="bfp-input" type="text" :value="detailOrder.approval_remarks || '-'" readonly />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Approval Remarks</label>
+            <div class="tuao-input-wrap">
+              <input class="tuao-input" type="text" :value="detailOrder.approval_remarks || '-'" readonly />
             </div>
           </div>
         </div>
       </div>
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Supporting Documents</div>
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">cloud_upload</i> Supporting Documents</div>
         <div v-if="permissions.can_create" class="document-upload-panel mb-3">
-          <div class="bfp-form-grid">
-            <div class="bfp-field-half">
-              <label class="bfp-label">Document Title</label>
-              <div class="bfp-input-wrap">
-                <i class="material-icons-round bfp-input-icon">badge</i>
+          <div class="tuao-form-grid">
+            <div class="tuao-field-half">
+              <label class="tuao-label">Document Title</label>
+              <div class="tuao-input-wrap">
+                <i class="material-icons-round tuao-input-icon">badge</i>
                 <input
-                  class="bfp-input"
+                  class="tuao-input"
                   type="text"
                   v-model="documentUpload.document_title"
                   placeholder="Optional document title"
                 />
               </div>
             </div>
-            <div class="bfp-field-half">
-              <label class="bfp-label">File</label>
-              <div class="bfp-input-wrap">
+            <div class="tuao-field-half">
+              <label class="tuao-label">File</label>
+              <div class="tuao-input-wrap">
                 <input
                   ref="documentFileInput"
-                  class="bfp-input"
+                  class="tuao-input"
                   type="file"
                   accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png"
                   @change="handleDocumentFileChange"
                 />
               </div>
             </div>
-            <div class="bfp-field-full">
-              <label class="bfp-label">Remarks</label>
-              <div class="bfp-input-wrap">
+            <div class="tuao-field-full">
+              <label class="tuao-label">Remarks</label>
+              <div class="tuao-input-wrap">
                 <textarea
-                  class="bfp-input bfp-textarea"
+                  class="tuao-input tuao-textarea"
                   rows="2"
                   v-model="documentUpload.remarks"
                   placeholder="Optional remarks"
@@ -573,18 +573,18 @@
         </div>
         <div v-else class="text-secondary small text-center py-3">No documents uploaded</div>
       </div>
-    </BfpModal>
+    </TuaoModal>
   </div>
 </template>
 
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 import variationOrderService from "@/services/variation-order.service";
 
 export default {
   name: "VariationOrders",
-  components: { StatusBadge, BfpModal },
+  components: { StatusBadge, TuaoModal },
   data() {
     return {
       showRequestModal: false,
@@ -1348,7 +1348,7 @@ export default {
   background: #f8fafc;
 }
 
-.document-upload-panel .bfp-input[type="file"] {
+.document-upload-panel .tuao-input[type="file"] {
   padding-left: 12px;
 }
 

@@ -116,7 +116,7 @@
           </div>
           <div>
             <dt>Unit</dt>
-            <dd>{{ form.office_unit || "BFP Region II" }}</dd>
+            <dd>{{ form.office_unit || "LGU Tuao" }}</dd>
           </div>
         </dl>
       </aside>

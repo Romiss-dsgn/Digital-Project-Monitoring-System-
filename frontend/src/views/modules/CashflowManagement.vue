@@ -345,7 +345,7 @@
       </div>
     </div>
 
-    <BfpModal
+    <TuaoModal
       :show="showExportModal"
       title="Export Cashflow Report"
       stripe="FINANCIAL REPORT EXPORT"
@@ -354,37 +354,37 @@
       @close="showExportModal = false"
       @confirm="confirmExportReport"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Settings</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Format</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">file_download</i>
-              <select class="bfp-input bfp-select" v-model="exportFormat">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">ios_share</i> Export Settings</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Format</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">file_download</i>
+              <select class="tuao-input tuao-select" v-model="exportFormat">
                 <option>PDF</option>
                 <option>Excel</option>
                 <option>CSV</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Period</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">date_range</i>
-              <select class="bfp-input bfp-select" v-model="exportPeriod">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Period</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">date_range</i>
+              <select class="tuao-input tuao-select" v-model="exportPeriod">
                 <option>Current Fiscal Year</option>
                 <option>Current Quarter</option>
                 <option>Month to Date</option>
               </select>
             </div>
           </div>
-          <label class="bfp-check-option bfp-field-full"><input type="checkbox" v-model="exportIncludeChart" /> Include budget vs actual chart data</label>
+          <label class="tuao-check-option tuao-field-full"><input type="checkbox" v-model="exportIncludeChart" /> Include budget vs actual chart data</label>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showDisburseFundsModal"
       :title="disbursementMode === 'mark-paid' ? 'Mark Invoice as Paid' : 'Disburse Funds'"
       stripe="PAYMENT RELEASE FORM"
@@ -393,14 +393,14 @@
       @close="showDisburseFundsModal = false"
       @confirm="disburseFunds"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">payments</i> Disbursement Details</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Invoice <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">receipt_long</i>
-              <select class="bfp-input bfp-select" v-model="disbursement.invoice_id" :disabled="disbursementMode === 'mark-paid'">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">payments</i> Disbursement Details</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Invoice <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">receipt_long</i>
+              <select class="tuao-input tuao-select" v-model="disbursement.invoice_id" :disabled="disbursementMode === 'mark-paid'">
                 <option value="">Select Invoice</option>
                 <option v-for="invoice in payableInvoices" :key="invoice.id" :value="invoice.id">
                   {{ invoice.invoice_number }} - {{ formatCurrency(invoice.remaining_balance) }} remaining
@@ -409,45 +409,45 @@
               <div v-if="payableInvoices.length === 0" class="text-secondary small mt-1">No payable invoices available to disburse.</div>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Amount (PHP) <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">payments</i>
-              <input class="bfp-input" type="number" v-model="disbursement.amount" placeholder="0.00" step="0.01" min="0" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Amount (PHP) <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">payments</i>
+              <input class="tuao-input" type="number" v-model="disbursement.amount" placeholder="0.00" step="0.01" min="0" />
             </div>
             <div v-if="selectedPaymentInvoice" class="text-secondary small mt-1">
               Remaining balance: {{ formatCurrency(selectedPaymentInvoice.remaining_balance) }}
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Payment Date <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="disbursement.payment_date" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Payment Date <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="disbursement.payment_date" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Payment Method</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">payment</i>
-              <select class="bfp-input bfp-select" v-model="disbursement.payment_method">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Payment Method</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">payment</i>
+              <select class="tuao-input tuao-select" v-model="disbursement.payment_method">
                 <option value="Check">Check</option>
                 <option value="Direct Deposit">Direct Deposit</option>
                 <option value="Cash">Cash</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Remarks</label>
-            <div class="bfp-input-wrap">
-              <textarea class="bfp-input bfp-textarea" rows="2" v-model="disbursement.remarks" placeholder="Optional remarks"></textarea>
+          <div class="tuao-field-full">
+            <label class="tuao-label">Remarks</label>
+            <div class="tuao-input-wrap">
+              <textarea class="tuao-input tuao-textarea" rows="2" v-model="disbursement.remarks" placeholder="Optional remarks"></textarea>
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showPeriodModal"
       :title="editingPeriod ? 'Edit Cashflow Period' : 'Add Cashflow Period'"
       stripe="CASHFLOW PERIOD FORM"
@@ -456,14 +456,14 @@
       @close="showPeriodModal = false"
       @confirm="savePeriod"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Period Information</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Contract <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">assignment</i>
-              <select class="bfp-input bfp-select" v-model="newPeriod.contract_id">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">date_range</i> Period Information</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Contract <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">assignment</i>
+              <select class="tuao-input tuao-select" v-model="newPeriod.contract_id">
                 <option value="">Select Contract</option>
                 <option v-for="contract in contracts" :key="contract.id" :value="contract.id">
                   {{ contract.contract_number }}
@@ -471,39 +471,39 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Period Label <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">tag</i>
-              <input class="bfp-input" type="text" v-model="newPeriod.period_label" placeholder="e.g. BFP-R2-CON-2024-001 - 2026-01" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Period Label <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">tag</i>
+              <input class="tuao-input" type="text" v-model="newPeriod.period_label" placeholder="e.g. BFP-R2-CON-2024-001 - 2026-01" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Start Date</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="newPeriod.period_start" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Start Date</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="newPeriod.period_start" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">End Date</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="newPeriod.period_end" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">End Date</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="newPeriod.period_end" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Planned Amount <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">payments</i>
-              <input class="bfp-input" type="number" v-model="newPeriod.planned_amount" placeholder="0.00" step="0.01" min="0" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Planned Amount <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">payments</i>
+              <input class="tuao-input" type="number" v-model="newPeriod.planned_amount" placeholder="0.00" step="0.01" min="0" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Status</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">flag</i>
-              <select class="bfp-input bfp-select" v-model="newPeriod.status">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Status</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">flag</i>
+              <select class="tuao-input tuao-select" v-model="newPeriod.status">
                 <option v-for="status in periodStatuses" :key="status" :value="status">
                   {{ status }}
                 </option>
@@ -512,9 +512,9 @@
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showAddInvoiceModal"
       :title="editingInvoice ? 'Edit Invoice' : 'Add Invoice'"
       stripe="INVOICE RECORD FORM"
@@ -523,21 +523,21 @@
       @close="showAddInvoiceModal = false"
       @confirm="editingInvoice ? updateInvoice() : createInvoice()"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">receipt_long</i> Invoice Information</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Invoice Number <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">tag</i>
-              <input class="bfp-input" type="text" v-model="newInvoice.invoice_number" placeholder="INV-004" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">receipt_long</i> Invoice Information</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Invoice Number <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">tag</i>
+              <input class="tuao-input" type="text" v-model="newInvoice.invoice_number" placeholder="INV-004" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Contract <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">assignment</i>
-              <select class="bfp-input bfp-select" v-model="newInvoice.contract_id">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Contract <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">assignment</i>
+              <select class="tuao-input tuao-select" v-model="newInvoice.contract_id">
                 <option value="">Select Contract</option>
                 <option v-for="contract in contracts" :key="contract.id" :value="contract.id">
                   {{ contract.contract_number }}
@@ -545,11 +545,11 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Cashflow Period</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">date_range</i>
-              <select class="bfp-input bfp-select" v-model="newInvoice.cashflow_period_id">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Cashflow Period</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">date_range</i>
+              <select class="tuao-input tuao-select" v-model="newInvoice.cashflow_period_id">
                 <option value="">Select Period (Optional)</option>
                 <option v-for="period in periods" :key="period.id" :value="period.id">
                   {{ period.period_label }}
@@ -557,39 +557,39 @@
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Amount <span class="bfp-required">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">payments</i>
-              <input class="bfp-input" type="number" v-model="newInvoice.invoice_amount" placeholder="PHP amount" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Amount <span class="tuao-required">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">payments</i>
+              <input class="tuao-input" type="number" v-model="newInvoice.invoice_amount" placeholder="PHP amount" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Invoice Date</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="newInvoice.invoice_date" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Invoice Date</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="newInvoice.invoice_date" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Due Date</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="newInvoice.due_date" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Due Date</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="newInvoice.due_date" />
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Billing Period</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">receipt_long</i>
-              <input class="bfp-input" type="text" v-model="newInvoice.billing_period" placeholder="e.g. Jan-2024" />
+          <div class="tuao-field-full">
+            <label class="tuao-label">Billing Period</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">receipt_long</i>
+              <input class="tuao-input" type="text" v-model="newInvoice.billing_period" placeholder="e.g. Jan-2024" />
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showInvoiceDetailModal"
       title="Invoice Details"
       stripe="INVOICE DETAIL VIEW"
@@ -597,8 +597,8 @@
       width="760px"
       @close="closeInvoiceDetailModal"
     >
-      <div v-if="selectedInvoice" class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">receipt_long</i> Invoice Overview</div>
+      <div v-if="selectedInvoice" class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">receipt_long</i> Invoice Overview</div>
         <div class="invoice-detail-grid">
           <div class="detail-card">
             <span class="detail-label">Invoice #</span>
@@ -643,27 +643,27 @@
         </div>
       </div>
 
-      <div v-if="selectedInvoice" class="bfp-section">
+      <div v-if="selectedInvoice" class="tuao-section">
         <div v-if="permissions.can_create" class="document-upload-panel mb-3">
-          <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Upload Invoice Document</div>
-          <div class="bfp-form-grid">
-            <div class="bfp-field-full">
-              <label class="bfp-label">File <span class="bfp-required">*</span></label>
-              <div class="bfp-input-wrap">
+          <div class="tuao-section-label"><i class="material-icons-round">cloud_upload</i> Upload Invoice Document</div>
+          <div class="tuao-form-grid">
+            <div class="tuao-field-full">
+              <label class="tuao-label">File <span class="tuao-required">*</span></label>
+              <div class="tuao-input-wrap">
                 <input
                   ref="invoiceDocumentFileInput"
-                  class="bfp-input"
+                  class="tuao-input"
                   type="file"
                   accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png"
                   @change="handleInvoiceDocumentFileChange"
                 />
               </div>
             </div>
-            <div class="bfp-field-full">
-              <label class="bfp-label">Remarks</label>
-              <div class="bfp-input-wrap">
+            <div class="tuao-field-full">
+              <label class="tuao-label">Remarks</label>
+              <div class="tuao-input-wrap">
                 <textarea
-                  class="bfp-input bfp-textarea"
+                  class="tuao-input tuao-textarea"
                   rows="2"
                   v-model="invoiceDocumentUpload.remarks"
                   placeholder="Optional remarks"
@@ -685,7 +685,7 @@
           </div>
         </div>
 
-        <div class="bfp-section-label"><i class="material-icons-round">description</i> Invoice Documents</div>
+        <div class="tuao-section-label"><i class="material-icons-round">description</i> Invoice Documents</div>
         <div v-if="selectedInvoice.documents && selectedInvoice.documents.length" class="document-list">
           <div v-for="document in selectedInvoice.documents" :key="document.id" class="document-row">
             <div class="document-info">
@@ -704,13 +704,13 @@
         </div>
         <div v-else class="text-secondary small text-center py-3">No documents uploaded</div>
       </div>
-    </BfpModal>
+    </TuaoModal>
   </div>
 </template>
 
 <script>
 import StatusBadge from "@/components/StatusBadge.vue";
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 import Chart from "chart.js/auto";
 import cashflowService from "@/services/cashflow.service";
 import "bootstrap";
@@ -719,7 +719,7 @@ export default {
   name: "CashflowManagement",
   components: {
     StatusBadge,
-    BfpModal
+    TuaoModal
   },
   data() {
       return {
@@ -1650,7 +1650,7 @@ export default {
 
           <div class="report-sheet">
             <h1>ConTrackPro — Cashflow Report</h1>
-            <h2>BFP Region II · Generated ${new Date().toLocaleString('en-US')} · Range: ${range.start.toLocaleDateString('en-US')} to ${range.end.toLocaleDateString('en-US')}</h2>
+            <h2>LGU Tuao · Generated ${new Date().toLocaleString('en-US')} · Range: ${range.start.toLocaleDateString('en-US')} to ${range.end.toLocaleDateString('en-US')}</h2>
 
             <div class="summary-grid">
               <div class="summary-card"><span>Planned Budget</span><strong>${this.formatCurrency(this.summary?.planned_total)}</strong></div>

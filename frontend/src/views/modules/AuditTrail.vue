@@ -211,7 +211,7 @@
     </div>
 
     <!-- Advanced Filter Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showAdvancedFilterModal"
       title="Audit Log Advanced Filters"
       stripe="ACTIVITY LOG SEARCH"
@@ -221,24 +221,24 @@
       @close="showAdvancedFilterModal = false"
       @confirm="applyAdvancedFilters"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">admin_panel_settings</i> Users & Modules</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Role</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">badge</i>
-              <select class="bfp-input bfp-select" v-model="advFilters.role">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">admin_panel_settings</i> Users & Modules</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Role</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">badge</i>
+              <select class="tuao-input tuao-select" v-model="advFilters.role">
                 <option value="">All Roles</option>
                 <option v-for="r in roleOptions" :key="r.id" :value="r.name">{{ r.name }}</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Module</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">apps</i>
-              <select class="bfp-input bfp-select" v-model="advFilters.module">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Module</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">apps</i>
+              <select class="tuao-input tuao-select" v-model="advFilters.module">
                 <option value="">All Modules</option>
                 <option v-for="m in moduleOptions" :key="m" :value="m">{{ m }}</option>
               </select>
@@ -246,34 +246,34 @@
           </div>
         </div>
       </div>
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">manage_search</i> Actions & Date Range</div>
-        <div class="bfp-filter-grid">
-          <label class="bfp-check-option" v-for="action in actionOptions" :key="action">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">manage_search</i> Actions & Date Range</div>
+        <div class="tuao-filter-grid">
+          <label class="tuao-check-option" v-for="action in actionOptions" :key="action">
             <input type="checkbox" :value="action" v-model="advFilters.actions" /> {{ action }}
           </label>
         </div>
-        <div class="bfp-form-grid mt-3">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Date From</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="advFilters.date_from" />
+        <div class="tuao-form-grid mt-3">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Date From</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="advFilters.date_from" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Date To</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event_available</i>
-              <input class="bfp-input" type="date" v-model="advFilters.date_to" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Date To</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event_available</i>
+              <input class="tuao-input" type="date" v-model="advFilters.date_to" />
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Export Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showExportModal"
       title="Export Audit Logs"
       stripe="ACCOUNTABILITY RECORD EXPORT"
@@ -282,25 +282,25 @@
       @close="showExportModal = false"
       @confirm="doExport"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">ios_share</i> Export Package</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Format <span class="text-danger">*</span></label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">file_download</i>
-              <select class="bfp-input bfp-select" v-model="exportOptions.format">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">ios_share</i> Export Package</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Format <span class="text-danger">*</span></label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">file_download</i>
+              <select class="tuao-input tuao-select" v-model="exportOptions.format">
                 <option value="csv">CSV</option>
                 <option value="excel">Excel</option>
                 <option value="pdf">PDF</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Retention Label</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">label</i>
-              <select class="bfp-input bfp-select" v-model="exportOptions.retention_label">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Retention Label</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">label</i>
+              <select class="tuao-input tuao-select" v-model="exportOptions.retention_label">
                 <option value="Official Copy">Official Copy</option>
                 <option value="Internal Review">Internal Review</option>
                 <option value="Security Incident">Security Incident</option>
@@ -309,30 +309,30 @@
           </div>
         </div>
       </div>
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Date Range (Optional)</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Date From</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input class="bfp-input" type="date" v-model="exportOptions.date_from" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">date_range</i> Date Range (Optional)</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Date From</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input class="tuao-input" type="date" v-model="exportOptions.date_from" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Date To</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event_available</i>
-              <input class="bfp-input" type="date" v-model="exportOptions.date_to" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Date To</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event_available</i>
+              <input class="tuao-input" type="date" v-model="exportOptions.date_to" />
             </div>
           </div>
         </div>
       </div>
       <div class="text-danger small mt-2" v-if="exportError">{{ exportError }}</div>
-    </BfpModal>
+    </TuaoModal>
 
     <!-- Detail Modal -->
-    <BfpModal
+    <TuaoModal
       :show="showDetailModal"
       title="Audit Log Detail"
       stripe="ACTIVITY RECORD DETAIL"
@@ -341,67 +341,67 @@
       @close="showDetailModal = false"
       @confirm="showDetailModal = false"
     >
-      <div class="bfp-section" v-if="selectedLog">
-        <div class="bfp-section-label"><i class="material-icons-round">info</i> Log Information</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Date/Time</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">schedule</i>
-              <input class="bfp-input" readonly :value="formatDate(selectedLog.performed_at) + ' ' + formatTime(selectedLog.performed_at)" />
+      <div class="tuao-section" v-if="selectedLog">
+        <div class="tuao-section-label"><i class="material-icons-round">info</i> Log Information</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Date/Time</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">schedule</i>
+              <input class="tuao-input" readonly :value="formatDate(selectedLog.performed_at) + ' ' + formatTime(selectedLog.performed_at)" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">User</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">person</i>
-              <input class="bfp-input" readonly :value="selectedLog.user_name || 'System'" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">User</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">person</i>
+              <input class="tuao-input" readonly :value="selectedLog.user_name || 'System'" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Role</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">badge</i>
-              <input class="bfp-input" readonly :value="selectedLog.role_name || 'N/A'" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Role</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">badge</i>
+              <input class="tuao-input" readonly :value="selectedLog.role_name || 'N/A'" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Module</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">apps</i>
-              <input class="bfp-input" readonly :value="selectedLog.module" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Module</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">apps</i>
+              <input class="tuao-input" readonly :value="selectedLog.module" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Action</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">bolt</i>
-              <input class="bfp-input" readonly :value="selectedLog.action.toUpperCase()" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Action</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">bolt</i>
+              <input class="tuao-input" readonly :value="selectedLog.action.toUpperCase()" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Record Affected</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">folder</i>
-              <input class="bfp-input" readonly :value="selectedLog.record_code || '-'" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Record Affected</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">folder</i>
+              <input class="tuao-input" readonly :value="selectedLog.record_code || '-'" />
             </div>
           </div>
-          <div class="bfp-field-full">
-            <label class="bfp-label">Remarks</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">notes</i>
-              <input class="bfp-input" readonly :value="selectedLog.remarks || '-'" />
+          <div class="tuao-field-full">
+            <label class="tuao-label">Remarks</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">notes</i>
+              <input class="tuao-input" readonly :value="selectedLog.remarks || '-'" />
             </div>
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
   </div>
 </template>
 
 <script>
-import BfpModal from "@/components/BfpModal.vue";
+import TuaoModal from "@/components/TuaoModal.vue";
 import AuditService from "@/services/audit.service";
 
 const AVATAR_COLORS = [
@@ -418,7 +418,7 @@ const DISPLAY_TIMEZONE = "Asia/Manila";
 
 export default {
   name: "AuditTrail",
-  components: { BfpModal },
+  components: { TuaoModal },
   data() {
     return {
       // State

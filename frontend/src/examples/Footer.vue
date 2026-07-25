@@ -1,7 +1,7 @@
 <template>
   <footer class="app-footer">
     <div class="container-fluid">
-      <span>&copy; {{ footerYear }} Bureau of Fire Protection - Region II. ConTrackPro v4.2.0. All Rights Reserved.</span>
+      <span>&copy; {{ footerYear }} Municipality of Tuao. ConTrackPro v4.2.0. All Rights Reserved.</span>
     </div>
   </footer>
 </template>

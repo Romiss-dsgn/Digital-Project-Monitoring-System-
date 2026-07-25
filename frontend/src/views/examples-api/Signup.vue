@@ -9,11 +9,11 @@
                     <div>
                         <div class="panel-brand">
                             <div class="panel-mark">
-                                <img :src="logo" alt="BFP Region II Logo" />
+                                <img :src="logo" alt="LGU Tuao Logo" />
                             </div>
                             <div class="panel-brand-copy">
-                                <p class="system-name">BFP Region II</p>
-                                <p class="system-subtitle">Bureau of Fire Protection</p>
+                                <p class="system-name">LGU Tuao</p>
+                                <p class="system-subtitle">Municipality of Tuao</p>
                             </div>
                         </div>
                     </div>
@@ -22,7 +22,7 @@
                         <p class="panel-label">ConTrackPro Monitoring Portal</p>
                         <h1>Request Secure System Access</h1>
                         <p>
-                            Official digital project monitoring portal for BFP Region II
+                            Official digital project monitoring portal for LGU Tuao
                             infrastructure records, engineering plans, contracts,
                             cashflows, variation orders, accomplishments, contractor
                             performance, notifications, and audit history.
@@ -35,7 +35,7 @@
                             <span>Secure Government Network</span>
                         </div>
                         <p>
-                            Access is restricted to authorized Bureau of Fire Protection
+                            Access is restricted to authorized Municipality of Tuao
                             personnel. Account requests are reviewed before activation,
                             and system activity is logged for compliance and audit
                             accountability.
@@ -79,7 +79,7 @@
                                         v-model="user.badgeNumber"
                                         type="text"
                                         class="form-control"
-                                        placeholder="BFP-2024-XXXX"
+                                        placeholder="TUAO-2024-XXXX"
                                         name="badgeNumber"
                                     />
                                 </div>
@@ -94,7 +94,7 @@
                                         v-model="user.email"
                                         type="email"
                                         class="form-control"
-                                        placeholder="example@bfp.gov.ph"
+                                        placeholder="example@tuao.gov.ph"
                                         name="email"
                                     />
                                 </div>
@@ -225,7 +225,7 @@
 import showSwal from "@/mixins/showSwal";
 import * as Yup from "yup";
 import logo from "@/assets/img/system-logo/logo.jpg";
-import bgImage from "@/assets/img/bg.png";
+import bgImage from "@/assets/img/LGU Tuao bg.jpg";
 
 export default {
     name: "Signup",
@@ -268,7 +268,8 @@ export default {
     },
     computed: {
         panelBackgroundImage() {
-            return `linear-gradient(175deg, rgba(180, 14, 26, 0.84) 0%, rgba(120, 10, 20, 0.80) 35%, rgba(28, 34, 58, 0.82) 100%), url(${this.bgImage})`;
+            console.log("DEBUG bgImage:", this.bgImage);
+            return `linear-gradient(175deg, rgba(21, 101, 192, 0.92) 0%, rgba(13, 59, 120, 0.90) 35%, rgba(28, 34, 58, 0.82) 100%), url("${this.bgImage}")`;
         },
     },
     methods: {
@@ -491,7 +492,7 @@ export default {
 
 .eyebrow {
     margin: 0 0 0.35rem;
-    color: #c0392b;
+    color: #1565c0;
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -623,7 +624,7 @@ export default {
     height: 1rem;
     margin-top: 0.1rem;
     flex: 0 0 auto;
-    accent-color: #c0392b;
+    accent-color: #1565c0;
 }
 
 .btn-request {
@@ -631,7 +632,7 @@ export default {
     min-height: 3.35rem;
     border: 0;
     border-radius: 0.85rem;
-    background: linear-gradient(135deg, #c0392b 0%, #1a4fa0 100%);
+    background: linear-gradient(135deg, #1565c0 0%, #0d3b78 100%);
     color: #fff;
     display: inline-flex;
     align-items: center;
@@ -641,7 +642,7 @@ export default {
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    box-shadow: 0 8px 24px rgba(160, 20, 20, 0.25);
+    box-shadow: 0 8px 24px rgba(13, 59, 120, 0.25);
     transition: opacity 0.2s, transform 0.2s;
 }
 
@@ -664,7 +665,7 @@ export default {
 }
 
 .access-footer a {
-    color: #c0392b;
+    color: #1565c0;
     font-weight: 700;
     text-decoration: none;
 }

@@ -421,7 +421,7 @@ export default {
     },
     organizationLabel() {
       const organization = this.dashboard?.organization || {};
-      return organization.office_unit || organization.name || organization.region || "BFP Region II";
+      return organization.office_unit || organization.name || organization.region || "LGU Tuao";
     },
     organizationRegion() {
       return this.dashboard?.organization?.region || "Region II";

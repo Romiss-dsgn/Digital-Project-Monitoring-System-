@@ -268,34 +268,34 @@
          NEW PROJECT MODAL (unchanged)
     ═══════════════════════════════════════════ -->
     <div v-if="showNewProjectModal" class="modal-overlay" @click.self="showNewProjectModal = false">
-      <div class="bfp-modal">
-        <div class="bfp-modal-header">
-          <div class="bfp-modal-header-left">
-            <div class="bfp-modal-emblem">
-              <img :src="bfpLogo" alt="BFP Logo" class="bfp-logo-img" />
+      <div class="tuao-modal">
+        <div class="tuao-modal-header">
+          <div class="tuao-modal-header-left">
+            <div class="tuao-modal-emblem">
+              <img :src="tuaoLogo" alt="BFP Logo" class="tuao-logo-img" />
             </div>
             <div>
-              <p class="bfp-modal-agency">Bureau of Fire Protection</p>
-              <h5 class="bfp-modal-title">{{ contractForm.id ? "Edit Contract" : "New Contract" }}</h5>
+              <p class="tuao-modal-agency">Municipality of Tuao</p>
+              <h5 class="tuao-modal-title">{{ contractForm.id ? "Edit Contract" : "New Contract" }}</h5>
             </div>
           </div>
-          <button class="bfp-modal-close" @click="showNewProjectModal = false">
+          <button class="tuao-modal-close" @click="showNewProjectModal = false">
             <i class="material-icons-round">close</i>
           </button>
         </div>
-        <div class="bfp-modal-stripe">
+        <div class="tuao-modal-stripe">
           <span>REGION II — CAGAYAN VALLEY</span>
           <span>PROJECT REGISTRATION FORM</span>
         </div>
-        <div class="bfp-modal-body">
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">folder_open</i> Project Identification</div>
-            <div class="bfp-form-grid">
-              <div class="bfp-field-full">
-                <label class="bfp-label">Project <span class="bfp-required">*</span></label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">folder_open</i>
-                  <select v-model="contractForm.project_id" class="bfp-input bfp-select">
+        <div class="tuao-modal-body">
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">folder_open</i> Project Identification</div>
+            <div class="tuao-form-grid">
+              <div class="tuao-field-full">
+                <label class="tuao-label">Project <span class="tuao-required">*</span></label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">folder_open</i>
+                  <select v-model="contractForm.project_id" class="tuao-input tuao-select">
                     <option value="">Select project</option>
                     <option v-for="project in projects" :key="project.id" :value="project.id">
                       {{ project.project_code }} - {{ project.project_name }}
@@ -303,30 +303,30 @@
                   </select>
                 </div>
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">Contract Title <span class="bfp-required">*</span></label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">business</i>
-                  <input v-model="contractForm.contract_title" type="text" class="bfp-input" placeholder="Enter contract title" />
+              <div class="tuao-field-half">
+                <label class="tuao-label">Contract Title <span class="tuao-required">*</span></label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">business</i>
+                  <input v-model="contractForm.contract_title" type="text" class="tuao-input" placeholder="Enter contract title" />
                 </div>
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">Contract Number <span class="bfp-required">*</span></label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">tag</i>
-                  <input v-model="contractForm.contract_number" type="text" class="bfp-input" placeholder="e.g. BFP-R2-CON-2024-011" />
+              <div class="tuao-field-half">
+                <label class="tuao-label">Contract Number <span class="tuao-required">*</span></label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">tag</i>
+                  <input v-model="contractForm.contract_number" type="text" class="tuao-input" placeholder="e.g. BFP-R2-CON-2024-011" />
                 </div>
               </div>
             </div>
           </div>
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">engineering</i> Contractor & Budget</div>
-            <div class="bfp-form-grid">
-              <div class="bfp-field-full">
-                <label class="bfp-label">Contractor / Firm <span class="bfp-required">*</span></label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">groups</i>
-                  <select v-model="contractForm.contractor_id" class="bfp-input bfp-select">
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">engineering</i> Contractor & Budget</div>
+            <div class="tuao-form-grid">
+              <div class="tuao-field-full">
+                <label class="tuao-label">Contractor / Firm <span class="tuao-required">*</span></label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">groups</i>
+                  <select v-model="contractForm.contractor_id" class="tuao-input tuao-select">
                     <option value="">Select contractor</option>
                     <option v-for="contractor in contractors" :key="contractor.id" :value="contractor.id">
                       {{ contractor.company_name }}
@@ -334,62 +334,62 @@
                   </select>
                 </div>
               </div>
-              <div class="bfp-field-full">
-                <label class="bfp-label">Project Budget (₱) <span class="bfp-required">*</span></label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">payments</i>
-                  <input v-model="contractForm.original_contract_amount" type="number" min="0" class="bfp-input" placeholder="e.g. 15500000" />
+              <div class="tuao-field-full">
+                <label class="tuao-label">Project Budget (₱) <span class="tuao-required">*</span></label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">payments</i>
+                  <input v-model="contractForm.original_contract_amount" type="number" min="0" class="tuao-input" placeholder="e.g. 15500000" />
                 </div>
               </div>
             </div>
           </div>
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Schedule</div>
-            <div class="bfp-form-grid">
-              <div class="bfp-field-half">
-                <label class="bfp-label">Start Date</label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">event</i>
-                  <input v-model="contractForm.start_date" type="date" class="bfp-input" />
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">date_range</i> Schedule</div>
+            <div class="tuao-form-grid">
+              <div class="tuao-field-half">
+                <label class="tuao-label">Start Date</label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">event</i>
+                  <input v-model="contractForm.start_date" type="date" class="tuao-input" />
                 </div>
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">End Date</label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">event_available</i>
-                  <input v-model="contractForm.end_date" type="date" class="bfp-input" />
+              <div class="tuao-field-half">
+                <label class="tuao-label">End Date</label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">event_available</i>
+                  <input v-model="contractForm.end_date" type="date" class="tuao-input" />
                 </div>
               </div>
-              <div class="bfp-field-full">
-                <label class="bfp-label">Status</label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">fact_check</i>
-                  <select v-model="contractForm.status" class="bfp-input bfp-select">
+              <div class="tuao-field-full">
+                <label class="tuao-label">Status</label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">fact_check</i>
+                  <select v-model="contractForm.status" class="tuao-input tuao-select">
                     <option v-for="status in contractStatusOptions" :key="status" :value="status">{{ status }}</option>
                   </select>
                 </div>
               </div>
             </div>
           </div>
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">notes</i> Additional Remarks</div>
-            <div class="bfp-form-grid">
-              <div class="bfp-field-full">
-                <div class="bfp-input-wrap">
-                  <textarea v-model="contractForm.remarks" class="bfp-input bfp-textarea" rows="3" placeholder="Optional — observations, special conditions, remarks..."></textarea>
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">notes</i> Additional Remarks</div>
+            <div class="tuao-form-grid">
+              <div class="tuao-field-full">
+                <div class="tuao-input-wrap">
+                  <textarea v-model="contractForm.remarks" class="tuao-input tuao-textarea" rows="3" placeholder="Optional — observations, special conditions, remarks..."></textarea>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="bfp-modal-footer">
-          <div class="bfp-footer-note">
+        <div class="tuao-modal-footer">
+          <div class="tuao-footer-note">
             <i class="material-icons-round" style="font-size:14px;vertical-align:-2px">info</i>
             Fields marked <span style="color:#c0392b;font-weight:700">*</span> are required.
           </div>
-          <div class="bfp-footer-actions">
-            <button class="bfp-btn-cancel" @click="showNewProjectModal = false">Cancel</button>
-            <button class="bfp-btn-save" @click="saveContract" :disabled="isSaving">
+          <div class="tuao-footer-actions">
+            <button class="tuao-btn-cancel" @click="showNewProjectModal = false">Cancel</button>
+            <button class="tuao-btn-save" @click="saveContract" :disabled="isSaving">
               <i class="material-icons-round">save</i>
               {{ isSaving ? "Saving..." : contractForm.id ? "Update Contract" : "Create Contract" }}
             </button>
@@ -403,38 +403,38 @@
          — triggered by Quick Upload area
     ═══════════════════════════════════════════ -->
     <div v-if="showUploadModal" class="modal-overlay" @click.self="showUploadModal = false">
-      <div class="bfp-modal">
-        <div class="bfp-modal-header">
-          <div class="bfp-modal-header-left">
-            <div class="bfp-modal-emblem">
-              <img :src="bfpLogo" alt="BFP Logo" class="bfp-logo-img" />
+      <div class="tuao-modal">
+        <div class="tuao-modal-header">
+          <div class="tuao-modal-header-left">
+            <div class="tuao-modal-emblem">
+              <img :src="tuaoLogo" alt="BFP Logo" class="tuao-logo-img" />
             </div>
             <div>
-              <p class="bfp-modal-agency">Bureau of Fire Protection</p>
-              <h5 class="bfp-modal-title">Upload Batch Documents</h5>
+              <p class="tuao-modal-agency">Municipality of Tuao</p>
+              <h5 class="tuao-modal-title">Upload Batch Documents</h5>
             </div>
           </div>
-          <button class="bfp-modal-close" @click="showUploadModal = false">
+          <button class="tuao-modal-close" @click="showUploadModal = false">
             <i class="material-icons-round">close</i>
           </button>
         </div>
-        <div class="bfp-modal-stripe">
+        <div class="tuao-modal-stripe">
           <span>REGION II — CAGAYAN VALLEY</span>
           <span>BATCH DOCUMENT UPLOAD</span>
         </div>
-        <div class="bfp-modal-body">
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">cloud_upload</i> Upload Files</div>
+        <div class="tuao-modal-body">
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">cloud_upload</i> Upload Files</div>
             <div
-              class="bfp-upload-area"
+              class="tuao-upload-area"
               :class="{ 'drag-over': dragOver }"
               @dragover.prevent="dragOver = true"
               @dragleave.prevent="dragOver = false"
               @drop.prevent="handleFileDrop"
             >
-              <i class="material-icons-round bfp-upload-icon">cloud_upload</i>
-              <p class="bfp-upload-title">Drag and drop files here</p>
-              <p class="bfp-upload-sub">or click to browse from your computer</p>
+              <i class="material-icons-round tuao-upload-icon">cloud_upload</i>
+              <p class="tuao-upload-title">Drag and drop files here</p>
+              <p class="tuao-upload-sub">or click to browse from your computer</p>
               <label>
                 <input
                   type="file"
@@ -443,36 +443,36 @@
                   accept=".pdf,.docx,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   @change="handleFileSelect"
                 />
-                <span class="bfp-upload-btn">
+                <span class="tuao-upload-btn">
                   <i class="material-icons-round" style="font-size:15px;vertical-align:-3px">folder_open</i>
                   Choose Files
                 </span>
               </label>
-              <div class="bfp-format-pills">
-                <span class="bfp-format-pill">PDF</span>
-                <span class="bfp-format-pill">DOCX</span>
-                <span class="bfp-format-pill">XLSX</span>
+              <div class="tuao-format-pills">
+                <span class="tuao-format-pill">PDF</span>
+                <span class="tuao-format-pill">DOCX</span>
+                <span class="tuao-format-pill">XLSX</span>
               </div>
             </div>
-            <div v-if="uploadedFiles.length > 0" class="bfp-file-list">
-              <div v-for="(file, index) in uploadedFiles" :key="index" class="bfp-file-item">
-                <i class="material-icons-round bfp-file-icon">description</i>
-                <span class="bfp-file-name">{{ file.name }}</span>
-                <span class="bfp-file-size">{{ (file.size / 1024).toFixed(1) }} KB</span>
-                <button class="bfp-file-remove" @click="removeFile(index)">
+            <div v-if="uploadedFiles.length > 0" class="tuao-file-list">
+              <div v-for="(file, index) in uploadedFiles" :key="index" class="tuao-file-item">
+                <i class="material-icons-round tuao-file-icon">description</i>
+                <span class="tuao-file-name">{{ file.name }}</span>
+                <span class="tuao-file-size">{{ (file.size / 1024).toFixed(1) }} KB</span>
+                <button class="tuao-file-remove" @click="removeFile(index)">
                   <i class="material-icons-round">close</i>
                 </button>
               </div>
             </div>
           </div>
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">label</i> Upload Options</div>
-            <div class="bfp-form-grid">
-              <div class="bfp-field-half">
-                <label class="bfp-label">Document Type</label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">article</i>
-                  <select v-model="uploadForm.document_category" class="bfp-input bfp-select">
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">label</i> Upload Options</div>
+            <div class="tuao-form-grid">
+              <div class="tuao-field-half">
+                <label class="tuao-label">Document Type</label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">article</i>
+                  <select v-model="uploadForm.document_category" class="tuao-input tuao-select">
                     <option value="">Select type</option>
                     <option>Contract Document</option>
                     <option>Procurement Record</option>
@@ -481,33 +481,33 @@
                   </select>
                 </div>
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">Related Contract</label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">tag</i>
-                  <select v-model="uploadForm.contract_id" class="bfp-input bfp-select">
+              <div class="tuao-field-half">
+                <label class="tuao-label">Related Contract</label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">tag</i>
+                  <select v-model="uploadForm.contract_id" class="tuao-input tuao-select">
                     <option value="">Select contract</option>
                     <option v-for="c in contracts" :key="c.id" :value="c.id">{{ c.contract_id }}</option>
                   </select>
                 </div>
               </div>
-              <div class="bfp-field-full">
-                <label class="bfp-label">Remarks</label>
-                <div class="bfp-input-wrap">
-                  <textarea v-model="uploadForm.remarks" class="bfp-input bfp-textarea" rows="2" placeholder="Optional — describe the batch contents…"></textarea>
+              <div class="tuao-field-full">
+                <label class="tuao-label">Remarks</label>
+                <div class="tuao-input-wrap">
+                  <textarea v-model="uploadForm.remarks" class="tuao-input tuao-textarea" rows="2" placeholder="Optional — describe the batch contents…"></textarea>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="bfp-modal-footer">
-          <div class="bfp-footer-note">
+        <div class="tuao-modal-footer">
+          <div class="tuao-footer-note">
             <i class="material-icons-round" style="font-size:14px;vertical-align:-2px">info</i>
             {{ uploadedFiles.length > 0 ? `${uploadedFiles.length} file(s) selected.` : 'No files selected.' }}
           </div>
-          <div class="bfp-footer-actions">
-            <button class="bfp-btn-cancel" @click="showUploadModal = false">Cancel</button>
-            <button class="bfp-btn-save" :disabled="isUploading" @click="uploadContractDocuments">
+          <div class="tuao-footer-actions">
+            <button class="tuao-btn-cancel" @click="showUploadModal = false">Cancel</button>
+            <button class="tuao-btn-save" :disabled="isUploading" @click="uploadContractDocuments">
               <i class="material-icons-round">upload</i>
               {{ isUploading ? 'Uploading...' : 'Upload Files' }}
             </button>
@@ -520,29 +520,29 @@
          ADVANCED FILTER MODAL
     ═══════════════════════════════════════════ -->
     <div v-if="showAdvancedFilterModal" class="modal-overlay" @click.self="showAdvancedFilterModal = false">
-      <div class="bfp-modal" style="width: 700px;">
-        <div class="bfp-modal-header">
-          <div class="bfp-modal-header-left">
-            <div class="bfp-modal-emblem">
-              <img :src="bfpLogo" alt="BFP Logo" class="bfp-logo-img" />
+      <div class="tuao-modal" style="width: 700px;">
+        <div class="tuao-modal-header">
+          <div class="tuao-modal-header-left">
+            <div class="tuao-modal-emblem">
+              <img :src="tuaoLogo" alt="BFP Logo" class="tuao-logo-img" />
             </div>
             <div>
-              <p class="bfp-modal-agency">Bureau of Fire Protection</p>
-              <h5 class="bfp-modal-title">Advanced Filter</h5>
+              <p class="tuao-modal-agency">Municipality of Tuao</p>
+              <h5 class="tuao-modal-title">Advanced Filter</h5>
             </div>
           </div>
-          <button class="bfp-modal-close" @click="showAdvancedFilterModal = false">
+          <button class="tuao-modal-close" @click="showAdvancedFilterModal = false">
             <i class="material-icons-round">close</i>
           </button>
         </div>
-        <div class="bfp-modal-stripe">
+        <div class="tuao-modal-stripe">
           <span>REGION II — CAGAYAN VALLEY</span>
           <span>CONTRACT SEARCH & FILTERING</span>
         </div>
-        <div class="bfp-modal-body">
+        <div class="tuao-modal-body">
           <!-- Category Filter -->
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">category</i> Category</div>
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">category</i> Category</div>
             <div class="filter-checkbox-group">
               <label v-for="category in categoryOptions" :key="category" class="filter-checkbox">
                 <input type="checkbox" v-model="filters.categories" :value="category" />
@@ -552,8 +552,8 @@
           </div>
 
           <!-- Payment Type Filter -->
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">payments</i> Payment Type</div>
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">payments</i> Payment Type</div>
             <div class="filter-checkbox-group">
               <label v-for="paymentType in paymentTypeOptions" :key="paymentType" class="filter-checkbox">
                 <input type="checkbox" v-model="filters.paymentTypes" :value="paymentType" />
@@ -563,8 +563,8 @@
           </div>
 
           <!-- Timeline Status Filter -->
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">schedule</i> Timeline Status</div>
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">schedule</i> Timeline Status</div>
             <div class="filter-checkbox-group">
               <label v-for="status in timelineStatusOptions" :key="status" class="filter-checkbox">
                 <input type="checkbox" v-model="filters.timelineStatus" :value="status" />
@@ -574,8 +574,8 @@
           </div>
 
           <!-- Contract Status Filter -->
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">check_circle</i> Contract Status</div>
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">check_circle</i> Contract Status</div>
             <div class="filter-checkbox-group">
               <label v-for="status in contractStatusOptions" :key="status" class="filter-checkbox">
                 <input type="checkbox" v-model="filters.contractStatus" :value="status" />
@@ -585,8 +585,8 @@
           </div>
 
           <!-- Compliance Status Filter -->
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">verified</i> Compliance Status</div>
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">verified</i> Compliance Status</div>
             <div class="filter-checkbox-group">
               <label v-for="compliance in complianceStatusOptions" :key="compliance" class="filter-checkbox">
                 <input type="checkbox" v-model="filters.complianceStatus" :value="compliance" />
@@ -596,34 +596,34 @@
           </div>
 
           <!-- Budget Range Filter -->
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">trending_up</i> Budget Range (₱)</div>
-            <div class="bfp-form-grid">
-              <div class="bfp-field-half">
-                <label class="bfp-label">Minimum</label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">payments</i>
-                  <input type="number" class="bfp-input" v-model="filters.budgetMin" placeholder="e.g. 1000000" />
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">trending_up</i> Budget Range (₱)</div>
+            <div class="tuao-form-grid">
+              <div class="tuao-field-half">
+                <label class="tuao-label">Minimum</label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">payments</i>
+                  <input type="number" class="tuao-input" v-model="filters.budgetMin" placeholder="e.g. 1000000" />
                 </div>
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">Maximum</label>
-                <div class="bfp-input-wrap">
-                  <i class="material-icons-round bfp-input-icon">payments</i>
-                  <input type="number" class="bfp-input" v-model="filters.budgetMax" placeholder="e.g. 50000000" />
+              <div class="tuao-field-half">
+                <label class="tuao-label">Maximum</label>
+                <div class="tuao-input-wrap">
+                  <i class="material-icons-round tuao-input-icon">payments</i>
+                  <input type="number" class="tuao-input" v-model="filters.budgetMax" placeholder="e.g. 50000000" />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="bfp-modal-footer">
-          <div class="bfp-footer-note">
+        <div class="tuao-modal-footer">
+          <div class="tuao-footer-note">
             <i class="material-icons-round" style="font-size:14px;vertical-align:-2px">info</i>
             {{ hasActiveFilters() ? 'Filters applied' : 'No filters selected' }}
           </div>
-          <div class="bfp-footer-actions">
-            <button class="bfp-btn-cancel" @click="clearFilters(); showAdvancedFilterModal = false">Clear All</button>
-            <button class="bfp-btn-save" @click="applyFilters"><i class="material-icons-round">filter_list</i> Apply Filters</button>
+          <div class="tuao-footer-actions">
+            <button class="tuao-btn-cancel" @click="clearFilters(); showAdvancedFilterModal = false">Clear All</button>
+            <button class="tuao-btn-save" @click="applyFilters"><i class="material-icons-round">filter_list</i> Apply Filters</button>
           </div>
         </div>
       </div>
@@ -631,33 +631,33 @@
 
     <!-- Database-backed contract details and document review. -->
     <div v-if="showDetailsModal && selectedContract" class="modal-overlay" @click.self="showDetailsModal = false">
-      <div class="bfp-modal" style="width:760px;">
-        <div class="bfp-modal-header">
+      <div class="tuao-modal" style="width:760px;">
+        <div class="tuao-modal-header">
           <div>
-            <p class="bfp-modal-agency">Contract Record</p>
-            <h5 class="bfp-modal-title">{{ selectedContract.contract_number }}</h5>
+            <p class="tuao-modal-agency">Contract Record</p>
+            <h5 class="tuao-modal-title">{{ selectedContract.contract_number }}</h5>
           </div>
-          <button class="bfp-modal-close" @click="showDetailsModal = false">
+          <button class="tuao-modal-close" @click="showDetailsModal = false">
             <i class="material-icons-round">close</i>
           </button>
         </div>
-        <div class="bfp-modal-body">
-          <div class="bfp-form-grid mb-3">
-            <div class="bfp-field-half"><strong>Title</strong><div>{{ selectedContract.contract_title }}</div></div>
-            <div class="bfp-field-half"><strong>Status</strong><div>{{ selectedContract.status }}</div></div>
-            <div class="bfp-field-half"><strong>Project</strong><div>{{ selectedContract.project_name }}</div></div>
-            <div class="bfp-field-half"><strong>Contractor</strong><div>{{ selectedContract.contractor_name }}</div></div>
-            <div class="bfp-field-half"><strong>Value</strong><div>{{ formatPeso(selectedContract.revised_contract_amount) }}</div></div>
-            <div class="bfp-field-half"><strong>Schedule</strong><div>{{ selectedContract.start_date }} to {{ selectedContract.end_date }}</div></div>
+        <div class="tuao-modal-body">
+          <div class="tuao-form-grid mb-3">
+            <div class="tuao-field-half"><strong>Title</strong><div>{{ selectedContract.contract_title }}</div></div>
+            <div class="tuao-field-half"><strong>Status</strong><div>{{ selectedContract.status }}</div></div>
+            <div class="tuao-field-half"><strong>Project</strong><div>{{ selectedContract.project_name }}</div></div>
+            <div class="tuao-field-half"><strong>Contractor</strong><div>{{ selectedContract.contractor_name }}</div></div>
+            <div class="tuao-field-half"><strong>Value</strong><div>{{ formatPeso(selectedContract.revised_contract_amount) }}</div></div>
+            <div class="tuao-field-half"><strong>Schedule</strong><div>{{ selectedContract.start_date }} to {{ selectedContract.end_date }}</div></div>
           </div>
 
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">folder</i> Contract Documents</div>
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">folder</i> Contract Documents</div>
             <p v-if="!selectedContract.documents?.length" class="text-secondary small mb-0">No documents uploaded.</p>
-            <div v-for="document in selectedContract.documents" :key="document.id" class="bfp-file-item mb-2">
-              <i class="material-icons-round bfp-file-icon">description</i>
+            <div v-for="document in selectedContract.documents" :key="document.id" class="tuao-file-item mb-2">
+              <i class="material-icons-round tuao-file-icon">description</i>
               <div class="flex-grow-1">
-                <div class="bfp-file-name">{{ document.file_name }}</div>
+                <div class="tuao-file-name">{{ document.file_name }}</div>
                 <small class="text-secondary">{{ document.document_category }} · {{ document.status }}</small>
               </div>
               <button class="btn btn-sm btn-light" title="Download" @click="downloadContractDocument(document)">
@@ -672,24 +672,24 @@
             </div>
           </div>
 
-          <div class="bfp-section">
-            <div class="bfp-section-label"><i class="material-icons-round">date_range</i> Contract Dates</div>
-            <div class="bfp-form-grid">
-              <div class="bfp-field-half">
-                <label class="bfp-label">Start Date From</label>
-                <input v-model="filters.startDateFrom" type="date" class="bfp-input" />
+          <div class="tuao-section">
+            <div class="tuao-section-label"><i class="material-icons-round">date_range</i> Contract Dates</div>
+            <div class="tuao-form-grid">
+              <div class="tuao-field-half">
+                <label class="tuao-label">Start Date From</label>
+                <input v-model="filters.startDateFrom" type="date" class="tuao-input" />
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">Start Date To</label>
-                <input v-model="filters.startDateTo" type="date" class="bfp-input" />
+              <div class="tuao-field-half">
+                <label class="tuao-label">Start Date To</label>
+                <input v-model="filters.startDateTo" type="date" class="tuao-input" />
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">End Date From</label>
-                <input v-model="filters.endDateFrom" type="date" class="bfp-input" />
+              <div class="tuao-field-half">
+                <label class="tuao-label">End Date From</label>
+                <input v-model="filters.endDateFrom" type="date" class="tuao-input" />
               </div>
-              <div class="bfp-field-half">
-                <label class="bfp-label">End Date To</label>
-                <input v-model="filters.endDateTo" type="date" class="bfp-input" />
+              <div class="tuao-field-half">
+                <label class="tuao-label">End Date To</label>
+                <input v-model="filters.endDateTo" type="date" class="tuao-input" />
               </div>
             </div>
           </div>
@@ -698,21 +698,21 @@
     </div>
 
     <div v-if="showSaveResultModal" class="modal-overlay" @click.self="closeSaveResultModal">
-      <div class="bfp-modal" style="width: 520px;">
-        <div class="bfp-modal-header">
+      <div class="tuao-modal" style="width: 520px;">
+        <div class="tuao-modal-header">
           <div>
-            <p class="bfp-modal-agency">Contract Management</p>
-            <h5 class="bfp-modal-title">{{ saveResultTitle }}</h5>
+            <p class="tuao-modal-agency">Contract Management</p>
+            <h5 class="tuao-modal-title">{{ saveResultTitle }}</h5>
           </div>
-          <button class="bfp-modal-close" @click="closeSaveResultModal">
+          <button class="tuao-modal-close" @click="closeSaveResultModal">
             <i class="material-icons-round">close</i>
           </button>
         </div>
-        <div class="bfp-modal-stripe">
+        <div class="tuao-modal-stripe">
           <span>REGION II — CAGAYAN VALLEY</span>
           <span>{{ saveResultStatus === "success" ? "DATA SAVED" : "SAVE FAILED" }}</span>
         </div>
-        <div class="bfp-modal-body">
+        <div class="tuao-modal-body">
           <div class="save-result-card" :class="saveResultStatus">
             <i class="material-icons-round save-result-icon">
               {{ saveResultStatus === "success" ? "check_circle" : "error" }}
@@ -725,13 +725,13 @@
             </div>
           </div>
         </div>
-        <div class="bfp-modal-footer">
-          <div class="bfp-footer-note">
+        <div class="tuao-modal-footer">
+          <div class="tuao-footer-note">
             <i class="material-icons-round" style="font-size:14px;vertical-align:-2px">info</i>
             {{ saveResultStatus === "success" ? "Operation completed successfully." : "Operation did not complete." }}
           </div>
-          <div class="bfp-footer-actions">
-            <button class="bfp-btn-save" @click="closeSaveResultModal">
+          <div class="tuao-footer-actions">
+            <button class="tuao-btn-save" @click="closeSaveResultModal">
               <i class="material-icons-round">check</i>
               OK
             </button>
@@ -744,7 +744,7 @@
 </template>
 
 <script>
-import bfpLogo from "@/assets/img/BFP 11.png";
+import tuaoLogo from "@/assets/img/LGU TUAO logo.jpeg";
 import contractService from "@/services/contract.service";
 
 const emptyContractForm = () => ({
@@ -765,7 +765,7 @@ export default {
   name: "ContractManagement",
   data() {
     return {
-      bfpLogo,
+      tuaoLogo,
       showNewProjectModal: false,
       showUploadModal: false,
       showAdvancedFilterModal: false,
@@ -1686,7 +1686,7 @@ export default {
   z-index: 1055;
   padding: 1rem;
 }
-.bfp-modal {
+.tuao-modal {
   background: #ffffff;
   border-radius: 16px;
   width: 600px;
@@ -1698,7 +1698,7 @@ export default {
   display: flex;
   flex-direction: column;
 }
-.bfp-modal-header {
+.tuao-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1706,8 +1706,8 @@ export default {
   background: #1a1a2e;
   border-radius: 16px 16px 0 0;
 }
-.bfp-modal-header-left { display: flex; align-items: center; gap: 14px; }
-.bfp-modal-emblem {
+.tuao-modal-header-left { display: flex; align-items: center; gap: 14px; }
+.tuao-modal-emblem {
   width: 52px; height: 52px;
   background: rgba(255,255,255,0.08);
   border: 1.5px solid rgba(255,255,255,0.15);
@@ -1715,13 +1715,13 @@ export default {
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; overflow: hidden;
 }
-.bfp-logo-img { width: 100%; height: 100%; object-fit: cover; border-radius: 11px; }
-.bfp-modal-agency {
+.tuao-logo-img { width: 100%; height: 100%; object-fit: cover; border-radius: 11px; }
+.tuao-modal-agency {
   font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em;
   text-transform: uppercase; color: rgba(255,255,255,0.55); margin: 0 0 3px;
 }
-.bfp-modal-title { font-size: 17px; font-weight: 700; color: #ffffff; margin: 0; }
-.bfp-modal-close {
+.tuao-modal-title { font-size: 17px; font-weight: 700; color: #ffffff; margin: 0; }
+.tuao-modal-close {
   width: 34px; height: 34px;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
@@ -1730,113 +1730,113 @@ export default {
   cursor: pointer; color: rgba(255,255,255,0.7);
   transition: all 0.15s;
 }
-.bfp-modal-close:hover { background: rgba(192,57,43,0.6); color: #fff; border-color: transparent; }
-.bfp-modal-close .material-icons-round { font-size: 18px; }
-.bfp-modal-stripe {
-  background: linear-gradient(90deg, #c0392b 0%, #922b21 100%);
+.tuao-modal-close:hover { background: rgba(192,57,43,0.6); color: #fff; border-color: transparent; }
+.tuao-modal-close .material-icons-round { font-size: 18px; }
+.tuao-modal-stripe {
+  background: linear-gradient(90deg, #1565c0 0%, #0d3b78 100%);
   padding: 7px 22px;
   display: flex; justify-content: space-between; align-items: center;
 }
-.bfp-modal-stripe span {
+.tuao-modal-stripe span {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em;
   text-transform: uppercase; color: rgba(255,255,255,0.85);
 }
-.bfp-modal-body { padding: 20px 22px; flex: 1; }
-.bfp-section { margin-bottom: 20px; }
-.bfp-section:last-child { margin-bottom: 0; }
-.bfp-section-label {
+.tuao-modal-body { padding: 20px 22px; flex: 1; }
+.tuao-section { margin-bottom: 20px; }
+.tuao-section:last-child { margin-bottom: 0; }
+.tuao-section-label {
   display: flex; align-items: center; gap: 7px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; color: #7f1d1d;
   background: #fef2f2; border-left: 3px solid #c0392b;
   padding: 7px 12px; border-radius: 0 8px 8px 0; margin-bottom: 14px;
 }
-.bfp-section-label .material-icons-round { font-size: 15px; color: #c0392b; }
-.bfp-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.bfp-field-half { grid-column: span 1; }
-.bfp-field-full { grid-column: 1 / -1; }
-.bfp-label {
+.tuao-section-label .material-icons-round { font-size: 15px; color: #c0392b; }
+.tuao-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tuao-field-half { grid-column: span 1; }
+.tuao-field-full { grid-column: 1 / -1; }
+.tuao-label {
   display: flex; justify-content: space-between; align-items: center;
   font-size: 11.5px; font-weight: 600; color: #374151;
   margin-bottom: 5px; letter-spacing: 0.01em;
 }
-.bfp-required { color: #c0392b; font-size: 13px; }
-.bfp-input-wrap { position: relative; }
-.bfp-input-icon {
+.tuao-required { color: #c0392b; font-size: 13px; }
+.tuao-input-wrap { position: relative; }
+.tuao-input-icon {
   position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
   font-size: 16px; color: #9ca3af; pointer-events: none;
 }
-.bfp-input {
+.tuao-input {
   width: 100%; padding: 9px 12px 9px 36px;
   border: 1.5px solid #e5e7eb; border-radius: 9px;
   font-size: 13px; color: #111827; background: #fafafa;
   outline: none; transition: border-color 0.15s, box-shadow 0.15s;
   -webkit-appearance: none; appearance: none;
 }
-.bfp-input:focus { border-color: #c0392b; background: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,0.10); }
-.bfp-select {
+.tuao-input:focus { border-color: #c0392b; background: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,0.10); }
+.tuao-select {
   cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
 }
-.bfp-textarea { padding: 10px 12px; resize: vertical; min-height: 72px; line-height: 1.5; }
-.bfp-modal-footer {
+.tuao-textarea { padding: 10px 12px; resize: vertical; min-height: 72px; line-height: 1.5; }
+.tuao-modal-footer {
   display: flex; justify-content: space-between; align-items: center;
   padding: 14px 22px; background: #f9fafb;
   border-top: 1px solid #f0f0f0; border-radius: 0 0 16px 16px;
 }
-.bfp-footer-note { font-size: 11.5px; color: #6b7280; }
-.bfp-footer-actions { display: flex; gap: 10px; align-items: center; }
-.bfp-btn-cancel {
+.tuao-footer-note { font-size: 11.5px; color: #6b7280; }
+.tuao-footer-actions { display: flex; gap: 10px; align-items: center; }
+.tuao-btn-cancel {
   padding: 9px 18px; border: 1.5px solid #e5e7eb; border-radius: 9px;
   background: transparent; font-size: 13px; font-weight: 500; color: #6b7280;
   cursor: pointer; transition: all 0.15s;
 }
-.bfp-btn-cancel:hover { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
-.bfp-btn-save {
+.tuao-btn-cancel:hover { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
+.tuao-btn-save {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 22px; background: #c0392b; border: none; border-radius: 9px;
   font-size: 13px; font-weight: 600; color: #fff;
   cursor: pointer; transition: all 0.15s;
 }
-.bfp-btn-save:hover { background: #a93226; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(192,57,43,0.35); }
-.bfp-btn-save .material-icons-round { font-size: 17px; }
+.tuao-btn-save:hover { background: #a93226; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(192,57,43,0.35); }
+.tuao-btn-save .material-icons-round { font-size: 17px; }
 
 /* Upload Modal Styles */
-.bfp-upload-area {
+.tuao-upload-area {
   border: 2px dashed #e5e7eb; border-radius: 12px;
   padding: 28px 20px; text-align: center; cursor: pointer;
   transition: all 0.2s; background: #fafafa;
 }
-.bfp-upload-area:hover, .bfp-upload-area.drag-over { border-color: #c0392b; background: rgba(192,57,43,0.04); }
-.bfp-upload-icon { font-size: 36px !important; color: #c0392b; margin-bottom: 8px; display: block; }
-.bfp-upload-title { font-size: 14px; font-weight: 600; color: #1a202c; margin-bottom: 4px; }
-.bfp-upload-sub { font-size: 12px; color: #9ca3af; margin-bottom: 14px; }
-.bfp-upload-btn {
+.tuao-upload-area:hover, .tuao-upload-area.drag-over { border-color: #c0392b; background: rgba(192,57,43,0.04); }
+.tuao-upload-icon { font-size: 36px !important; color: #c0392b; margin-bottom: 8px; display: block; }
+.tuao-upload-title { font-size: 14px; font-weight: 600; color: #1a202c; margin-bottom: 4px; }
+.tuao-upload-sub { font-size: 12px; color: #9ca3af; margin-bottom: 14px; }
+.tuao-upload-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 16px; border: 1.5px solid #c0392b; border-radius: 8px;
   background: transparent; color: #c0392b; font-size: 12px; font-weight: 600; cursor: pointer;
 }
-.bfp-upload-btn:hover { background: rgba(192,57,43,0.08); }
-.bfp-format-pills { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
-.bfp-format-pill {
+.tuao-upload-btn:hover { background: rgba(192,57,43,0.08); }
+.tuao-format-pills { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+.tuao-format-pill {
   padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
   background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb;
 }
-.bfp-file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
-.bfp-file-item {
+.tuao-file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.tuao-file-item {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;
 }
-.bfp-file-icon { font-size: 20px !important; color: #9ca3af; }
-.bfp-file-name { font-size: 13px; color: #374151; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bfp-file-size { font-size: 11px; color: #9ca3af; white-space: nowrap; }
-.bfp-file-remove { background: transparent; border: none; cursor: pointer; color: #9ca3af; display: flex; align-items: center; padding: 0; }
-.bfp-file-remove:hover { color: #c0392b; }
-.bfp-file-remove .material-icons-round { font-size: 18px; }
-.bfp-modal::-webkit-scrollbar { width: 5px; }
-.bfp-modal::-webkit-scrollbar-track { background: transparent; }
-.bfp-modal::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+.tuao-file-icon { font-size: 20px !important; color: #9ca3af; }
+.tuao-file-name { font-size: 13px; color: #374151; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tuao-file-size { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+.tuao-file-remove { background: transparent; border: none; cursor: pointer; color: #9ca3af; display: flex; align-items: center; padding: 0; }
+.tuao-file-remove:hover { color: #c0392b; }
+.tuao-file-remove .material-icons-round { font-size: 18px; }
+.tuao-modal::-webkit-scrollbar { width: 5px; }
+.tuao-modal::-webkit-scrollbar-track { background: transparent; }
+.tuao-modal::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
 
 .save-result-card {
   display: flex;
@@ -1886,8 +1886,8 @@ export default {
 }
 
 @media (max-width: 576px) {
-  .bfp-form-grid { grid-template-columns: 1fr; }
-  .bfp-field-half { grid-column: span 1; }
+  .tuao-form-grid { grid-template-columns: 1fr; }
+  .tuao-field-half { grid-column: span 1; }
   .quick-upload-area { padding: 24px 16px; }
   .tab-pill { padding: 4px 10px; font-size: 0.75rem; }
   .pagination-btn { width: 30px; height: 30px; }
@@ -1895,41 +1895,41 @@ export default {
     min-width: 136px;
     max-width: calc(100vw - 1.5rem);
   }
-  .bfp-modal-header {
+  .tuao-modal-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  .bfp-modal-header-left {
+  .tuao-modal-header-left {
     width: 100%;
   }
-  .bfp-modal-close {
+  .tuao-modal-close {
     align-self: flex-end;
   }
-  .bfp-modal-stripe {
+  .tuao-modal-stripe {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
     padding: 8px 18px;
   }
-  .bfp-modal-body { padding: 16px 18px; }
-  .bfp-modal-footer { flex-direction: column; gap: 10px; align-items: stretch; }
-  .bfp-footer-actions {
+  .tuao-modal-body { padding: 16px 18px; }
+  .tuao-modal-footer { flex-direction: column; gap: 10px; align-items: stretch; }
+  .tuao-footer-actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
   }
-  .bfp-btn-cancel,
-  .bfp-btn-save {
+  .tuao-btn-cancel,
+  .tuao-btn-save {
     width: 100%;
     justify-content: center;
   }
-  .bfp-footer-note { width: 100%; }
-  .bfp-upload-area { padding: 24px 16px; }
-  .bfp-format-pills { flex-wrap: wrap; }
-  .bfp-file-item { align-items: flex-start; flex-wrap: wrap; }
-  .bfp-file-name { white-space: normal; overflow: visible; text-overflow: initial; }
-  .bfp-file-size { margin-left: 30px; }
+  .tuao-footer-note { width: 100%; }
+  .tuao-upload-area { padding: 24px 16px; }
+  .tuao-format-pills { flex-wrap: wrap; }
+  .tuao-file-item { align-items: flex-start; flex-wrap: wrap; }
+  .tuao-file-name { white-space: normal; overflow: visible; text-overflow: initial; }
+  .tuao-file-size { margin-left: 30px; }
 }
 
 @media (max-width: 420px) {
@@ -1937,11 +1937,11 @@ export default {
   .stat-value { font-size: 1.5rem; }
   .stat-sub,
   .compliance-sub { font-size: 10px; }
-  .bfp-modal-title { font-size: 15px; }
-  .bfp-modal-agency { font-size: 10px; }
-  .bfp-section-label { font-size: 10px; padding: 6px 10px; }
-  .bfp-upload-title { font-size: 13px; }
-  .bfp-upload-sub { font-size: 11px; }
+  .tuao-modal-title { font-size: 15px; }
+  .tuao-modal-agency { font-size: 10px; }
+  .tuao-section-label { font-size: 10px; padding: 6px 10px; }
+  .tuao-upload-title { font-size: 13px; }
+  .tuao-upload-sub { font-size: 11px; }
   .stitch-table thead th,
   .stitch-table tbody td {
     padding-left: 12px;

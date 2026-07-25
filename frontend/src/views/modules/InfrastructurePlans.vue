@@ -308,7 +308,7 @@
       </div>
     </div>
 
-    <BfpModal
+    <TuaoModal
       :show="showModal"
       :title="modalTitle"
       stripe="PROJECT REGISTRATION FORM"
@@ -323,86 +323,86 @@
         {{ modalError }}
       </div>
 
-      <div class="bfp-section">
-        <div class="bfp-section-label">
+      <div class="tuao-section">
+        <div class="tuao-section-label">
           <i class="material-icons-round">folder_open</i>
           Project Identification
         </div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field bfp-field-half">
-            <label class="bfp-label" for="m-code">
-              Project Code <span class="bfp-required">*</span>
+        <div class="tuao-form-grid">
+          <div class="tuao-field tuao-field-half">
+            <label class="tuao-label" for="m-code">
+              Project Code <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">tag</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">tag</i>
               <input
                 id="m-code"
                 v-model="form.code"
                 type="text"
-                class="bfp-input"
-                :class="{ 'bfp-input-error': errors.code }"
+                class="tuao-input"
+                :class="{ 'tuao-input-error': errors.code }"
                 placeholder="e.g. BFP-2026-X001"
               />
             </div>
-            <span v-if="errors.code" class="bfp-error-msg">{{ errors.code }}</span>
+            <span v-if="errors.code" class="tuao-error-msg">{{ errors.code }}</span>
           </div>
 
-          <div class="bfp-field bfp-field-half">
-            <label class="bfp-label" for="m-location">
-              Province / Location <span class="bfp-required">*</span>
+          <div class="tuao-field tuao-field-half">
+            <label class="tuao-label" for="m-location">
+              Province / Location <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">location_on</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">location_on</i>
               <select
                 id="m-location"
                 v-model="form.location"
-                class="bfp-input bfp-select"
-                :class="{ 'bfp-input-error': errors.location }"
+                class="tuao-input tuao-select"
+                :class="{ 'tuao-input-error': errors.location }"
               >
                 <option value="">Select province</option>
                 <option v-for="loc in locations" :key="loc" :value="loc">{{ loc }}</option>
               </select>
             </div>
-            <span v-if="errors.location" class="bfp-error-msg">{{ errors.location }}</span>
+            <span v-if="errors.location" class="tuao-error-msg">{{ errors.location }}</span>
           </div>
 
-          <div class="bfp-field bfp-field-full">
-            <label class="bfp-label" for="m-name">
-              Project Name <span class="bfp-required">*</span>
+          <div class="tuao-field tuao-field-full">
+            <label class="tuao-label" for="m-name">
+              Project Name <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">business</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">business</i>
               <input
                 id="m-name"
                 v-model="form.name"
                 type="text"
-                class="bfp-input"
-                :class="{ 'bfp-input-error': errors.name }"
+                class="tuao-input"
+                :class="{ 'tuao-input-error': errors.name }"
                 placeholder="Full official project name"
               />
             </div>
-            <span v-if="errors.name" class="bfp-error-msg">{{ errors.name }}</span>
+            <span v-if="errors.name" class="tuao-error-msg">{{ errors.name }}</span>
           </div>
         </div>
       </div>
 
-      <div class="bfp-section">
-        <div class="bfp-section-label">
+      <div class="tuao-section">
+        <div class="tuao-section-label">
           <i class="material-icons-round">engineering</i>
           Contractor & Schedule
         </div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field bfp-field-full">
-            <label class="bfp-label" for="m-contractor">
-              Contractor / Firm <span class="bfp-required">*</span>
+        <div class="tuao-form-grid">
+          <div class="tuao-field tuao-field-full">
+            <label class="tuao-label" for="m-contractor">
+              Contractor / Firm <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">groups</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">groups</i>
               <select
                 id="m-contractor"
                 v-model="form.contractor_id"
-                class="bfp-input bfp-select"
-                :class="{ 'bfp-input-error': errors.contractor_id }"
+                class="tuao-input tuao-select"
+                :class="{ 'tuao-input-error': errors.contractor_id }"
               >
                 <option value="">Select contractor</option>
                 <option
@@ -415,56 +415,56 @@
                 <option value="__new">+ Add new contractor</option>
               </select>
             </div>
-            <span v-if="errors.contractor_id" class="bfp-error-msg">{{ errors.contractor_id }}</span>
+            <span v-if="errors.contractor_id" class="tuao-error-msg">{{ errors.contractor_id }}</span>
           </div>
 
-          <div v-if="form.contractor_id === '__new'" class="bfp-field bfp-field-full">
-            <label class="bfp-label" for="m-new-contractor">
-              New Contractor Name <span class="bfp-required">*</span>
+          <div v-if="form.contractor_id === '__new'" class="tuao-field tuao-field-full">
+            <label class="tuao-label" for="m-new-contractor">
+              New Contractor Name <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">business</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">business</i>
               <input
                 id="m-new-contractor"
                 v-model="form.new_contractor_name"
                 type="text"
-                class="bfp-input"
-                :class="{ 'bfp-input-error': errors.new_contractor_name }"
+                class="tuao-input"
+                :class="{ 'tuao-input-error': errors.new_contractor_name }"
                 placeholder="Accredited contractor or company name"
               />
             </div>
-            <span v-if="errors.new_contractor_name" class="bfp-error-msg">
+            <span v-if="errors.new_contractor_name" class="tuao-error-msg">
               {{ errors.new_contractor_name }}
             </span>
           </div>
 
-          <div class="bfp-field bfp-field-half">
-            <label class="bfp-label" for="m-start">Start Date</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event</i>
-              <input id="m-start" v-model="form.startDate" type="date" class="bfp-input" />
+          <div class="tuao-field tuao-field-half">
+            <label class="tuao-label" for="m-start">Start Date</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event</i>
+              <input id="m-start" v-model="form.startDate" type="date" class="tuao-input" />
             </div>
           </div>
 
-          <div class="bfp-field bfp-field-half">
-            <label class="bfp-label" for="m-end">Target Completion</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">event_available</i>
-              <input id="m-end" v-model="form.endDate" type="date" class="bfp-input" />
+          <div class="tuao-field tuao-field-half">
+            <label class="tuao-label" for="m-end">Target Completion</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">event_available</i>
+              <input id="m-end" v-model="form.endDate" type="date" class="tuao-input" />
             </div>
           </div>
 
-          <div class="bfp-field bfp-field-full">
-            <label class="bfp-label" for="m-budget">
+          <div class="tuao-field tuao-field-full">
+            <label class="tuao-label" for="m-budget">
               Project Budget (PHP)
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">payments</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">payments</i>
               <input
                 id="m-budget"
                 v-model="form.budget"
                 type="text"
-                class="bfp-input"
+                class="tuao-input"
                 placeholder="e.g. 5,000,000.00"
               />
             </div>
@@ -472,42 +472,42 @@
         </div>
       </div>
 
-      <div class="bfp-section">
-        <div class="bfp-section-label">
+      <div class="tuao-section">
+        <div class="tuao-section-label">
           <i class="material-icons-round">insights</i>
           Status & Progress
         </div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field bfp-field-half">
-            <label class="bfp-label" for="m-phase">
-              Current Phase <span class="bfp-required">*</span>
+        <div class="tuao-form-grid">
+          <div class="tuao-field tuao-field-half">
+            <label class="tuao-label" for="m-phase">
+              Current Phase <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">layers</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">layers</i>
               <select
                 id="m-phase"
                 v-model="form.phase"
-                class="bfp-input bfp-select"
-                :class="{ 'bfp-input-error': errors.phase }"
+                class="tuao-input tuao-select"
+                :class="{ 'tuao-input-error': errors.phase }"
               >
                 <option value="">Select phase</option>
                 <option v-for="ph in phases" :key="ph" :value="ph">{{ ph }}</option>
               </select>
             </div>
-            <span v-if="errors.phase" class="bfp-error-msg">{{ errors.phase }}</span>
+            <span v-if="errors.phase" class="tuao-error-msg">{{ errors.phase }}</span>
           </div>
 
-          <div class="bfp-field bfp-field-half">
-            <label class="bfp-label" for="m-status">
-              Project Status <span class="bfp-required">*</span>
+          <div class="tuao-field tuao-field-half">
+            <label class="tuao-label" for="m-status">
+              Project Status <span class="tuao-required">*</span>
             </label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">flag</i>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">flag</i>
               <select
                 id="m-status"
                 v-model="form.status"
-                class="bfp-input bfp-select"
-                :class="{ 'bfp-input-error': errors.status }"
+                class="tuao-input tuao-select"
+                :class="{ 'tuao-input-error': errors.status }"
               >
                 <option value="">Select status</option>
                 <option value="on_time">On Time</option>
@@ -518,27 +518,27 @@
                 <option value="suspended">Suspended</option>
               </select>
             </div>
-            <span v-if="errors.status" class="bfp-error-msg">{{ errors.status }}</span>
+            <span v-if="errors.status" class="tuao-error-msg">{{ errors.status }}</span>
           </div>
 
-          <div class="bfp-field bfp-field-full">
-            <label class="bfp-label">
+          <div class="tuao-field tuao-field-full">
+            <label class="tuao-label">
               Completion Progress
-              <span class="bfp-progress-pct" :style="{ color: progressColor(form.progress) }">
+              <span class="tuao-progress-pct" :style="{ color: progressColor(form.progress) }">
                 {{ form.progress }}%
               </span>
             </label>
-            <div class="bfp-slider-wrap">
+            <div class="tuao-slider-wrap">
               <input
                 v-model.number="form.progress"
                 type="range"
                 min="0"
                 max="100"
                 step="1"
-                class="bfp-slider"
+                class="tuao-slider"
                 :style="sliderTrackStyle(form.progress)"
               />
-              <div class="bfp-slider-labels">
+              <div class="tuao-slider-labels">
                 <span>0%</span>
                 <span>25%</span>
                 <span>50%</span>
@@ -550,17 +550,17 @@
         </div>
       </div>
 
-      <div class="bfp-section">
-        <div class="bfp-section-label">
+      <div class="tuao-section">
+        <div class="tuao-section-label">
           <i class="material-icons-round">notes</i>
           Additional Remarks
         </div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field bfp-field-full">
-            <div class="bfp-input-wrap">
+        <div class="tuao-form-grid">
+          <div class="tuao-field tuao-field-full">
+            <div class="tuao-input-wrap">
               <textarea
                 v-model="form.notes"
-                class="bfp-input bfp-textarea"
+                class="tuao-input tuao-textarea"
                 placeholder="Optional - observations, special conditions, site concerns, etc."
                 rows="3"
               ></textarea>
@@ -568,9 +568,9 @@
           </div>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
 
-    <BfpModal
+    <TuaoModal
       :show="showFilterModal"
       title="Infrastructure Plan Filters"
       stripe="PROJECT SEARCH PARAMETERS"
@@ -579,38 +579,38 @@
       @close="showFilterModal = false"
       @confirm="applyFilters"
     >
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">tune</i> Project Criteria</div>
-        <div class="bfp-form-grid">
-          <div class="bfp-field-half">
-            <label class="bfp-label">Project Name</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">business</i>
-              <input v-model="filters.name" class="bfp-input" type="text" placeholder="Search project name" />
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">tune</i> Project Criteria</div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Project Name</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">business</i>
+              <input v-model="filters.name" class="tuao-input" type="text" placeholder="Search project name" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Project Code</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">tag</i>
-              <input v-model="filters.code" class="bfp-input" type="text" placeholder="Search project code" />
+          <div class="tuao-field-half">
+            <label class="tuao-label">Project Code</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">tag</i>
+              <input v-model="filters.code" class="tuao-input" type="text" placeholder="Search project code" />
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Province</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">location_on</i>
-              <select v-model="filters.location" class="bfp-input bfp-select">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Province</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">location_on</i>
+              <select v-model="filters.location" class="tuao-input tuao-select">
                 <option value="">All Provinces</option>
                 <option v-for="location in locations" :key="location" :value="location">{{ location }}</option>
               </select>
             </div>
           </div>
-          <div class="bfp-field-half">
-            <label class="bfp-label">Phase</label>
-            <div class="bfp-input-wrap">
-              <i class="material-icons-round bfp-input-icon">layers</i>
-              <select v-model="filters.phase" class="bfp-input bfp-select">
+          <div class="tuao-field-half">
+            <label class="tuao-label">Phase</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">layers</i>
+              <select v-model="filters.phase" class="tuao-input tuao-select">
                 <option value="">All Phases</option>
                 <option v-for="phase in phases" :key="phase" :value="phase">{{ phase }}</option>
               </select>
@@ -618,34 +618,34 @@
           </div>
         </div>
       </div>
-      <div class="bfp-section">
-        <div class="bfp-section-label"><i class="material-icons-round">flag</i> Status</div>
-        <div class="bfp-filter-grid">
-          <label class="bfp-check-option">
+      <div class="tuao-section">
+        <div class="tuao-section-label"><i class="material-icons-round">flag</i> Status</div>
+        <div class="tuao-filter-grid">
+          <label class="tuao-check-option">
             <input type="radio" value="" v-model="filters.status" />
             All Status
           </label>
-          <label v-for="(label, key) in statusOptions" :key="key" class="bfp-check-option">
+          <label v-for="(label, key) in statusOptions" :key="key" class="tuao-check-option">
             <input type="radio" :value="key" v-model="filters.status" />
             {{ label }}
           </label>
         </div>
       </div>
-    </BfpModal>
+    </TuaoModal>
   </div>
 </template>
 
 <script>
-import bfpLogo from "@/assets/img/BFP 11.png";
-import BfpModal from "@/components/BfpModal.vue";
+import tuaoLogo from "@/assets/img/LGU TUAO logo.jpeg";
+import TuaoModal from "@/components/TuaoModal.vue";
 import projectService from "@/services/project.service";
 
 export default {
   name: "InfrastructurePlans",
-  components: { BfpModal },
+  components: { TuaoModal },
   data() {
     return {
-      bfpLogo,
+      tuaoLogo,
       showModal: false,
       showFilterModal: false,
       loading: false,
@@ -2118,42 +2118,42 @@ export default {
   color: #6d28d9;
 }
 
-.bfp-form-grid {
+.tuao-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.bfp-field-half {
+.tuao-field-half {
   grid-column: span 1;
 }
 
-.bfp-field-full {
+.tuao-field-full {
   grid-column: 1 / -1;
 }
 
-.bfp-progress-pct {
+.tuao-progress-pct {
   font-weight: 800;
 }
 
-.bfp-slider-wrap {
+.tuao-slider-wrap {
   display: grid;
   gap: 0.45rem;
 }
 
-.bfp-slider {
+.tuao-slider {
   width: 100%;
   accent-color: #c0392b;
 }
 
-.bfp-slider-labels {
+.tuao-slider-labels {
   display: flex;
   justify-content: space-between;
   color: #9ca3af;
   font-size: 0.78rem;
 }
 
-.bfp-check-option {
+.tuao-check-option {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -2166,11 +2166,11 @@ export default {
   background: #fafafa;
 }
 
-.bfp-check-option input {
+.tuao-check-option input {
   accent-color: #c0392b;
 }
 
-.bfp-filter-grid {
+.tuao-filter-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -2219,12 +2219,12 @@ export default {
 }
 
 @media (max-width: 576px) {
-  .bfp-form-grid,
-  .bfp-filter-grid {
+  .tuao-form-grid,
+  .tuao-filter-grid {
     grid-template-columns: 1fr;
   }
 
-  .bfp-field-half {
+  .tuao-field-half {
     grid-column: span 1;
   }
 

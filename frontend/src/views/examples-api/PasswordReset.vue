@@ -83,7 +83,7 @@
 
 <script>
 import showSwal from "@/mixins/showSwal";
-import bgImage from "@/assets/img/bg.png";
+import bgImage from "@/assets/img/LGU Tuao bg.jpg";
 
 export default {
     name: "Password Forgot",
