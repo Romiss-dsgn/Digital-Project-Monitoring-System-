@@ -4,8 +4,26 @@ set -e
 cd /var/www/html
 export COMPOSER_PROCESS_TIMEOUT="${COMPOSER_PROCESS_TIMEOUT:-1200}"
 
+if [ -d "/etc/apache2/mods-enabled" ]; then
+    for module in /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf; do
+        [ -e "$module" ] || continue
+
+        case "$module" in
+            *mpm_prefork.*) ;;
+            *) rm -f "$module" ;;
+        esac
+    done
+
+    a2enmod -q mpm_prefork rewrite 2>/dev/null || true
+fi
+
 if [ ! -f ".env" ] && [ -f ".env.docker.example" ]; then
     cp .env.docker.example .env
+fi
+
+if [ -n "${APP_KEY:-}" ] && [ -f ".env" ]; then
+    sed -i "/^APP_KEY=/d" .env
+    printf "\nAPP_KEY=%s\n" "$APP_KEY" >> .env
 fi
 
 if [ ! -f "vendor/autoload.php" ]; then
