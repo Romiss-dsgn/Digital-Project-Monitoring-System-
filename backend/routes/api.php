@@ -21,8 +21,12 @@ use App\Http\Controllers\Api\V2\Admin\EngineeringPlanController;
 use App\Http\Controllers\Api\V2\MeController;
 use App\Http\Controllers\Api\V2\Admin\DashboardController;
 use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\HealthController;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
+
+Route::get("/health", HealthController::class)->name("health");
+Route::get("/v2/health", HealthController::class)->name("v2.health");
 
 Route::prefix("v2")->middleware("json.api")->group(function () {
     Route::post("/login", LoginController::class)->name("login");

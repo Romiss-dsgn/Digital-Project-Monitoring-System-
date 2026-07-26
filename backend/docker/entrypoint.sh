@@ -23,6 +23,8 @@ if [ -f "artisan" ]; then
         php artisan passport:keys --force
     fi
 
+    php artisan contrackpro:ensure-passport --no-interaction
+
     mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
     chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
     find storage bootstrap/cache -type d -exec chmod 775 {} \; 2>/dev/null || true

@@ -10,6 +10,7 @@ storage/logs/*.log
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
+public/storage
 bootstrap/cache/*.php
 npm-debug.log
 yarn-error.log

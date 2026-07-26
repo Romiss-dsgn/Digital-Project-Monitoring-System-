@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     zip \
     libzip-dev \
+    libpng-dev \
     default-mysql-client \
-    && docker-php-ext-install pdo_mysql zip \
+    && docker-php-ext-install pdo_mysql zip gd \
     && rm -rf /var/lib/apt/lists/*
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
@@ -27,6 +28,17 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
     && a2enmod rewrite
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-progress --no-scripts
+
+COPY . .
+RUN composer dump-autoload --optimize \
+    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R ug+rwX storage bootstrap/cache \
+    && chmod +x docker/entrypoint.sh scripts/release.sh
+
 COPY docker/entrypoint.sh /usr/local/bin/contrackpro-entrypoint
 RUN chmod +x /usr/local/bin/contrackpro-entrypoint
 
