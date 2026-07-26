@@ -13,7 +13,11 @@ if [ ! -f "vendor/autoload.php" ]; then
 fi
 
 if [ -f "artisan" ]; then
-    if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null; then
+    if [ -z "${APP_KEY:-}" ] && ! grep -q "^APP_KEY=base64:" .env 2>/dev/null; then
+        if ! grep -q "^APP_KEY=" .env 2>/dev/null; then
+            printf "\nAPP_KEY=\n" >> .env
+        fi
+
         php artisan key:generate --force --no-interaction
     fi
 
