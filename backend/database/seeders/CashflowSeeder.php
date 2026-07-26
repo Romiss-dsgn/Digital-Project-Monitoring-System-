@@ -19,9 +19,9 @@ class CashflowSeeder extends Seeder
 
         $contracts = Contract::query()
             ->whereIn('contract_number', [
-                'BFP-R2-CON-2026-001',
-                'BFP-R2-CON-2026-002',
-                'BFP-R2-CON-2026-003',
+                'LGU-TUAO-CON-2026-001',
+                'LGU-TUAO-CON-2026-002',
+                'LGU-TUAO-CON-2026-003',
             ])
             ->where('is_archived', false)
             ->orderBy('contract_number')
@@ -29,7 +29,7 @@ class CashflowSeeder extends Seeder
 
         $periods = [
             [
-                'contract_number' => 'BFP-R2-CON-2026-001',
+                'contract_number' => 'LGU-TUAO-CON-2026-001',
                 'label_suffix' => 'Mobilization',
                 'planned_amount' => 1250000,
                 'status' => 'Completed',
@@ -39,7 +39,7 @@ class CashflowSeeder extends Seeder
                 'payment_amount' => 1250000,
             ],
             [
-                'contract_number' => 'BFP-R2-CON-2026-002',
+                'contract_number' => 'LGU-TUAO-CON-2026-002',
                 'label_suffix' => 'Progress Billing 1',
                 'planned_amount' => 680000,
                 'status' => 'At Risk',
@@ -49,7 +49,7 @@ class CashflowSeeder extends Seeder
                 'payment_amount' => null,
             ],
             [
-                'contract_number' => 'BFP-R2-CON-2026-003',
+                'contract_number' => 'LGU-TUAO-CON-2026-003',
                 'label_suffix' => 'Advance Review',
                 'planned_amount' => 420000,
                 'status' => 'On Track',

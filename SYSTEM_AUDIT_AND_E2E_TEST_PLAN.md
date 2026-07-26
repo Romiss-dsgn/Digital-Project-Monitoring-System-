@@ -252,15 +252,15 @@ GUI steps:
 3. Create a project with either an existing contractor or a new contractor name.
 4. Edit the project status, progress, and dates.
 5. Archive a test project.
-6. Confirm filters, pagination, summary cards, regional distribution, and recent updates still work.
+6. Confirm filters, pagination, summary cards, location distribution, and recent updates still work.
 
 Postman create payload:
 
 ```json
 {
-  "code": "QA-2026-PROJ-001",
-  "name": "QA Fire Station Test Project",
-  "location": "Cagayan",
+  "code": "LGU-TUAO-PROJ-901",
+  "name": "QA Municipal Facility Test Project",
+  "location": "Municipal Hall Compound",
   "new_contractor_name": "QA Test Contractor",
   "startDate": "2026-07-15",
   "endDate": "2026-12-15",

@@ -49,7 +49,7 @@ export default {
       return this.profile.name || "—";
     },
     userRole() {
-      return (this.profile.position || this.profile.role || "BFP Personnel").toUpperCase();
+      return (this.profile.position || this.profile.role || "LGU Tuao Personnel").toUpperCase();
     },
   },
 };

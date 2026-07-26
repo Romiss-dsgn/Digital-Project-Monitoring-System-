@@ -3,10 +3,10 @@
         <div class="brand-bar">
             <div class="brand-inner">
                 <div class="brand-logo">
-                    <img :src="logo" alt="BFP Logo" class="logo-image" />
+                    <img :src="logo" alt="LGU Tuao Logo" class="logo-image" />
                 </div>
                 <div class="brand-texts">
-                    <span class="brand-title">Municipality of Tuao Region II</span>
+                    <span class="brand-title">Municipality of Tuao</span>
                     <div class="brand-subtitle-row">
                         <span class="brand-line"></span>
                         <span class="brand-subtitle">Digital Project Monitoring System</span>
@@ -27,14 +27,14 @@
                         <p class="eyebrow">Account Recovery</p>
                         <h4>RESET YOUR PASSWORD</h4>
                         <p>
-                            Enter your registered Bureau email address. We will send a
+                            Enter your registered official LGU email address. We will send a
                             secure password reset link after verifying your account.
                         </p>
                     </div>
 
                     <form class="forgot-form" @submit.prevent="handleReset">
                         <div class="form-group mb-3">
-                            <label for="email" class="form-label">Bureau Email Address</label>
+                            <label for="email" class="form-label">Official LGU Email Address</label>
                             <div class="input-with-icon">
                                 <i class="material-icons-round text-secondary">alternate_email</i>
                                 <input
@@ -42,7 +42,7 @@
                                     v-model="userEmail"
                                     type="email"
                                     class="form-control"
-                                    placeholder="example@bfp.gov.ph"
+                                    placeholder="example@tuao.gov.ph"
                                     name="email"
                                 />
                             </div>
@@ -84,8 +84,8 @@ export default {
             userEmail: "",
             schema: Yup.object().shape({
                 email: Yup.string()
-                    .email("Enter a valid Bureau email address")
-                    .required("Bureau email is required"),
+                    .email("Enter a valid official LGU email address")
+                    .required("Official LGU email is required"),
             }),
         };
     },

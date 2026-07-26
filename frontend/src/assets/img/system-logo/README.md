@@ -12,13 +12,13 @@ Recommended specs:
 - PNG with transparent background.
 - Square source image when possible.
 - At least `128x128` so it scales cleanly.
-- Keep enough padding so the BFP seal does not become clipped or oval.
+- Keep enough padding so the LGU Tuao seal does not become clipped or oval.
 
 Current UI usage:
 
 - Sidebar brand header.
 - Main dashboard shell.
-- Login and request access pages may use separate BFP image assets from `frontend/src/assets/img/`.
+- Login and request access pages may use separate LGU Tuao image assets from `frontend/src/assets/img/`.
 
 When replacing the logo:
 

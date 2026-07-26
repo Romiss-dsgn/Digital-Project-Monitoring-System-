@@ -63,11 +63,11 @@
           <validation-error :errors="apiValidationErrors.email" />
         </div>
 
-        <!-- Rank (read-only, badge hidden) -->
+        <!-- Designation level (read-only) -->
         <div class="info-field">
-          <label class="info-field__label">Rank</label>
+          <label class="info-field__label">Designation Level</label>
           <div class="info-field__input-wrap is-readonly">
-            <span class="material-symbols-rounded info-field__icon">military_tech</span>
+            <span class="material-symbols-rounded info-field__icon">workspace_premium</span>
             <input type="text" class="info-field__input" :value="user.rank || '—'" disabled />
           </div>
         </div>
@@ -152,44 +152,44 @@
       </div>
 
       <div class="info-grid">
-        <!-- Region (read-only, badge hidden) -->
+        <!-- Municipality (read-only) -->
         <div class="info-field">
-          <label class="info-field__label">Region</label>
+          <label class="info-field__label">Municipality</label>
           <div class="info-field__input-wrap is-readonly">
             <span class="material-symbols-rounded info-field__icon">map</span>
-            <input type="text" class="info-field__input" value="Region Office II" disabled />
+            <input type="text" class="info-field__input" value="LGU Tuao" disabled />
           </div>
         </div>
 
-        <!-- Province (read-only, badge hidden, default Cagayan) -->
+        <!-- Jurisdiction (read-only) -->
         <div class="info-field">
-          <label class="info-field__label">Province</label>
+          <label class="info-field__label">Jurisdiction</label>
           <div class="info-field__input-wrap is-readonly">
             <span class="material-symbols-rounded info-field__icon">location_city</span>
-            <input type="text" class="info-field__input" value="Cagayan" disabled />
+            <input type="text" class="info-field__input" value="Municipality of Tuao" disabled />
           </div>
         </div>
 
-        <!-- City/Municipality -->
+        <!-- Barangay / Area -->
         <div class="info-field">
-          <label class="info-field__label">City / Municipality</label>
+          <label class="info-field__label">Barangay / Area</label>
           <div class="info-field__input-wrap" :class="{ 'is-readonly': !isEditing }">
             <span class="material-symbols-rounded info-field__icon">location_on</span>
-            <input type="text" class="info-field__input" placeholder="Tuguegarao City"
+            <input type="text" class="info-field__input" placeholder="e.g. Centro"
               v-model="user.city" :disabled="!isEditing" />
           </div>
         </div>
 
-        <!-- Fire Station (read-only, badge hidden) -->
+        <!-- Office Unit (read-only) -->
         <div class="info-field">
-          <label class="info-field__label">Fire Station / Office Unit</label>
+          <label class="info-field__label">Office Unit</label>
           <div class="info-field__input-wrap is-readonly">
-            <span class="material-symbols-rounded info-field__icon">local_fire_department</span>
+            <span class="material-symbols-rounded info-field__icon">business</span>
             <input type="text" class="info-field__input" :value="user.office_unit || '—'" disabled />
           </div>
         </div>
 
-        <!-- Role (read-only, badge hidden) -->
+        <!-- Role (read-only) -->
         <div class="info-field">
           <label class="info-field__label">System Role</label>
           <div class="info-field__input-wrap is-readonly">
@@ -208,7 +208,7 @@ import formMixin from "@/mixins/formMixin.js";
 import showSwal from "@/mixins/showSwal.js";
 import _ from "lodash";
 
-const BFP_POSITIONS = [
+const LGU_POSITIONS = [
   "Administrative Staff - Contract Documentation",
   "Records Management Personnel",
   "Contract Monitoring Personnel",
@@ -245,7 +245,7 @@ export default {
   computed: {
     filteredPositions() {
       const q = this.positionSearch.toLowerCase();
-      return BFP_POSITIONS.filter(p => p.toLowerCase().includes(q));
+      return LGU_POSITIONS.filter(p => p.toLowerCase().includes(q));
     },
   },
   async mounted() {

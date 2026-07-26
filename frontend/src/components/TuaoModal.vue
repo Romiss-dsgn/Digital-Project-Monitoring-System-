@@ -55,7 +55,7 @@ export default {
     title: { type: String, required: true },
     stripe: { type: String, default: "OFFICIAL FORM" },
     agency: { type: String, default: "Municipality of Tuao" },
-    region: { type: String, default: "REGION II - CAGAYAN VALLEY" },
+    region: { type: String, default: "MUNICIPALITY OF TUAO" },
     note: { type: String, default: "Fields marked * are required." },
     cancelText: { type: String, default: "Cancel" },
     confirmText: { type: String, default: "Save" },

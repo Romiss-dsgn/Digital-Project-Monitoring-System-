@@ -17,9 +17,9 @@ class VariationOrdersSeeder extends Seeder
 
         $contracts = Contract::query()
             ->whereIn('contract_number', [
-                'BFP-R2-CON-2026-001',
-                'BFP-R2-CON-2026-002',
-                'BFP-R2-CON-2026-003',
+                'LGU-TUAO-CON-2026-001',
+                'LGU-TUAO-CON-2026-002',
+                'LGU-TUAO-CON-2026-003',
             ])
             ->where('is_archived', false)
             ->orderBy('contract_number')
@@ -29,8 +29,8 @@ class VariationOrdersSeeder extends Seeder
         $orders = [
             [
                 'vo_number' => 'VO-QA-2026-001',
-                'contract_number' => 'BFP-R2-CON-2026-001',
-                'description' => 'Approved roofing material upgrade for weather-resilience requirements.',
+                'contract_number' => 'LGU-TUAO-CON-2026-001',
+                'description' => 'Approved records-room material upgrade for weather-resilience requirements.',
                 'reason' => 'Material specification update',
                 'amount_change' => 320000,
                 'time_impact_days' => 10,
@@ -42,8 +42,8 @@ class VariationOrdersSeeder extends Seeder
             ],
             [
                 'vo_number' => 'VO-QA-2026-002',
-                'contract_number' => 'BFP-R2-CON-2026-002',
-                'description' => 'Electrical load capacity adjustment for records room equipment.',
+                'contract_number' => 'LGU-TUAO-CON-2026-002',
+                'description' => 'Drainage alignment adjustment for public market site conditions.',
                 'reason' => 'Scope refinement',
                 'amount_change' => 180000,
                 'time_impact_days' => 5,
@@ -53,7 +53,7 @@ class VariationOrdersSeeder extends Seeder
             ],
             [
                 'vo_number' => 'VO-QA-2026-003',
-                'contract_number' => 'BFP-R2-CON-2026-003',
+                'contract_number' => 'LGU-TUAO-CON-2026-003',
                 'description' => 'Draft drainage adjustment pending technical validation.',
                 'reason' => 'Site condition adjustment',
                 'amount_change' => 95000,

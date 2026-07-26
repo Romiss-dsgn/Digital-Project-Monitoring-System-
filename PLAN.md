@@ -4,7 +4,7 @@ This plan documents the current module strategy, what is already working, and th
 
 ## Product Goal
 
-Build a practical MVP for BFP Region II contract and project monitoring.
+Build a practical MVP for LGU Tuao contract and project monitoring.
 
 The MVP should prove these workflows first:
 

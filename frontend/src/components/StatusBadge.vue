@@ -44,7 +44,7 @@ export default {
         "draft":                    "Draft",
         "submitted":                "Submitted",
         "under_review":             "Under Review",
-        // BFP Module statuses
+        // Module statuses
         "dashboard":                "Dashboard",
         "infrastructure_plans":     "Infrastructure Plans",
         "contract_management":      "Contract Management",
@@ -206,7 +206,7 @@ export default {
   background: #7c3aed;
 }
 
-/* ── BFP Module Statuses ── */
+/* ── Module Statuses ── */
 
 /* Dashboard — slate blue */
 .badge-dashboard {

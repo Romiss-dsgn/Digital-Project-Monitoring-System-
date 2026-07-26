@@ -218,7 +218,7 @@ class VariationOrderTest extends TestCase
         ]);
 
         $contract = Contract::create([
-            'contract_number' => 'BFP-R2-CON-' . uniqid(),
+            'contract_number' => 'LGU-TUAO-CON-2026-' . random_int(100000, 999999),
             'contract_title' => 'Feature Test Contract',
             'project_id' => $project->id,
             'contractor_id' => $contractor->id,

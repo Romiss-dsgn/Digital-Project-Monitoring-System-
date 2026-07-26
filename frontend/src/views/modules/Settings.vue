@@ -26,7 +26,7 @@
             </label>
 
             <label>
-              <span>Badge Number</span>
+              <span>Personnel ID</span>
               <input v-model.trim="form.badge_number" type="text" />
               <small v-if="errors.badge_number">{{ errors.badge_number }}</small>
             </label>
@@ -111,7 +111,7 @@
             <dd>{{ form.email || "admin@contrackpro.test" }}</dd>
           </div>
           <div>
-            <dt>Badge</dt>
+            <dt>Personnel ID</dt>
             <dd>{{ form.badge_number || "Not set" }}</dd>
           </div>
           <div>

@@ -71,7 +71,7 @@
                             </div>
 
                             <div class="field-group">
-                                <label for="badgeNumber">Badge Number / ID</label>
+                                <label for="badgeNumber">Personnel ID</label>
                                 <div class="input-with-icon">
                                     <i class="material-icons-round">assignment_ind</i>
                                     <input
@@ -86,7 +86,7 @@
                             </div>
 
                             <div class="field-group full-span">
-                                <label for="email">Bureau Email Address</label>
+                                <label for="email">Official LGU Email Address</label>
                                 <div class="input-with-icon">
                                     <i class="material-icons-round">alternate_email</i>
                                     <input
@@ -117,7 +117,7 @@
                                         <option value="engineering-planning">Engineering - Planning</option>
                                         <option value="engineering-supervision">Engineering - Supervision</option>
                                         <option value="engineering-monitoring">Engineering - Monitoring</option>
-                                        <option value="regional-admin">Regional Administration</option>
+                                        <option value="municipal-admin">Municipal Administration</option>
                                     </select>
                                 </div>
                             </div>
@@ -247,10 +247,10 @@ export default {
             },
             schema: Yup.object().shape({
                 name: Yup.string().required("Full name is required"),
-                badgeNumber: Yup.string().required("Badge number or ID is required"),
+                badgeNumber: Yup.string().required("Personnel ID is required"),
                 email: Yup.string()
-                    .email("Enter a valid Bureau email address")
-                    .required("Bureau email is required"),
+                    .email("Enter a valid official LGU email address")
+                    .required("Official LGU email is required"),
                 department: Yup.string().required("Department is required"),
                 requestedRole: Yup.string().required("Requested role is required"),
                 password: Yup.string()
@@ -268,7 +268,6 @@ export default {
     },
     computed: {
         panelBackgroundImage() {
-            console.log("DEBUG bgImage:", this.bgImage);
             return `linear-gradient(175deg, rgba(21, 101, 192, 0.92) 0%, rgba(13, 59, 120, 0.90) 35%, rgba(28, 34, 58, 0.82) 100%), url("${this.bgImage}")`;
         },
     },

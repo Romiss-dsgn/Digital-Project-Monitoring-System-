@@ -8,7 +8,7 @@ table.data { width: 100%; border-collapse: collapse; } .data th { background: #7
 .footer { position: fixed; bottom: 0; color: #6b7280; font-size: 8px; width: 100%; }
 </style></head><body>
 <h1>{{ strtoupper($report['title']) }}</h1>
-<div class="meta">Report ID: {{ $report['report_id'] }} &nbsp; | &nbsp; BFP Region II &nbsp; | &nbsp; Generated: {{ \Carbon\Carbon::parse($report['generated_at'])->format('M d, Y h:i A') }}</div>
+<div class="meta">Report ID: {{ $report['report_id'] }} &nbsp; | &nbsp; LGU Tuao &nbsp; | &nbsp; Generated: {{ \Carbon\Carbon::parse($report['generated_at'])->format('M d, Y h:i A') }}</div>
 <table class="stats"><tr>@foreach($report['stats'] as $stat)<td><div class="label">{{ $stat['label'] }}</div><div class="value">{{ $stat['value'] }}</div></td>@endforeach</tr></table>
 <table class="data"><thead><tr>@foreach($report['columns'] as $column)<th class="{{ ($column['align'] ?? '') === 'end' ? 'end' : '' }}">{{ $column['label'] }}</th>@endforeach</tr></thead><tbody>
 @forelse($report['rows'] as $row)<tr>@foreach($report['columns'] as $column)<td class="{{ ($column['align'] ?? '') === 'end' ? 'end' : '' }}">{{ $row[$column['key']] ?? '-' }}</td>@endforeach</tr>@empty<tr><td colspan="{{ count($report['columns']) }}">No records match the selected filters.</td></tr>@endforelse

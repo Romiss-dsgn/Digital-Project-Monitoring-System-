@@ -87,7 +87,7 @@ export default {
       return this.profile.name || "Admin User";
     },
     displayRole() {
-      return (this.profile.position || this.profile.office_unit || "Region II Commander").toUpperCase();
+      return (this.profile.position || this.profile.office_unit || "Municipal Administrator").toUpperCase();
     },
   },
   async mounted() {
