@@ -5,7 +5,7 @@
         <div class="col">
           <h4 class="mb-1">Infrastructure Plans Management</h4>
           <p class="infra-page-subtitle mb-0">
-            Register project baselines, budgets, contractors, timelines, and overall status across Region II.
+            Register project baselines, budgets, contractors, timelines, and overall status across LGU Tuao.
           </p>
         </div>
         <div class="col-auto infra-header-actions">
@@ -238,38 +238,38 @@
           <div class="card analytics-card shadow-sm border-0 h-100">
             <div class="analytics-header">
               <div>
-                <p class="section-kicker mb-1">Regional Distribution</p>
-                <h5 class="mb-0">Regional Distribution</h5>
-                <p class="section-subtext mb-0">Projects mapped by geographical cluster</p>
+                <p class="section-kicker mb-1">Location Distribution</p>
+                <h5 class="mb-0">Location Distribution</h5>
+                <p class="section-subtext mb-0">Projects mapped by municipal location</p>
               </div>
             </div>
 
-            <div class="regional-grid">
-              <div v-if="regionalDistribution.length" class="regional-bars">
-                <div v-for="item in regionalDistribution" :key="item.location" class="regional-row">
-                  <div class="regional-row-head">
+            <div class="location-grid">
+              <div v-if="locationDistribution.length" class="location-bars">
+                <div v-for="item in locationDistribution" :key="item.location" class="location-row">
+                  <div class="location-row-head">
                     <span>{{ item.location }}</span>
                     <strong>{{ item.percent }}%</strong>
                   </div>
-                  <div class="progress progress-sm regional-progress">
-                    <div class="progress-bar regional-progress-bar" :style="{ width: item.percent + '%' }"></div>
+                  <div class="progress progress-sm location-progress">
+                    <div class="progress-bar location-progress-bar" :style="{ width: item.percent + '%' }"></div>
                   </div>
                 </div>
               </div>
-              <div v-else class="regional-empty">
-                Create a project first in Infrastructure Plans to populate regional distribution.
+              <div v-else class="location-empty">
+                Create a project first in Infrastructure Plans to populate location distribution.
               </div>
 
-              <div class="regional-insights">
-                <div class="regional-summary-card">
-                  <div class="regional-summary-label">Top Region</div>
-                  <div class="regional-summary-value">{{ topRegion.location }}</div>
-                  <div class="regional-summary-meta">{{ topRegion.percent }}% share of the current register</div>
+              <div class="location-insights">
+                <div class="location-summary-card">
+                  <div class="location-summary-label">Top Location</div>
+                  <div class="location-summary-value">{{ topLocation.location }}</div>
+                  <div class="location-summary-meta">{{ topLocation.percent }}% share of the current register</div>
                 </div>
-                <div class="regional-summary-card muted">
-                  <div class="regional-summary-label">Active Coverage</div>
-                  <div class="regional-summary-value">{{ summaryCards[0].value }} projects</div>
-                  <div class="regional-summary-meta">Across {{ locationCount }} provinces in Region II</div>
+                <div class="location-summary-card muted">
+                  <div class="location-summary-label">Active Coverage</div>
+                  <div class="location-summary-value">{{ summaryCards[0].value }} projects</div>
+                  <div class="location-summary-meta">Across {{ locationCount }} project locations in LGU Tuao</div>
                 </div>
               </div>
             </div>
@@ -341,7 +341,7 @@
                 type="text"
                 class="tuao-input"
                 :class="{ 'tuao-input-error': errors.code }"
-                placeholder="e.g. BFP-2026-X001"
+                placeholder="e.g. LGU-TUAO-PROJ-001"
               />
             </div>
             <span v-if="errors.code" class="tuao-error-msg">{{ errors.code }}</span>
@@ -349,7 +349,7 @@
 
           <div class="tuao-field tuao-field-half">
             <label class="tuao-label" for="m-location">
-              Province / Location <span class="tuao-required">*</span>
+              Project Location <span class="tuao-required">*</span>
             </label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">location_on</i>
@@ -359,7 +359,7 @@
                 class="tuao-input tuao-select"
                 :class="{ 'tuao-input-error': errors.location }"
               >
-                <option value="">Select province</option>
+                <option value="">Select location</option>
                 <option v-for="loc in locations" :key="loc" :value="loc">{{ loc }}</option>
               </select>
             </div>
@@ -597,11 +597,11 @@
             </div>
           </div>
           <div class="tuao-field-half">
-            <label class="tuao-label">Province</label>
+            <label class="tuao-label">Location</label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">location_on</i>
               <select v-model="filters.location" class="tuao-input tuao-select">
-                <option value="">All Provinces</option>
+                <option value="">All Locations</option>
                 <option v-for="location in locations" :key="location" :value="location">{{ location }}</option>
               </select>
             </div>
@@ -672,17 +672,17 @@ export default {
       stats: {
         total_projects: 0,
         delayed_works: 0,
-        regional_efficiency: 0,
+        municipal_efficiency: 0,
         total_budget: 0,
         last_updated_at: null,
-        regional_distribution: [],
+        location_distribution: [],
         recent_updates: [],
       },
       currentPage: 1,
       perPage: 6,
       contractors: [],
       filters: { name: "", code: "", location: "", status: "", phase: "" },
-      locations: ["Cagayan", "Isabela", "Nueva Vizcaya", "Quirino"],
+      locations: ["Municipal Hall Compound", "Public Market Area", "Rural Health Unit Compound", "Tuao Municipal Roads"],
       phases: ["Planning", "Foundation", "Construction", "Finishing", "Post-Eval"],
       statusTabs: [
         { label: "All", value: "" },
@@ -790,7 +790,7 @@ export default {
     summaryCards() {
       const totalProjects = this.stats.total_projects || 0;
       const delayedWorks = this.stats.delayed_works || 0;
-      const efficiency = Number(this.stats.regional_efficiency || 0);
+      const efficiency = Number(this.stats.municipal_efficiency || 0);
       const totalBudget = Number(this.stats.total_budget || 0);
 
       return [
@@ -804,8 +804,8 @@ export default {
           tone: "primary",
         },
         {
-          key: "regional-efficiency",
-          label: "Regional Efficiency",
+          key: "municipal-efficiency",
+          label: "Municipal Efficiency",
           value: `${efficiency.toFixed(1)}%`,
           note: "On-time delivery average",
           delta: "Realtime",
@@ -833,8 +833,8 @@ export default {
       ];
     },
 
-    regionalDistribution() {
-      const rows = Array.isArray(this.stats.regional_distribution) ? this.stats.regional_distribution : [];
+    locationDistribution() {
+      const rows = Array.isArray(this.stats.location_distribution) ? this.stats.location_distribution : [];
       const total = rows.reduce((sum, row) => sum + (Number(row.total) || 0), 0) || 1;
 
       return rows.map((row) => ({
@@ -844,12 +844,12 @@ export default {
       }));
     },
 
-    topRegion() {
-      return this.regionalDistribution[0] || { location: "N/A", percent: 0, total: 0 };
+    topLocation() {
+      return this.locationDistribution[0] || { location: "N/A", percent: 0, total: 0 };
     },
 
     locationCount() {
-      return this.regionalDistribution.length || this.locations.length;
+      return this.locationDistribution.length || this.locations.length;
     },
 
     recentUpdates() {
@@ -1018,7 +1018,7 @@ export default {
       const e = {};
       if (!this.form.code.trim()) e.code = "Project code is required.";
       if (!this.form.name.trim()) e.name = "Project name is required.";
-      if (!this.form.location) e.location = "Please select a province.";
+      if (!this.form.location) e.location = "Please select a project location.";
       if (!this.form.contractor_id) e.contractor_id = "Please select a contractor.";
       if (this.form.contractor_id === "__new" && !this.form.new_contractor_name.trim()) {
         e.new_contractor_name = "New contractor name is required.";
@@ -1948,19 +1948,19 @@ export default {
   font-weight: 500;
 }
 
-.regional-grid {
+.location-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.95fr);
   gap: 1rem;
   padding: 1.35rem 1.45rem 1.45rem;
 }
 
-.regional-bars {
+.location-bars {
   display: grid;
   gap: 1rem;
 }
 
-.regional-empty,
+.location-empty,
 .update-empty {
   border: 1px dashed rgba(15, 23, 42, 0.16);
   border-radius: 8px;
@@ -1971,7 +1971,7 @@ export default {
   background: #fbfcfe;
 }
 
-.regional-row-head {
+.location-row-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1982,31 +1982,31 @@ export default {
   color: #374151;
 }
 
-.regional-progress {
+.location-progress {
   background: rgba(15, 23, 42, 0.06);
 }
 
-.regional-progress-bar {
+.location-progress-bar {
   background: linear-gradient(90deg, #ef476f 0%, #f66f8d 100%);
 }
 
-.regional-insights {
+.location-insights {
   display: grid;
   gap: 0.9rem;
 }
 
-.regional-summary-card {
+.location-summary-card {
   border-radius: 1rem;
   padding: 1.05rem 1rem;
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: #fff;
 }
 
-.regional-summary-card.muted {
+.location-summary-card.muted {
   background: #fbfcfe;
 }
 
-.regional-summary-label {
+.location-summary-label {
   color: #6b7280;
   font-size: 0.74rem;
   text-transform: uppercase;
@@ -2015,14 +2015,14 @@ export default {
   margin-bottom: 0.35rem;
 }
 
-.regional-summary-value {
+.location-summary-value {
   font-size: 1.2rem;
   font-weight: 800;
   color: #111827;
   margin-bottom: 0.25rem;
 }
 
-.regional-summary-meta {
+.location-summary-meta {
   color: #6b7280;
   font-size: 0.88rem;
 }
@@ -2184,7 +2184,7 @@ export default {
 }
 
 @media (max-width: 1200px) {
-  .regional-grid {
+  .location-grid {
     grid-template-columns: 1fr;
   }
 }

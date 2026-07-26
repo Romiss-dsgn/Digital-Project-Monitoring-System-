@@ -25,7 +25,7 @@ class ContractManagementTest extends TestCase
         [$project, $contractor] = $this->projectAndContractor();
 
         $response = $this->postJson('/api/v2/contracts', [
-            'contract_number' => 'BFP-R2-CON-2026-901',
+            'contract_number' => 'LGU-TUAO-CON-2026-901',
             'contract_title' => 'Feature Test Contract',
             'project_id' => $project->id,
             'contractor_id' => $contractor->id,
@@ -36,12 +36,12 @@ class ContractManagementTest extends TestCase
             'status' => 'Draft',
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.contract_number', 'BFP-R2-CON-2026-901');
-        $this->assertDatabaseHas('contracts', ['contract_number' => 'BFP-R2-CON-2026-901']);
+        $response->assertCreated()->assertJsonPath('data.contract_number', 'LGU-TUAO-CON-2026-901');
+        $this->assertDatabaseHas('contracts', ['contract_number' => 'LGU-TUAO-CON-2026-901']);
         $this->assertDatabaseHas('audit_logs', [
             'module' => 'contracts',
             'action' => 'created',
-            'record_code' => 'BFP-R2-CON-2026-901',
+            'record_code' => 'LGU-TUAO-CON-2026-901',
         ]);
     }
 
@@ -72,7 +72,7 @@ class ContractManagementTest extends TestCase
         Passport::actingAs($user);
         [$project, $contractor] = $this->projectAndContractor();
         $contract = Contract::create([
-            'contract_number' => 'BFP-R2-CON-2026-902',
+            'contract_number' => 'LGU-TUAO-CON-2026-902',
             'contract_title' => 'Document Test Contract',
             'project_id' => $project->id,
             'contractor_id' => $contractor->id,
@@ -100,7 +100,7 @@ class ContractManagementTest extends TestCase
         Passport::actingAs($user);
         [$project, $contractor] = $this->projectAndContractor();
         $contract = Contract::create([
-            'contract_number' => 'BFP-R2-CON-2026-903',
+            'contract_number' => 'LGU-TUAO-CON-2026-903',
             'contract_title' => 'Workflow Test Contract',
             'project_id' => $project->id,
             'contractor_id' => $contractor->id,

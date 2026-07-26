@@ -11,13 +11,13 @@ use App\Models\Project;
 use App\Models\Role;
 use App\Models\RolePermission;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Passport\Passport;
 use Tests\TestCase;
 
 class CashflowPeriodTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_cashflow_period_actuals_are_recalculated_from_payments_and_invoice_status_changes(): void
     {
@@ -313,7 +313,7 @@ class CashflowPeriodTest extends TestCase
         ]);
 
         $contract = Contract::create([
-            'contract_number' => 'BFP-R2-CON-' . uniqid(),
+            'contract_number' => 'LGU-TUAO-CON-2026-' . random_int(100000, 999999),
             'contract_title' => 'Feature Test Contract',
             'project_id' => $project->id,
             'contractor_id' => $contractor->id,

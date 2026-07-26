@@ -475,7 +475,7 @@
             <label class="tuao-label">Period Label <span class="tuao-required">*</span></label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">tag</i>
-              <input class="tuao-input" type="text" v-model="newPeriod.period_label" placeholder="e.g. BFP-R2-CON-2024-001 - 2026-01" />
+              <input class="tuao-input" type="text" v-model="newPeriod.period_label" placeholder="e.g. LGU-TUAO-CON-2026-001 - Mobilization" />
             </div>
           </div>
           <div class="tuao-field-half">

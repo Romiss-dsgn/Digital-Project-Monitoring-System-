@@ -329,16 +329,16 @@
             <label class="tuao-label">Email Address <span class="tuao-required">*</span></label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">mail</i>
-              <input class="tuao-input" type="email" v-model="form.email" placeholder="user@bfp.gov.ph" />
+              <input class="tuao-input" type="email" v-model="form.email" placeholder="user@tuao.gov.ph" />
             </div>
             <span class="tuao-error" v-if="errors.email">{{ errors.email[0] }}</span>
           </div>
 
           <div class="tuao-field-half">
-            <label class="tuao-label">Badge Number</label>
+            <label class="tuao-label">Personnel ID</label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">fingerprint</i>
-              <input class="tuao-input" type="text" v-model="form.badge_number" placeholder="BFP-2026-0000" />
+              <input class="tuao-input" type="text" v-model="form.badge_number" placeholder="TUAO-2026-0000" />
             </div>
           </div>
 
@@ -1354,7 +1354,7 @@ export default {
   text-align: left;
 }
 
-/* BFP modal form helpers */
+/* LGU Tuao modal form helpers */
 .tuao-input-suffix {
   position: absolute;
   right: 10px;

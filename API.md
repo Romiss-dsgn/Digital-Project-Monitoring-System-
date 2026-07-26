@@ -101,10 +101,10 @@ Create contract request:
 
 ```json
 {
-  "contract_number": "BFP-R2-CON-2024-010",
+  "contract_number": "LGU-TUAO-CON-2026-010",
   "project_id": 1,
   "contractor_id": 1,
-  "contract_title": "Construction Contract - Sample Fire Station",
+  "contract_title": "Improvement Contract - Sample Municipal Facility",
   "contract_type": "Infrastructure Works",
   "original_contract_amount": 18500000,
   "start_date": "2026-05-04",
@@ -275,7 +275,7 @@ page=1
 per_page=10
 type=structural
 status=for_review
-search=fire station
+search=municipal hall
 ```
 
 Upload fields:

@@ -67,7 +67,7 @@ class ProjectControllerTest extends TestCase
         Project::create([
             'project_code' => 'TEST-001',
             'project_name' => 'Test Project',
-            'location' => 'Cagayan',
+            'location' => 'Municipal Hall Compound',
             'phase' => 'Planning',
             'status' => 'planning',
             'created_by' => $this->admin->id,
@@ -87,7 +87,7 @@ class ProjectControllerTest extends TestCase
             ->postJson('/api/v2/admin/projects', [
                 'code' => 'ENG-001',
                 'name' => 'Engineer Project',
-                'location' => 'Isabela',
+                'location' => 'Public Market Area',
                 'new_contractor_name' => 'Engineer QA Contractor',
                 'phase' => 'Planning',
                 'status' => 'planning',
@@ -102,7 +102,7 @@ class ProjectControllerTest extends TestCase
         $project = Project::create([
             'project_code' => 'ENG-DEL-001',
             'project_name' => 'Delete Test',
-            'location' => 'Cagayan',
+            'location' => 'Municipal Hall Compound',
             'phase' => 'Planning',
             'status' => 'planning',
             'created_by' => $this->engineer->id,
@@ -120,7 +120,7 @@ class ProjectControllerTest extends TestCase
             ->postJson('/api/v2/admin/projects', [
                 'code' => 'NEW-001',
                 'name' => 'New Project',
-                'location' => 'Isabela',
+                'location' => 'Rural Health Unit Compound',
                 'new_contractor_name' => 'Admin QA Contractor',
                 'phase' => 'Planning',
                 'status' => 'planning',
@@ -135,7 +135,7 @@ class ProjectControllerTest extends TestCase
         $project = Project::create([
             'project_code' => 'UPDATE-001',
             'project_name' => 'Update Test',
-            'location' => 'Cagayan',
+            'location' => 'Municipal Hall Compound',
             'phase' => 'Planning',
             'status' => 'planning',
             'created_by' => $this->admin->id,
@@ -155,7 +155,7 @@ class ProjectControllerTest extends TestCase
         $project = Project::create([
             'project_code' => 'ARCHIVE-001',
             'project_name' => 'Archive Test',
-            'location' => 'Cagayan',
+            'location' => 'Municipal Hall Compound',
             'phase' => 'Planning',
             'status' => 'planning',
             'created_by' => $this->admin->id,

@@ -14,7 +14,7 @@
 
       <div class="row mb-4 align-items-center gy-3">
         <div class="col">
-          <h4 class="mb-1">Regional Dashboard</h4>
+          <h4 class="mb-1">Municipal Dashboard</h4>
           <p class="text-muted mb-0">{{ dashboardSubtitle }}</p>
         </div>
         <div class="col-12 col-lg-auto d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center justify-content-lg-end">
@@ -424,7 +424,7 @@ export default {
       return organization.office_unit || organization.name || organization.region || "LGU Tuao";
     },
     organizationRegion() {
-      return this.dashboard?.organization?.region || "Region II";
+      return this.dashboard?.organization?.region || "Municipality of Tuao";
     },
     footerVersion() {
       return this.dashboard?.footer_version || "v4.2.0";

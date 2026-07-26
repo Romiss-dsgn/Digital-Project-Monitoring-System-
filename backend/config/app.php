@@ -21,6 +21,10 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'organization_name' => env('APP_ORGANIZATION_NAME', 'LGU Tuao'),
+
+    'region' => env('APP_REGION', 'Municipality of Tuao'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

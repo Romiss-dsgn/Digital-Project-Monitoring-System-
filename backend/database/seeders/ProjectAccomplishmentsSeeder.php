@@ -16,8 +16,8 @@ class ProjectAccomplishmentsSeeder extends Seeder
 
         $milestones = [
             [
-                'project_code' => 'BFP-R2-PROJ-001',
-                'milestone_title' => 'Structural Works Completion',
+                'project_code' => 'LGU-TUAO-PROJ-001',
+                'milestone_title' => 'Records Room Civil Works Completion',
                 'percent_complete' => 75,
                 'status' => 'In Progress',
                 'target_offset_days' => 45,
@@ -25,7 +25,7 @@ class ProjectAccomplishmentsSeeder extends Seeder
                 'remarks' => null,
             ],
             [
-                'project_code' => 'BFP-R2-PROJ-002',
+                'project_code' => 'LGU-TUAO-PROJ-002',
                 'milestone_title' => 'Procurement Documentation Review',
                 'percent_complete' => 100,
                 'status' => 'Completed',
@@ -34,7 +34,7 @@ class ProjectAccomplishmentsSeeder extends Seeder
                 'remarks' => 'Validated for QA reporting checks.',
             ],
             [
-                'project_code' => 'BFP-R2-PROJ-003',
+                'project_code' => 'LGU-TUAO-PROJ-003',
                 'milestone_title' => 'Site Works Recovery Plan',
                 'percent_complete' => 35,
                 'status' => 'Delayed',

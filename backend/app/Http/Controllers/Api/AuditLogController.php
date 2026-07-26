@@ -128,7 +128,7 @@ class AuditLogController extends Controller
 
         // Title
         $sheet->mergeCells("A1:G1");
-        $sheet->setCellValue("A1", "BFP Region II - Audit Logs ({$label})");
+        $sheet->setCellValue("A1", "LGU Tuao - Audit Logs ({$label})");
         $sheet->getStyle("A1")->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle("A1")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("A1")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB("1a2a4a");

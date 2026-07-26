@@ -13,8 +13,8 @@
               <div>
                 <h6 class="fw-bold mb-1" style="color:#c0392b;font-size:0.95rem;">Active Contracts & Procurement</h6>
                 <p class="text-secondary small mb-4">
-                  Manage fire station construction, equipment procurement, and maintenance
-                  services across Region II. Monitor timelines, budget utilization, and document
+                  Manage municipal infrastructure contracts, procurement, and maintenance
+                  services across LGU Tuao. Monitor timelines, budget utilization, and document
                   compliance in real-time.
                 </p>
               </div>
@@ -272,7 +272,7 @@
         <div class="tuao-modal-header">
           <div class="tuao-modal-header-left">
             <div class="tuao-modal-emblem">
-              <img :src="tuaoLogo" alt="BFP Logo" class="tuao-logo-img" />
+              <img :src="tuaoLogo" alt="LGU Tuao Logo" class="tuao-logo-img" />
             </div>
             <div>
               <p class="tuao-modal-agency">Municipality of Tuao</p>
@@ -284,7 +284,7 @@
           </button>
         </div>
         <div class="tuao-modal-stripe">
-          <span>REGION II — CAGAYAN VALLEY</span>
+          <span>MUNICIPALITY OF TUAO</span>
           <span>PROJECT REGISTRATION FORM</span>
         </div>
         <div class="tuao-modal-body">
@@ -314,7 +314,7 @@
                 <label class="tuao-label">Contract Number <span class="tuao-required">*</span></label>
                 <div class="tuao-input-wrap">
                   <i class="material-icons-round tuao-input-icon">tag</i>
-                  <input v-model="contractForm.contract_number" type="text" class="tuao-input" placeholder="e.g. BFP-R2-CON-2024-011" />
+                  <input v-model="contractForm.contract_number" type="text" class="tuao-input" placeholder="e.g. LGU-TUAO-CON-2026-001" />
                 </div>
               </div>
             </div>
@@ -407,7 +407,7 @@
         <div class="tuao-modal-header">
           <div class="tuao-modal-header-left">
             <div class="tuao-modal-emblem">
-              <img :src="tuaoLogo" alt="BFP Logo" class="tuao-logo-img" />
+              <img :src="tuaoLogo" alt="LGU Tuao Logo" class="tuao-logo-img" />
             </div>
             <div>
               <p class="tuao-modal-agency">Municipality of Tuao</p>
@@ -419,7 +419,7 @@
           </button>
         </div>
         <div class="tuao-modal-stripe">
-          <span>REGION II — CAGAYAN VALLEY</span>
+          <span>MUNICIPALITY OF TUAO</span>
           <span>BATCH DOCUMENT UPLOAD</span>
         </div>
         <div class="tuao-modal-body">
@@ -524,7 +524,7 @@
         <div class="tuao-modal-header">
           <div class="tuao-modal-header-left">
             <div class="tuao-modal-emblem">
-              <img :src="tuaoLogo" alt="BFP Logo" class="tuao-logo-img" />
+              <img :src="tuaoLogo" alt="LGU Tuao Logo" class="tuao-logo-img" />
             </div>
             <div>
               <p class="tuao-modal-agency">Municipality of Tuao</p>
@@ -536,7 +536,7 @@
           </button>
         </div>
         <div class="tuao-modal-stripe">
-          <span>REGION II — CAGAYAN VALLEY</span>
+          <span>MUNICIPALITY OF TUAO</span>
           <span>CONTRACT SEARCH & FILTERING</span>
         </div>
         <div class="tuao-modal-body">
@@ -709,7 +709,7 @@
           </button>
         </div>
         <div class="tuao-modal-stripe">
-          <span>REGION II — CAGAYAN VALLEY</span>
+          <span>MUNICIPALITY OF TUAO</span>
           <span>{{ saveResultStatus === "success" ? "DATA SAVED" : "SAVE FAILED" }}</span>
         </div>
         <div class="tuao-modal-body">
@@ -1074,8 +1074,8 @@ export default {
       if (!String(this.contractForm.contract_title || "").trim()) {
         return "Enter a contract title before saving.";
       }
-      if (!/^BFP-R2-CON-\d{4}-\d{3,}$/i.test(contractNumber)) {
-        return "Use a valid contract number format: BFP-R2-CON-YYYY-NNN.";
+      if (!/^LGU-TUAO-CON-\d{4}-\d{3,}$/i.test(contractNumber)) {
+        return "Use a valid contract number format: LGU-TUAO-CON-YYYY-NNN.";
       }
       if (this.contractForm.original_contract_amount === "" || Number.isNaN(amount) || amount < 0) {
         return "Enter a valid project budget amount.";
@@ -1673,7 +1673,7 @@ export default {
 .edit-icon { color: #d97706; }
 
 /* ════════════════════════════════════════════
-   MODAL (BFP Styled)
+   MODAL (LGU Tuao Styled)
 ════════════════════════════════════════════ */
 .modal-overlay {
   position: fixed;

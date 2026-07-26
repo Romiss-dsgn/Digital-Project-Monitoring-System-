@@ -370,7 +370,7 @@ class ContractManagementController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^BFP-R2-CON-\d{4}-\d{3,}$/i',
+                'regex:/^LGU-TUAO-CON-\d{4}-\d{3,}$/i',
                 Rule::unique('contracts', 'contract_number')->ignore($contractId),
             ],
             'contract_title' => ['required', 'string', 'max:255'],
@@ -391,7 +391,7 @@ class ContractManagementController extends Controller
             'status' => ['required', Rule::in(self::STATUSES)],
             'remarks' => ['nullable', 'string', 'max:5000'],
         ], [
-            'contract_number.regex' => 'Use the format BFP-R2-CON-YYYY-NNN.',
+            'contract_number.regex' => 'Use the format LGU-TUAO-CON-YYYY-NNN.',
         ]);
 
         // Keep stored records consistent even when the frontend is saving an early draft.

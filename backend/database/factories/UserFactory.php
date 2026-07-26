@@ -21,7 +21,7 @@ class UserFactory extends Factory
             'username' => fake()->unique()->userName(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'badge_number' => fake()->unique()->bothify('BFP-####-????'),
+            'badge_number' => fake()->unique()->bothify('TUAO-####-????'),
             'contact_number' => fake()->optional()->phoneNumber(),
             'position' => fake()->optional()->jobTitle(),
             'office_unit' => fake()->optional()->company(),

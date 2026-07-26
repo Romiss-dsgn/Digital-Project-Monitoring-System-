@@ -340,7 +340,7 @@ class UserManagementController extends Controller
         ];
         $callback = function () use ($users, $includeExtras) {
             $file    = fopen("php://output", "w");
-            $columns = ["Name", "Username", "Email", "Badge Number", "Position", "Status"];
+            $columns = ["Name", "Username", "Email", "Personnel ID", "Position", "Status"];
             if ($includeExtras) {
                 $columns = array_merge($columns, ["Role", "Unit", "Joined Date", "Last Active"]);
             }
@@ -371,7 +371,7 @@ class UserManagementController extends Controller
         $sheet       = $spreadsheet->getActiveSheet();
         $sheet->setTitle("Users");
 
-        $cols = ["A" => "Name", "B" => "Username", "C" => "Email", "D" => "Badge Number", "E" => "Position", "F" => "Status"];
+        $cols = ["A" => "Name", "B" => "Username", "C" => "Email", "D" => "Personnel ID", "E" => "Position", "F" => "Status"];
         if ($includeExtras) {
             $cols["G"] = "Role";
             $cols["H"] = "Unit";
@@ -381,7 +381,7 @@ class UserManagementController extends Controller
 
         $lastCol = array_key_last($cols);
         $sheet->mergeCells("A1:{$lastCol}1");
-        $sheet->setCellValue("A1", "BFP Region II - User List Export");
+        $sheet->setCellValue("A1", "LGU Tuao - User List Export");
         $sheet->getStyle("A1")->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle("A1")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("A1")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB("1a2a4a");

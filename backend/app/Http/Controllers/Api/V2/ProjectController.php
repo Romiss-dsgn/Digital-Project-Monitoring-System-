@@ -81,17 +81,17 @@ class ProjectController extends Controller
             ->all();
 
         $efficiencyBase = max($totalProjects, 1);
-        $regionalEfficiency = round((($onTimeProjects + $completedProjects) / $efficiencyBase) * 100, 1);
+        $municipalEfficiency = round((($onTimeProjects + $completedProjects) / $efficiencyBase) * 100, 1);
 
         return response()->json([
             'data' => $projects->items(),
             'stats' => [
                 'total_projects' => $totalProjects,
                 'delayed_works' => $delayedWorks,
-                'regional_efficiency' => $regionalEfficiency,
+                'municipal_efficiency' => $municipalEfficiency,
                 'total_budget' => $totalBudget,
                 'last_updated_at' => $lastUpdatedAt,
-                'regional_distribution' => $distribution,
+                'location_distribution' => $distribution,
                 'recent_updates' => $recentUpdates,
             ],
             'meta' => [

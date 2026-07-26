@@ -13,7 +13,7 @@
                     <span class="forgot-label">ACCOUNT RECOVERY</span>
                     <h2 class="forgot-title">RESET YOUR PASSWORD</h2>
                     <p class="forgot-desc">
-                        Enter your registered Bureau email address. Your request will be sent to the
+                        Enter your registered official LGU email address. Your request will be sent to the
                         <strong>System Administrator</strong> who will process your password reset.
                     </p>
                 </div>
@@ -21,14 +21,14 @@
                 <!-- Form -->
                 <form @submit.prevent="handleSubmit">
                     <div class="form-group mb-3">
-                        <label class="form-label">Bureau Email Address</label>
+                        <label class="form-label">Official LGU Email Address</label>
                         <div class="input-with-icon">
                             <i class="material-icons-round text-secondary">alternate_email</i>
                             <input
                                 v-model="email"
                                 type="email"
                                 class="form-control"
-                                placeholder="example@bfp.gov.ph"
+                                placeholder="example@tuao.gov.ph"
                                 :disabled="submitted"
                             />
                         </div>

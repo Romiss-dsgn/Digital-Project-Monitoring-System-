@@ -21,12 +21,12 @@
 </head>
 <body>
 <div class="header">
-  <h2>Bureau of Fire Protection - Region II</h2>
+  <h2>LGU Tuao</h2>
   <p>User List Export</p>
   <p>Generated: {{ now()->format("F d, Y h:i A") }}</p>
 </div>
 <div class="stripe">
-  <span>REGION II &ndash; CAGAYAN VALLEY</span>
+  <span>MUNICIPALITY OF TUAO</span>
   <span>USER LIST EXPORT</span>
 </div>
 <table>
@@ -35,7 +35,7 @@
       <th>Name</th>
       <th>Username</th>
       <th>Email</th>
-      <th>Badge Number</th>
+      <th>Personnel ID</th>
       <th>Position</th>
       <th>Status</th>
       @if($includeExtras)

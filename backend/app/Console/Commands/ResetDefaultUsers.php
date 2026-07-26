@@ -37,7 +37,7 @@ class ResetDefaultUsers extends Command
                     'name' => 'ConTrackPro Administrator',
                     'email' => 'admin@contrackpro.test',
                     'position' => 'System Administrator',
-                    'office_unit' => 'BFP Region II - System Administration',
+                    'office_unit' => 'LGU Tuao - System Administration',
                     'role_id' => $adminRole?->id,
                     'is_active' => true,
                     'password' => 'password',

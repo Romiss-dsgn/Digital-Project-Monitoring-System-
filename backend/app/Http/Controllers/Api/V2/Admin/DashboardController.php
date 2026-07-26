@@ -519,7 +519,7 @@ class DashboardController extends Controller
         $sheet->setCellValue('A1', $this->organizationName() . ' Dashboard Summary FY' . $payload['fiscal_year']);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->setCellValue('A2', 'Organization: ' . ($payload['organization']['office_unit'] ?? $this->organizationName()));
-        $sheet->setCellValue('A3', 'Region: ' . ($payload['organization']['region'] ?? $this->organizationRegion()));
+        $sheet->setCellValue('A3', 'Jurisdiction: ' . ($payload['organization']['region'] ?? $this->organizationRegion()));
         $sheet->setCellValue('A4', 'Generated: ' . now()->format('M d, Y h:i A'));
 
         $headersRow = 6;
@@ -566,7 +566,7 @@ class DashboardController extends Controller
         </style></head><body>';
         $html .= '<h1>' . e($this->organizationName()) . ' Dashboard Summary FY' . e($payload['fiscal_year']) . '</h1>';
         $html .= '<div>Organization: ' . e($payload['organization']['office_unit'] ?? $this->organizationName()) . '</div>';
-        $html .= '<div>Region: ' . e($payload['organization']['region'] ?? $this->organizationRegion()) . '</div>';
+        $html .= '<div>Jurisdiction: ' . e($payload['organization']['region'] ?? $this->organizationRegion()) . '</div>';
         $html .= '<div>Generated: ' . e(now()->format('M d, Y h:i A')) . '</div>';
 
         foreach ($sections as $section => $items) {
@@ -751,12 +751,12 @@ class DashboardController extends Controller
 
     private function organizationName(): string
     {
-        return (string) config('app.organization_name', config('app.name', 'BFP Region II'));
+        return (string) config('app.organization_name', config('app.name', 'LGU Tuao'));
     }
 
     private function organizationRegion(): string
     {
-        return (string) config('app.region', 'Region II');
+        return (string) config('app.region', 'Municipality of Tuao');
     }
 
     private function authorizeModule(Request $request, string $ability): void

@@ -923,7 +923,7 @@ export default {
     buildReportId() {
       const now = new Date();
       const stamp = now.toISOString().replace(/[-:T.]/g, "").slice(0, 14);
-      return `BFP-ACC-${stamp}`;
+      return `LGU-TUAO-ACC-${stamp}`;
     },
 
     errorMessage(error, fallback) {

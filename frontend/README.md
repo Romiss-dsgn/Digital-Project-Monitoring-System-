@@ -1,6 +1,6 @@
 # ConTrackPro Frontend
 
-This folder contains the Vue 3 frontend for ConTrackPro. The UI is based on a Material Dashboard template, but the active implementation is now customized for BFP Region II project and contract monitoring.
+This folder contains the Vue 3 frontend for ConTrackPro. The UI is based on a Material Dashboard template, but the active implementation is now customized for LGU Tuao project and contract monitoring.
 
 ## Runtime
 
@@ -92,7 +92,7 @@ frontend/src/views/modules/ContractorPerformance.vue
 | Profile | Connected to backend `/me` profile endpoints. |
 | Layout | ConTrackPro header/sidebar branding applied. Shared ConTrackPro footer is enabled for authenticated module pages. |
 | Dashboard | Connected to dashboard summary/export API. |
-| Infrastructure Plans | Connected to DB-backed project API. Create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header are active. |
+| Infrastructure Plans | Connected to DB-backed project API. Create/edit/archive, filters, summary cards, location distribution, recent updates, and aligned page header are active. |
 | Contract Management | Connected to DB-backed contract API. Create/update/archive, summary, filters, document workflow. |
 | Engineering Plans | Connected to DB-backed engineering plans API for list, stats, pagination, project dropdown, upload, download, review status changes, and archive actions. |
 | Project Accomplishments | Connected to DB-backed accomplishments API. Create/update/archive/validate, summary, documents. |
@@ -186,7 +186,7 @@ Login works in Postman but not frontend:
 
 Contract save returns 422:
 
-- Use contract number format `BFP-R2-CON-YYYY-NNN`.
+- Use contract number format `LGU-TUAO-CON-YYYY-NNN`.
 - Select an existing project and contractor.
 - Enter a valid budget amount.
 - If dates are filled, end date must be after or equal to start date.
@@ -199,7 +199,7 @@ Build has warnings:
 ## Frontend Development Rules
 
 - Keep pages focused on operational workflows, not landing-page content.
-- Use existing BFP/ConTrackPro layout patterns.
+- Use existing LGU Tuao/ConTrackPro layout patterns.
 - Do not add new static mock data once a backend endpoint exists.
 - Add loading, empty, and error states for API-backed tables.
 - Make all write actions permission-aware when backend permissions are available.

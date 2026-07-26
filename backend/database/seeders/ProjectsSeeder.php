@@ -15,24 +15,24 @@ class ProjectsSeeder extends Seeder
 
         $contractors = [
             [
-                'company_name' => 'Cagayan Valley Builders Corp.',
+                'company_name' => 'Tuao Builders and Supply Corp.',
                 'contact_person' => 'Engr. Ramon Santos',
                 'contact_number' => '09170000001',
-                'email' => 'cagayan.builders@contractor.test',
+                'email' => 'tuao.builders@contractor.test',
                 'license_number' => 'PCAB-QA-2026-001',
             ],
             [
-                'company_name' => 'Northern Luzon Construction Services',
+                'company_name' => 'Tuao Drainage and Roadworks Services',
                 'contact_person' => 'Maria Villanueva',
                 'contact_number' => '09170000002',
-                'email' => 'northern.luzon@contractor.test',
+                'email' => 'tuao.roadworks@contractor.test',
                 'license_number' => 'PCAB-QA-2026-002',
             ],
             [
-                'company_name' => 'Red Shield Engineering Works',
+                'company_name' => 'Tuao Civil Works and Engineering',
                 'contact_person' => 'Carlo Mendoza',
                 'contact_number' => '09170000003',
-                'email' => 'red.shield@contractor.test',
+                'email' => 'tuao.civilworks@contractor.test',
                 'license_number' => 'PCAB-QA-2026-003',
             ],
         ];
@@ -41,7 +41,7 @@ class ProjectsSeeder extends Seeder
             Contractor::updateOrCreate(
                 ['company_name' => $contractor['company_name']],
                 $contractor + [
-                    'address' => 'Region II, Philippines',
+                    'address' => 'Tuao Municipal Proper',
                     'is_active' => true,
                 ]
             );
@@ -53,10 +53,10 @@ class ProjectsSeeder extends Seeder
 
         $projects = [
             [
-                'project_code' => 'BFP-R2-PROJ-001',
-                'project_name' => 'Tuguegarao Central Fire Station Phase II',
-                'location' => 'Cagayan',
-                'contractor' => 'Cagayan Valley Builders Corp.',
+                'project_code' => 'LGU-TUAO-PROJ-001',
+                'project_name' => 'Tuao Municipal Hall Records Room Improvement',
+                'location' => 'Municipal Hall Compound',
+                'contractor' => 'Tuao Builders and Supply Corp.',
                 'phase' => 'Construction',
                 'status' => 'on_time',
                 'progress_percent' => 65,
@@ -66,10 +66,10 @@ class ProjectsSeeder extends Seeder
                 'description' => 'QA seed project for project planning, contracts, and dashboard totals.',
             ],
             [
-                'project_code' => 'BFP-R2-PROJ-002',
-                'project_name' => 'Regional Office Records Room Renovation',
-                'location' => 'Cagayan',
-                'contractor' => 'Northern Luzon Construction Services',
+                'project_code' => 'LGU-TUAO-PROJ-002',
+                'project_name' => 'Tuao Public Market Drainage Rehabilitation',
+                'location' => 'Public Market Area',
+                'contractor' => 'Tuao Drainage and Roadworks Services',
                 'phase' => 'Procurement',
                 'status' => 'ongoing',
                 'progress_percent' => 35,
@@ -79,10 +79,10 @@ class ProjectsSeeder extends Seeder
                 'description' => 'QA seed project for engineering plan upload and contract review.',
             ],
             [
-                'project_code' => 'BFP-R2-PROJ-003',
-                'project_name' => 'Ilagan Fire Truck Bay Expansion',
-                'location' => 'Isabela',
-                'contractor' => 'Red Shield Engineering Works',
+                'project_code' => 'LGU-TUAO-PROJ-003',
+                'project_name' => 'Tuao Rural Health Unit Site Development',
+                'location' => 'Rural Health Unit Compound',
+                'contractor' => 'Tuao Civil Works and Engineering',
                 'phase' => 'Execution',
                 'status' => 'delayed',
                 'progress_percent' => 45,
@@ -104,7 +104,7 @@ class ProjectsSeeder extends Seeder
                     'contractor_id' => $contractorIds[$contractorName] ?? null,
                     'implementing_office' => $contractorName,
                     'project_type' => 'Infrastructure',
-                    'funding_source' => 'FY 2026 BFP Regional Allocation',
+                    'funding_source' => 'FY 2026 LGU Tuao Infrastructure Allocation',
                     'phase' => $project['phase'],
                     'status' => $project['status'],
                     'progress_percent' => $project['progress_percent'],

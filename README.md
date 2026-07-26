@@ -1,6 +1,6 @@
 # ConTrackPro - Digital Project Monitoring System
 
-ConTrackPro is a web-based contract and infrastructure project monitoring system for BFP Region II. The app is intended to help authorized personnel track projects, contracts, engineering records, project accomplishments, financial movements, approvals, documents, and audit history in one internal portal.
+ConTrackPro is a web-based contract and infrastructure project monitoring system for LGU Tuao. The app is intended to help authorized municipal personnel track projects, contracts, engineering records, project accomplishments, financial movements, approvals, documents, and audit history in one internal portal.
 
 This repository contains:
 
@@ -21,7 +21,7 @@ This repository contains:
 | Docker | Backend, MySQL 8, and phpMyAdmin are containerized for local development. |
 | Contract Management | DB-backed MVP with contracts CRUD/archive, document upload/download/review/archive, summary cards, seed data, audit logging, and tests. |
 | Project Accomplishments | DB-backed MVP with accomplishments CRUD/archive/validation, document upload/download, project progress sync, summary cards, seed data, and tests. |
-| Infrastructure Plans | DB-backed MVP with project create/edit/archive, filters, summary cards, regional distribution, recent updates, and aligned page header. This module owns project creation and baseline project data. |
+| Infrastructure Plans | DB-backed MVP with project create/edit/archive, filters, summary cards, location distribution, recent updates, and aligned page header. This module owns project creation and baseline project data. |
 | Engineering Plans | DB-backed MVP with list, summary cards, pagination, project dropdown, upload, authenticated download, review status updates, archive, and audit logging. |
 | Dashboard | DB-backed summary/export through the dashboard API. |
 | Cashflows | DB-backed MVP for cashflow periods, invoices, payments, summaries, and seed data. |
@@ -32,12 +32,12 @@ This repository contains:
 
 ## Intended Use
 
-ConTrackPro is not a public-facing app. It is designed as an internal project monitoring portal for authorized Bureau of Fire Protection personnel.
+ConTrackPro is not a public-facing app. It is designed as an internal project monitoring portal for authorized Municipality of Tuao personnel.
 
 Primary users:
 
 - System Administrator
-- Regional Commander / management reviewer
+- Municipal Administrator / management reviewer
 - Contract Monitoring personnel
 - Engineering personnel
 - Finance / cashflow personnel
@@ -213,6 +213,8 @@ Recommended MVP deployment sequence:
 APP_ENV=staging
 APP_DEBUG=false
 APP_URL=https://staging-domain.example
+APP_ORGANIZATION_NAME="LGU Tuao"
+APP_REGION="Municipality of Tuao"
 DB_HOST=<staging-db-host>
 DB_DATABASE=contrackpro
 DB_USERNAME=<db-user>
