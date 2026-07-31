@@ -150,7 +150,7 @@ export default {
 
 .contrack-title {
   margin: 0;
-  color: #850000;
+  color: #1565c0;
   font-size: 1.9rem;
   font-weight: 900;
   line-height: 1;
@@ -260,8 +260,8 @@ export default {
   height: 46px;
   border-radius: 50%;
   background: #f5e6e6;
-  border: 2px solid #c0392b;
-  color: #850000;
+  border: 2px solid #0d3b78;
+  color: #1565c0;
   cursor: pointer;
   transition: background 0.2s;
   flex-shrink: 0;
@@ -304,7 +304,7 @@ export default {
   height: 40px;
   border-radius: 50%;
   background: #f5e6e6;
-  color: #850000;
+  color: #1565c0;
   flex-shrink: 0;
 }
 
@@ -365,7 +365,7 @@ export default {
 
 .contrack-dropdown__item:hover {
   background: #f8f0f0;
-  color: #850000;
+  color: #1565c0;
 }
 
 .contrack-dropdown__item .material-symbols-rounded {
@@ -374,15 +374,15 @@ export default {
 }
 
 .contrack-dropdown__item:hover .material-symbols-rounded {
-  color: #850000;
+  color: #1565c0;
 }
 
 .contrack-dropdown__item--danger {
-  color: #c0392b;
+  color: #0d3b78;
 }
 
 .contrack-dropdown__item--danger .material-symbols-rounded {
-  color: #c0392b;
+  color: #0d3b78;
 }
 
 .contrack-dropdown__item--danger:hover {

@@ -62,7 +62,7 @@ export default {
   height: 140px;
   border-radius: 16px 16px 0 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #850000 0%, #4a0000 60%, #1c223a 100%);
+  background: linear-gradient(135deg, #1565c0 0%, #0d3b78 60%, #1c223a 100%);
   display: flex;
   align-items: flex-end;
   padding: 1.25rem 1.75rem;
@@ -133,7 +133,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #850000;
+  color: #1565c0;
   flex-shrink: 0;
 }
 
@@ -155,7 +155,7 @@ export default {
 .profile-card__role {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #850000;
+  color: #1565c0;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   background: #fdf0f0;
