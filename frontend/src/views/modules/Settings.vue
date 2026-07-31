@@ -329,7 +329,7 @@ export default {
 
 .panel-heading p {
   margin: 0 0 0.35rem;
-  color: #850000;
+  color: #1565C0;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -391,8 +391,8 @@ export default {
 }
 
 .settings-form input:focus {
-  border-color: #850000;
-  box-shadow: 0 0 0 3px rgba(133, 0, 0, 0.12);
+  border-color: #1565C0;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
 }
 
 .settings-form small {
@@ -410,8 +410,8 @@ export default {
 }
 
 .phone-input:focus-within {
-  border-color: #850000;
-  box-shadow: 0 0 0 3px rgba(133, 0, 0, 0.12);
+  border-color: #1565C0;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
 }
 
 .phone-input--error {
@@ -492,7 +492,7 @@ export default {
   border: 0;
   border-radius: 8px;
   padding: 0 1.15rem;
-  background: linear-gradient(90deg, #b9403b 0%, #2f59a4 100%);
+  background: linear-gradient(90deg, #1565C0 0%, #0D3B78 100%);
   color: #ffffff;
   font-weight: 800;
   letter-spacing: 0.03em;
@@ -518,9 +518,9 @@ export default {
   height: 88px;
   margin: 0 auto 1rem;
   border-radius: 50%;
-  background: #850000;
+  background: #1565C0;
   color: #ffffff;
-  box-shadow: 0 10px 24px rgba(133, 0, 0, 0.22);
+  box-shadow: 0 10px 24px rgba(21, 101, 192, 0.22);
 }
 
 .profile-avatar span {
@@ -555,7 +555,7 @@ export default {
 }
 
 .profile-summary dt {
-  color: #850000;
+  color: #1565C0;
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.07em;

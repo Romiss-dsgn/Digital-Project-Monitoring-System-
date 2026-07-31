@@ -882,6 +882,7 @@ h4 {
 
 .stat-info {
   flex: 1;
+  min-width: 0;
 }
 
 .stat-badge {
@@ -923,15 +924,17 @@ h4 {
 }
 
 .stat-value {
-  font-size: 1.75rem;
+  font-size: clamp(1rem, 1.6vw, 1.75rem);
   font-weight: 700;
   color: #1a1a2e;
   margin: 0;
   line-height: 1.1;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .stat-value-lg {
-  font-size: 1.35rem;
+  font-size: clamp(0.8rem, 1.2vw, 1.35rem);
 }
 
 .stat-value-danger {

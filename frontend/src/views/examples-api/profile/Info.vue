@@ -374,7 +374,7 @@ export default {
 }
 
 .info-block__header .material-symbols-rounded {
-  color: #850000;
+  color: #1565c0;
   font-size: 1.3rem;
 }
 
@@ -391,7 +391,7 @@ export default {
   align-items: center;
   gap: 0.35rem;
   background: #f5e6e6;
-  color: #850000;
+  color: #1565c0;
   border: none;
   border-radius: 8px;
   padding: 0.4rem 0.9rem;
@@ -428,7 +428,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: linear-gradient(135deg, #850000, #c0392b);
+  background: linear-gradient(135deg, #1565c0, #0d3b78);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -479,7 +479,7 @@ export default {
 }
 
 .info-field__input-wrap:focus-within {
-  border-color: #850000;
+  border-color: #1565c0;
   background: #fff;
 }
 
@@ -491,7 +491,7 @@ export default {
 
 .info-field__icon {
   font-size: 1.1rem;
-  color: #850000;
+  color: #1565c0;
   flex-shrink: 0;
 }
 
@@ -514,7 +514,7 @@ select.info-field__input:disabled { cursor: default; }
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #850000;
+  color: #1565c0;
   display: flex;
   align-items: center;
   padding: 0;
@@ -547,7 +547,7 @@ select.info-field__input:disabled { cursor: default; }
 
 .position-dropdown__item:hover {
   background: #fdf0f0;
-  color: #850000;
+  color: #1565c0;
 }
 
 .position-dropdown__empty {
