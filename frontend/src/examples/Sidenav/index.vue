@@ -4,7 +4,7 @@
     class="sidenav navbar navbar-vertical navbar-expand-xs border-0"
     :class="`${
       isRTL ? 'rotate-caret fixed-end' : 'fixed-start'
-    } ${sidebarType}`"
+    } ${sidebarType} ${isCollapsed ? 'sidenav-collapsed' : ''}`"
     :style="{ backgroundImage: backgroundImageUrl }"
   >
     <div class="sidenav-header">
@@ -14,20 +14,31 @@
         id="iconSidenav"
         @click="closeMobileSidenav"
       >close</i>
-      <a class="m-0 navbar-brand d-flex align-items-center justify-content-center" href="/dashboard">
-        <div class="logo-wrapper">
-          <img
-            :src="logo"
-            class="navbar-brand-img"
-            alt="main_logo"
-          />
-          <div class="logo-glow"></div>
-        </div>
-        <div class="brand-text-wrapper">
-          <span class="font-weight-bold text-white sidebar-brand-text">LGU Tuao</span>
-          <span class="sidebar-brand-sub">Municipality of Tuao</span>
-        </div>
-      </a>
+      <div class="sidenav-header-row">
+        <a class="m-0 navbar-brand d-flex align-items-center" href="/dashboard">
+          <div class="logo-wrapper">
+            <img
+              :src="logo"
+              class="navbar-brand-img"
+              alt="main_logo"
+            />
+            <div class="logo-glow"></div>
+          </div>
+          <div class="brand-text-wrapper">
+            <span class="font-weight-bold text-white sidebar-brand-text">LGU Tuao</span>
+            <span class="sidebar-brand-sub">Municipality of Tuao</span>
+          </div>
+        </a>
+        <button
+          type="button"
+          class="sidenav-toggle-btn d-none d-xl-flex"
+          :aria-expanded="(!isCollapsed).toString()"
+          aria-label="Toggle sidebar"
+          @click="toggleSidenav"
+        >
+          <span class="material-symbols-rounded">{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</span>
+        </button>
+      </div>
     </div>
     <hr class="horizontal light mt-0 mb-2" />
     <sidenav-list />
@@ -49,6 +60,7 @@ export default {
     return {
       logo,
       bgImage,
+      isCollapsed: false,
     };
   },
   computed: {
@@ -57,11 +69,27 @@ export default {
       return `url("${this.bgImage}")`;
     },
   },
+  mounted() {
+    const stored = localStorage.getItem("contrack_sidenav_collapsed");
+    this.isCollapsed = stored === "true";
+    this.applySidebarWidth();
+  },
   methods: {
     closeMobileSidenav() {
       this.$store.commit("closeMobileSidenav");
-    }
-  }
+    },
+    toggleSidenav() {
+      this.isCollapsed = !this.isCollapsed;
+      localStorage.setItem("contrack_sidenav_collapsed", this.isCollapsed);
+      this.applySidebarWidth();
+    },
+    applySidebarWidth() {
+      document.documentElement.style.setProperty(
+        "--contrack-sidebar-width",
+        this.isCollapsed ? "5.25rem" : "17.125rem"
+      );
+    },
+  },
 };
 </script>
 
@@ -76,11 +104,14 @@ export default {
   height: 100vh !important;
   margin: 0 !important;
   border-radius: 0 !important;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
   color: #fff;
   box-shadow: none !important;
   width: var(--contrack-sidebar-width, 17.125rem) !important;
   max-width: var(--contrack-sidebar-width, 17.125rem) !important;
+  transition: width 0.3s ease, max-width 0.3s ease;
 }
 
 /* Overlay layer */
@@ -108,14 +139,46 @@ export default {
 
 .sidenav .sidenav-header {
   height: auto !important;
-  min-height: 104px;
+  min-height: 76px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+/* ── Sidebar toggle button ────────────────────── */
+.sidenav-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+.sidenav-toggle-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+.sidenav-toggle-btn:hover {
+  opacity: 1;
+}
+.sidenav-toggle-btn .material-symbols-rounded {
+  font-size: 20px;
+  color: #fff;
 }
 
 /* ── Logo wrapper ─────────────────────────────── */
 .logo-wrapper {
+  margin-top: 0;
   position: relative;
   display: flex;
   align-items: center;
@@ -191,8 +254,8 @@ export default {
 
 /* ── Navbar brand padding ─────────────────────── */
 .sidenav .navbar-brand {
-  min-height: 104px;
-  padding: 1rem 1.25rem;
+  min-height: 76px;
+  padding: 0.6rem 1.25rem;
   gap: 1rem;
   overflow: visible;
   width: 100%;
@@ -214,10 +277,16 @@ export default {
 }
 
 /* ── Nav links ────────────────────────────────── */
+.sidenav .sidenav-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 22px;
+}
+
 .sidenav .nav-link {
   border-radius: 4px;
-  min-height: 48px;
-  margin: 0 1rem 0.25rem;
+  min-height: 46px;
+  margin: 0 1rem 0.125rem;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
@@ -246,6 +315,49 @@ export default {
 /* ── Divider ──────────────────────────────────── */
 .sidenav hr.horizontal.light {
   border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* ── Collapsed state ──────────────────────────── */
+.sidenav.sidenav-collapsed {
+  width: 5.25rem !important;
+  max-width: 5.25rem !important;
+}
+
+.sidenav.sidenav-collapsed .navbar-brand {
+  padding: 1rem 0.5rem;
+  gap: 0;
+}
+
+.sidenav.sidenav-collapsed .brand-text-wrapper {
+  display: none;
+}
+
+.sidenav.sidenav-collapsed .sidenav-header-row {
+  flex-direction: column;
+  gap: 6px;
+}
+.sidenav.sidenav-collapsed .sidenav-toggle-btn {
+  width: 22px;
+  height: 22px;
+}
+
+.sidenav.sidenav-collapsed .logo-wrapper {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+}
+
+.sidenav.sidenav-collapsed .nav-link-button {
+  justify-content: center;
+}
+
+.sidenav.sidenav-collapsed .nav-link-text {
+  display: none;
+}
+
+.sidenav.sidenav-collapsed .nav-link-button .me-2,
+.sidenav.sidenav-collapsed .nav-link-button .ms-2 {
+  margin: 0 !important;
 }
 
 @media (max-width: 1199.98px) {

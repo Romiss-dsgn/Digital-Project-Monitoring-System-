@@ -94,7 +94,8 @@ export default {
   min-width: 0;
   overflow-wrap: anywhere;
   white-space: normal;
-  line-height: 1.2;
+  line-height: 1.15;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 1199.98px) {
