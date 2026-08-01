@@ -88,7 +88,7 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Project Name</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Location</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Contractor</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Progress %</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Duration</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Phase</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 inventory-actions-head">Actions</th>
@@ -125,24 +125,16 @@
                   <div class="project-contractor" :title="project.contractor">{{ project.contractor }}</div>
                 </td>
                 <td class="align-middle text-sm">
-                  <div class="d-flex align-items-center gap-2 progress-group">
-                    <div class="progress progress-sm flex-grow-1">
-                      <div
-                        class="progress-bar"
-                        :class="progressBarClass(project.progress)"
-                        :style="{ width: project.progress + '%' }"
-                      ></div>
-                    </div>
-                    <span class="progress-label" :class="progressTextClass(project.progress)">
-                      {{ project.progress }}%
-                    </span>
-                  </div>
+                  <span class="duration-badge" :class="durationInfo(project.phase, project.start_date, project.end_date).cssClass">
+                    <i class="material-icons-round duration-icon">{{ durationInfo(project.phase, project.start_date, project.end_date).icon }}</i>
+                    {{ durationInfo(project.phase, project.start_date, project.end_date).text }}
+                  </span>
                 </td>
                 <td class="align-middle text-sm">{{ project.phase }}</td>
                 <td class="align-middle text-sm">
-                  <span class="status-pill" :class="project.status">
+                  <span class="status-pill" :class="displayStatus(project)">
                     <span class="status-dot"></span>
-                    {{ statusLabel(project.status) }}
+                    {{ statusLabel(displayStatus(project)) }}
                   </span>
                 </td>
                 <td class="align-middle inventory-actions-cell">
@@ -455,8 +447,16 @@
           </div>
 
           <div class="tuao-field tuao-field-full">
+            <div class="tuao-duration-display" :class="formDurationInfo.cssClass">
+              <i class="material-icons-round">{{ formDurationInfo.icon }}</i>
+              <span>Project Duration:</span>
+              <strong>{{ formDurationInfo.text }}</strong>
+            </div>
+          </div>
+
+          <div class="tuao-field tuao-field-full">
             <label class="tuao-label" for="m-budget">
-              Project Budget (PHP)
+              Contract Budget (PHP)
             </label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">payments</i>
@@ -510,42 +510,12 @@
                 :class="{ 'tuao-input-error': errors.status }"
               >
                 <option value="">Select status</option>
-                <option value="on_time">On Time</option>
-                <option value="delayed">Delayed</option>
-                <option value="ongoing">Ongoing</option>
                 <option value="planning">Planning</option>
-                <option value="completed">Completed</option>
-                <option value="suspended">Suspended</option>
+                <option value="completed">Construction</option>
+                <option value="suspended">Post Evaluation</option>
               </select>
             </div>
             <span v-if="errors.status" class="tuao-error-msg">{{ errors.status }}</span>
-          </div>
-
-          <div class="tuao-field tuao-field-full">
-            <label class="tuao-label">
-              Completion Progress
-              <span class="tuao-progress-pct" :style="{ color: progressColor(form.progress) }">
-                {{ form.progress }}%
-              </span>
-            </label>
-            <div class="tuao-slider-wrap">
-              <input
-                v-model.number="form.progress"
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                class="tuao-slider"
-                :style="sliderTrackStyle(form.progress)"
-              />
-              <div class="tuao-slider-labels">
-                <span>0%</span>
-                <span>25%</span>
-                <span>50%</span>
-                <span>75%</span>
-                <span>100%</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -683,7 +653,7 @@ export default {
       contractors: [],
       filters: { name: "", code: "", location: "", status: "", phase: "" },
       locations: ["Municipal Hall Compound", "Public Market Area", "Rural Health Unit Compound", "Tuao Municipal Roads"],
-      phases: ["Planning", "Foundation", "Construction", "Finishing", "Post-Eval"],
+      phases: ["Planning", "Construction", "Post-Eval"],
       statusTabs: [
         { label: "All", value: "" },
         { label: "On Time", value: "on_time" },
@@ -691,7 +661,6 @@ export default {
         { label: "Completed", value: "completed" },
         { label: "Ongoing", value: "ongoing" },
         { label: "Planning", value: "planning" },
-        { label: "Suspended", value: "suspended" },
       ],
       statusOptions: {
         on_time: "On Time",
@@ -713,7 +682,6 @@ export default {
         budget: "",
         phase: "",
         status: "",
-        progress: 0,
         notes: "",
       },
       errors: {},
@@ -761,6 +729,10 @@ export default {
 
     canDelete() {
       return this.permissions.can_delete;
+    },
+
+    formDurationInfo() {
+      return this.durationInfo(this.form.phase, this.form.startDate, this.form.endDate);
     },
 
     paginationPages() {
@@ -877,7 +849,6 @@ export default {
         budget: "",
         phase: "",
         status: "",
-        progress: 0,
         notes: "",
       };
     },
@@ -1067,7 +1038,6 @@ export default {
           budget: this.parseBudget(this.form.budget),
           phase: this.form.phase,
           status: this.form.status,
-          progress: Math.min(100, Math.max(0, Number(this.form.progress) || 0)),
           notes: this.form.notes || null,
         };
 
@@ -1123,7 +1093,6 @@ export default {
         budget: project.budget,
         phase: project.phase,
         status: project.status,
-        progress: project.progress,
         notes: project.notes || "",
       };
       this.showModal = true;
@@ -1154,30 +1123,92 @@ export default {
       return labels[status] || status.toUpperCase();
     },
 
-    progressBarClass(progress) {
-      if (progress === 100) return "progress-bar-completed";
-      if (progress >= 75) return "progress-bar-high";
-      if (progress >= 40) return "progress-bar-mid";
-      return "progress-bar-low";
+    // Visual-only override: an overdue project displays as "Delayed" in the
+    // table regardless of its saved status, unless it's already Completed.
+    // This does not mutate project.status or get sent back to the server.
+    displayStatus(project) {
+      const info = this.durationInfo(project.phase, project.start_date, project.end_date);
+      const isOverdue = info.cssClass === "duration-overdue";
+
+      if (isOverdue && project.status !== "completed") {
+        return "delayed";
+      }
+
+      return project.status;
     },
 
-    progressTextClass(progress) {
-      if (progress === 100) return "text-completed";
-      if (progress >= 75) return "text-high";
-      if (progress >= 40) return "text-mid";
-      return "text-low";
+    isPlanningPhase(phase) {
+      return String(phase || "").trim().toLowerCase() === "planning";
     },
 
-    progressColor(p) {
-      if (p === 100) return "#15803d";
-      if (p >= 75) return "#16a34a";
-      if (p >= 40) return "#d97706";
-      return "#ef4444";
-    },
+    durationInfo(phase, start, end) {
+      // Duration tracking only kicks in once a project leaves the Planning phase.
+      if (this.isPlanningPhase(phase)) {
+        return {
+          text: "Not started",
+          cssClass: "duration-inactive",
+          icon: "hourglass_empty",
+        };
+      }
 
-    sliderTrackStyle(p) {
-      const color = this.progressColor(p);
-      return `--slider-fill: ${color}; background: linear-gradient(to right, ${color} ${p}%, #e5e7eb ${p}%)`;
+      if (!start || !end) {
+        return { text: "N/A", cssClass: "duration-neutral", icon: "schedule" };
+      }
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+        return { text: "N/A", cssClass: "duration-neutral", icon: "schedule" };
+      }
+
+      if (endDate < startDate) {
+        return { text: "Invalid date range", cssClass: "duration-invalid", icon: "error_outline" };
+      }
+
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endOnly = new Date(endDate);
+      endOnly.setHours(0, 0, 0, 0);
+
+      // Automatically counts down as today's date approaches the end date.
+      const remainingDays = Math.round((endOnly.getTime() - today.getTime()) / msPerDay);
+
+      if (remainingDays < 0) {
+        const overdueDays = Math.abs(remainingDays);
+        return {
+          text: `Overdue by ${overdueDays} day${overdueDays === 1 ? "" : "s"}`,
+          cssClass: "duration-overdue",
+          icon: "report",
+        };
+      }
+
+      if (remainingDays === 0) {
+        return { text: "Due today", cssClass: "duration-critical", icon: "notifications_active" };
+      }
+
+      if (remainingDays <= 7) {
+        return {
+          text: `${remainingDays} day${remainingDays === 1 ? "" : "s"} left`,
+          cssClass: "duration-critical",
+          icon: "notifications_active",
+        };
+      }
+
+      if (remainingDays <= 30) {
+        return {
+          text: `${remainingDays} days left`,
+          cssClass: "duration-warning",
+          icon: "schedule",
+        };
+      }
+
+      return {
+        text: `${remainingDays} days left`,
+        cssClass: "duration-ok",
+        icon: "schedule",
+      };
     },
 
     formatInteger(value) {
@@ -1637,51 +1668,60 @@ export default {
   text-overflow: ellipsis;
 }
 
-.progress-group {
-  min-width: 130px;
-}
-
 .progress {
   background: rgba(15, 23, 42, 0.06);
   height: 6px;
   border-radius: 999px;
 }
 
-.progress-bar-low {
-  background-color: #ef4444;
-}
-
-.progress-bar-mid {
-  background-color: #f59e0b;
-}
-
-.progress-bar-high {
-  background-color: #22c55e;
-}
-
-.progress-bar-completed {
-  background-color: #16a34a;
-}
-
-.progress-label {
-  font-size: 0.75rem;
+.duration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.text-low {
-  color: #ef4444;
+.duration-icon {
+  font-size: 0.95rem;
 }
 
-.text-mid {
-  color: #d97706;
+.duration-neutral {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
 }
 
-.text-high {
-  color: #16a34a;
+.duration-inactive {
+  background: rgba(148, 163, 184, 0.14);
+  color: #64748b;
+  font-style: italic;
 }
 
-.text-completed {
+.duration-invalid {
+  background: rgba(239, 68, 68, 0.12);
+  color: #c62828;
+}
+
+.duration-overdue {
+  background: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+}
+
+.duration-critical {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.duration-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.duration-ok {
+  background: rgba(22, 163, 74, 0.12);
   color: #15803d;
 }
 
@@ -2132,25 +2172,51 @@ export default {
   grid-column: 1 / -1;
 }
 
-.tuao-progress-pct {
-  font-weight: 800;
-}
-
-.tuao-slider-wrap {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.tuao-slider {
-  width: 100%;
-  accent-color: #c0392b;
-}
-
-.tuao-slider-labels {
+.tuao-duration-display {
   display: flex;
-  justify-content: space-between;
-  color: #9ca3af;
-  font-size: 0.78rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: rgba(107, 114, 128, 0.08);
+  color: #4b5563;
+}
+
+.tuao-duration-display .material-icons-round {
+  font-size: 1.1rem;
+}
+
+.tuao-duration-display.duration-inactive {
+  background: rgba(148, 163, 184, 0.14);
+  color: #64748b;
+  font-style: italic;
+}
+
+.tuao-duration-display.duration-invalid {
+  background: rgba(239, 68, 68, 0.1);
+  color: #c62828;
+}
+
+.tuao-duration-display.duration-overdue {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+.tuao-duration-display.duration-critical {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.tuao-duration-display.duration-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+}
+
+.tuao-duration-display.duration-ok {
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
 }
 
 .tuao-check-option {
