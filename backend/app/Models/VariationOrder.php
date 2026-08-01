@@ -43,4 +43,9 @@ class VariationOrder extends Model
     {
         return $this->hasMany(VariationOrderDocument::class);
     }
+
+    public function items()
+    {
+        return $this->hasMany(VariationOrderItem::class);
+    }
 }

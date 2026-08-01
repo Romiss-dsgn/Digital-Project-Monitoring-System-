@@ -32,7 +32,7 @@
               <slot name="note">{{ note }}</slot>
             </div>
             <div class="tuao-footer-actions">
-              <button class="tuao-btn-cancel" type="button" :disabled="loading" @click="$emit('close')">{{ cancelText }}</button>
+              <button v-if="showCancel" class="tuao-btn-cancel" type="button" :disabled="loading" @click="$emit('close')">{{ cancelText }}</button>
               <button class="tuao-btn-save" type="button" :disabled="loading" @click="$emit('confirm')">
                 <i class="material-icons-round">{{ confirmIcon }}</i>
                 {{ loading ? 'Saving...' : confirmText }}
@@ -61,6 +61,7 @@ export default {
     confirmText: { type: String, default: "Save" },
     confirmIcon: { type: String, default: "save" },
     showFooter: { type: Boolean, default: true },
+    showCancel: { type: Boolean, default: true },
     width: { type: String, default: "620px" },
     loading: { type: Boolean, default: false },
     confirmVariant: { type: String, default: "primary" }

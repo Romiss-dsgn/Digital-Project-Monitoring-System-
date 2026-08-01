@@ -65,6 +65,9 @@ export default {
       "showFooter",
       "mobileSidenavOpen"
     ]),
+    isMobileSidenavOpen() {
+      return this.mobileSidenavOpen;
+    },
     showAppShell() {
       return !this.$route.matched.some((record) => record.meta.hideAppShell);
     },
