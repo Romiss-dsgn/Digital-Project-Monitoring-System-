@@ -44,6 +44,7 @@ export default createStore({
         sidenav_show.classList.toggle("mobile-sidenav-open", state.mobileSidenavOpen);
         sidenav_show.classList.remove("g-sidenav-pinned");
         document.body.classList.toggle("mobile-sidenav-lock", state.mobileSidenavOpen);
+        document.body.classList.remove("app-shell-sidenav-pinned");
         return;
       }
 
@@ -54,9 +55,11 @@ export default createStore({
       if (sidenav_show.classList.contains("g-sidenav-pinned")) {
         sidenav_show.classList.remove("g-sidenav-pinned");
         state.isPinned = true;
+        document.body.classList.remove("app-shell-sidenav-pinned");
       } else {
         sidenav_show.classList.add("g-sidenav-pinned");
         state.isPinned = false;
+        document.body.classList.add("app-shell-sidenav-pinned");
       }
     },
     closeMobileSidenav(state) {
@@ -67,6 +70,7 @@ export default createStore({
         sidenav_show.classList.remove("mobile-sidenav-open");
       }
       document.body.classList.remove("mobile-sidenav-lock");
+      document.body.classList.remove("app-shell-sidenav-pinned");
     },
     navbarFixed(state) {
       if (state.isNavFixed === false) {
