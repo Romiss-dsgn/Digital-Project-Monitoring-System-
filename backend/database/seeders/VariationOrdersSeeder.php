@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Contract;
 use App\Models\User;
 use App\Models\VariationOrder;
+use App\Models\VariationOrderItem;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -39,6 +40,15 @@ class VariationOrdersSeeder extends Seeder
                 'reviewed_at' => Carbon::now()->subDays(14),
                 'approved_at' => Carbon::now()->subDays(12),
                 'approval_remarks' => 'Approved for QA financial impact testing.',
+                'items' => [
+                    [
+                        'line_number' => 1,
+                        'item_description' => 'Weather-resistant records room upgrade',
+                        'additive_qty' => 1,
+                        'additive_unit' => 'lot',
+                        'additive_unit_cost' => 320000,
+                    ],
+                ],
             ],
             [
                 'vo_number' => 'VO-QA-2026-002',
@@ -50,6 +60,15 @@ class VariationOrdersSeeder extends Seeder
                 'status' => 'Under Review',
                 'submitted_at' => Carbon::now()->subDays(8),
                 'reviewed_at' => Carbon::now()->subDays(3),
+                'items' => [
+                    [
+                        'line_number' => 1,
+                        'item_description' => 'Drainage alignment and excavation adjustment',
+                        'additive_qty' => 1,
+                        'additive_unit' => 'lot',
+                        'additive_unit_cost' => 180000,
+                    ],
+                ],
             ],
             [
                 'vo_number' => 'VO-QA-2026-003',
@@ -60,6 +79,15 @@ class VariationOrdersSeeder extends Seeder
                 'time_impact_days' => 3,
                 'status' => 'Draft',
                 'submitted_at' => null,
+                'items' => [
+                    [
+                        'line_number' => 1,
+                        'item_description' => 'Pending drainage adjustment for site condition review',
+                        'additive_qty' => 1,
+                        'additive_unit' => 'lot',
+                        'additive_unit_cost' => 95000,
+                    ],
+                ],
             ],
         ];
 
@@ -89,6 +117,37 @@ class VariationOrdersSeeder extends Seeder
                     'is_archived' => false,
                 ]
             );
+
+            $variationOrder = VariationOrder::where('vo_number', $order['vo_number'])->first();
+
+            if ($variationOrder) {
+                VariationOrderItem::where('variation_order_id', $variationOrder->id)->delete();
+
+                foreach ($order['items'] as $itemIndex => $item) {
+                    $additiveTotal = (($item['additive_qty'] ?? 0) * ($item['additive_unit_cost'] ?? 0));
+                    $deductiveTotal = (($item['deductive_qty'] ?? 0) * ($item['deductive_unit_cost'] ?? 0));
+
+                    VariationOrderItem::create([
+                        'variation_order_id' => $variationOrder->id,
+                        'line_number' => $item['line_number'] ?? ($itemIndex + 1),
+                        'item_description' => $item['item_description'],
+                        'original_qty' => $item['original_qty'] ?? 0,
+                        'original_unit' => $item['original_unit'] ?? null,
+                        'original_unit_cost' => $item['original_unit_cost'] ?? 0,
+                        'original_total_cost' => (($item['original_qty'] ?? 0) * ($item['original_unit_cost'] ?? 0)),
+                        'additive_qty' => $item['additive_qty'] ?? 0,
+                        'additive_unit' => $item['additive_unit'] ?? null,
+                        'additive_unit_cost' => $item['additive_unit_cost'] ?? 0,
+                        'additive_total_cost' => $additiveTotal,
+                        'deductive_qty' => $item['deductive_qty'] ?? 0,
+                        'deductive_unit' => $item['deductive_unit'] ?? null,
+                        'deductive_unit_cost' => $item['deductive_unit_cost'] ?? 0,
+                        'deductive_total_cost' => $deductiveTotal,
+                        'net_line_cost' => $additiveTotal - $deductiveTotal,
+                        'remarks' => $item['remarks'] ?? null,
+                    ]);
+                }
+            }
         }
 
         foreach ($contracts as $contract) {

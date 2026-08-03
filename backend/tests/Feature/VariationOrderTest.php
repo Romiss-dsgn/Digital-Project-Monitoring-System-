@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\RolePermission;
 use App\Models\User;
 use App\Models\VariationOrder;
+use App\Models\VariationOrderItem;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Passport\Passport;
 use Tests\TestCase;
@@ -98,6 +99,52 @@ class VariationOrderTest extends TestCase
         $vo = VariationOrder::where('vo_number', $response->json('data.vo_number'))->first();
         $this->assertNull($vo->submitted_by);
         $this->assertNull($vo->submitted_at);
+    }
+
+    public function test_creating_variation_order_with_items_persists_the_worksheet_rows(): void
+    {
+        $user = $this->userWithPermissions('variation_orders', ['view', 'create']);
+        Passport::actingAs($user);
+        [$project, $contractor, $contract] = $this->projectAndContractorAndContract();
+
+        $response = $this->postJson('/api/v2/variation-orders', [
+            'contract_id' => $contract->id,
+            'vo_number' => 'VO-' . uniqid(),
+            'description' => 'Itemized VO',
+            'reason' => 'Worksheet breakdown',
+            'time_impact_days' => 4,
+            'items' => [
+                [
+                    'line_number' => 1,
+                    'item_description' => 'Additional site works',
+                    'original_qty' => 10,
+                    'original_unit' => 'm2',
+                    'original_unit_cost' => 500,
+                    'additive_qty' => 1,
+                    'additive_unit' => 'lot',
+                    'additive_unit_cost' => 2500,
+                ],
+                [
+                    'line_number' => 2,
+                    'item_description' => 'Deduct concrete cutting',
+                    'deductive_qty' => 1,
+                    'deductive_unit' => 'lot',
+                    'deductive_unit_cost' => 1000,
+                ],
+            ],
+        ]);
+
+        $response->assertCreated();
+        $this->assertEquals(1500.00, (float) $response->json('data.amount_change'));
+        $this->assertCount(2, $response->json('data.items'));
+
+        $vo = VariationOrder::where('vo_number', $response->json('data.vo_number'))->firstOrFail();
+        $this->assertEquals(1500.00, (float) $vo->amount_change);
+        $this->assertCount(2, $vo->items()->get());
+
+        $item = VariationOrderItem::where('variation_order_id', $vo->id)->orderBy('line_number')->first();
+        $this->assertEquals('Additional site works', $item->item_description);
+        $this->assertEquals(2500.00, (float) $item->additive_total_cost);
     }
 
     public function test_reviewing_variation_order_twice_does_not_overwrite_reviewed_at(): void

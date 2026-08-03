@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\VariationOrder;
 use App\Models\VariationOrderDocument;
+use App\Models\VariationOrderItem;
 use App\Services\AuditLogger;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -23,8 +24,11 @@ class VariationOrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = VariationOrder::query()
+            ->withCount('items')
             ->with([
-                'contract:id,contract_number,contract_title',
+                'contract:id,contract_number,contract_title,project_id,contractor_id,original_contract_amount,revised_contract_amount',
+                'contract.project:id,project_code,project_name',
+                'contract.contractor:id,company_name',
                 'submitter:id,name',
                 'reviewer:id,name',
                 'approver:id,name',
@@ -36,7 +40,12 @@ class VariationOrderController extends Controller
                         ->orWhere('description', 'like', "%{$search}%")
                         ->orWhereHas('contract', fn (Builder $contract) => $contract
                             ->where('contract_number', 'like', "%{$search}%")
-                            ->orWhere('contract_title', 'like', "%{$search}%"));
+                            ->orWhere('contract_title', 'like', "%{$search}%")
+                            ->orWhereHas('project', fn (Builder $project) => $project
+                                ->where('project_code', 'like', "%{$search}%")
+                                ->orWhere('project_name', 'like', "%{$search}%"))
+                            ->orWhereHas('contractor', fn (Builder $contractor) => $contractor
+                                ->where('company_name', 'like', "%{$search}%")));
                 });
             })
             ->when($request->query('status'), fn (Builder $query, string $status) => $query->where('status', $status))
@@ -95,8 +104,23 @@ class VariationOrderController extends Controller
         return response()->json([
             'contracts' => Contract::query()
                 ->where('is_archived', false)
+                ->with([
+                    'project:id,project_code,project_name',
+                    'contractor:id,company_name',
+                ])
                 ->orderBy('contract_number')
-                ->get(['id', 'contract_number', 'contract_title']),
+                ->get(['id', 'project_id', 'contractor_id', 'contract_number', 'contract_title', 'original_contract_amount', 'revised_contract_amount'])
+                ->map(fn (Contract $contract) => [
+                    'id' => $contract->id,
+                    'contract_number' => $contract->contract_number,
+                    'contract_title' => $contract->contract_title,
+                    'project_name' => $contract->project?->project_name,
+                    'project_ref' => $contract->project?->project_code,
+                    'contractor_name' => $contract->contractor?->company_name,
+                    'original_contract_amount' => (float) $contract->original_contract_amount,
+                    'revised_contract_amount' => (float) $contract->revised_contract_amount,
+                ])
+                ->values(),
             'statuses' => self::STATUSES,
             'permissions' => $request->user()->modulePermissions('variation_orders'),
         ]);
@@ -112,16 +136,42 @@ class VariationOrderController extends Controller
             'vo_number' => ['required', 'string', 'max:255', 'unique:variation_orders,vo_number'],
             'description' => ['nullable', 'string', 'max:5000'],
             'reason' => ['nullable', 'string', 'max:5000'],
-            'amount_change' => ['required', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'amount_change' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'time_impact_days' => ['nullable', 'integer', 'min:0'],
             'status' => ['sometimes', Rule::in(self::STATUSES)],
+            'items' => ['nullable', 'array', 'min:1'],
+            'items.*.line_number' => ['nullable', 'integer', 'min:1'],
+            'items.*.item_description' => ['required_with:items', 'string', 'max:5000'],
+            'items.*.original_qty' => ['nullable', 'numeric', 'min:0'],
+            'items.*.original_unit' => ['nullable', 'string', 'max:255'],
+            'items.*.original_unit_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'items.*.additive_qty' => ['nullable', 'numeric', 'min:0'],
+            'items.*.additive_unit' => ['nullable', 'string', 'max:255'],
+            'items.*.additive_unit_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'items.*.deductive_qty' => ['nullable', 'numeric', 'min:0'],
+            'items.*.deductive_unit' => ['nullable', 'string', 'max:255'],
+            'items.*.deductive_unit_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'items.*.remarks' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $order = DB::transaction(function () use ($request, $validated) {
-            $order = VariationOrder::create($validated + [
+            $items = $this->normalizeItems($validated['items'] ?? []);
+            $amountChange = $items !== []
+                ? $this->calculateWorksheetNetAmount($items)
+                : (float) ($validated['amount_change'] ?? 0);
+
+            $order = VariationOrder::create([
+                'contract_id' => $validated['contract_id'],
+                'vo_number' => $validated['vo_number'],
+                'description' => $validated['description'] ?? null,
+                'reason' => $validated['reason'] ?? null,
+                'amount_change' => $amountChange,
+                'time_impact_days' => $validated['time_impact_days'] ?? null,
                 'status' => 'Draft',
                 'is_archived' => false,
             ]);
+
+            $this->syncItems($order, $items);
 
             AuditLogger::record(
                 $request,
@@ -138,17 +188,20 @@ class VariationOrderController extends Controller
 
         return response()->json([
             'message' => 'Variation order created successfully.',
-            'data' => $this->formatOrder($order->load(['contract', 'submitter'])),
+            'data' => $this->formatOrder($order->load(['contract.project', 'contract.contractor', 'submitter', 'items'])),
         ], 201);
     }
 
     public function show(VariationOrder $order): JsonResponse
     {
         $order->load([
-            'contract:id,contract_number,contract_title',
+            'contract:id,contract_number,contract_title,project_id,contractor_id,original_contract_amount,revised_contract_amount',
+            'contract.project:id,project_code,project_name',
+            'contract.contractor:id,company_name',
             'submitter:id,name',
             'reviewer:id,name',
             'approver:id,name',
+            'items',
             'documents.uploader:id,name',
         ]);
 
@@ -170,15 +223,46 @@ class VariationOrderController extends Controller
             ],
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'reason' => ['sometimes', 'nullable', 'string', 'max:5000'],
-            'amount_change' => ['sometimes', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'amount_change' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'time_impact_days' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'approval_remarks' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'items' => ['sometimes', 'array', 'min:1'],
+            'items.*.line_number' => ['nullable', 'integer', 'min:1'],
+            'items.*.item_description' => ['required_with:items', 'string', 'max:5000'],
+            'items.*.original_qty' => ['nullable', 'numeric', 'min:0'],
+            'items.*.original_unit' => ['nullable', 'string', 'max:255'],
+            'items.*.original_unit_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'items.*.additive_qty' => ['nullable', 'numeric', 'min:0'],
+            'items.*.additive_unit' => ['nullable', 'string', 'max:255'],
+            'items.*.additive_unit_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'items.*.deductive_qty' => ['nullable', 'numeric', 'min:0'],
+            'items.*.deductive_unit' => ['nullable', 'string', 'max:255'],
+            'items.*.deductive_unit_cost' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'items.*.remarks' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $oldValues = $order->toArray();
 
         DB::transaction(function () use ($request, $order, $validated, $oldValues) {
-            $order->update($validated);
+            $itemsProvided = array_key_exists('items', $validated);
+            $items = $itemsProvided ? $this->normalizeItems($validated['items'] ?? []) : null;
+            $amountChange = $itemsProvided
+                ? ($items !== [] ? $this->calculateWorksheetNetAmount($items) : 0)
+                : ($validated['amount_change'] ?? $order->amount_change);
+
+            $order->update([
+                'contract_id' => $validated['contract_id'] ?? $order->contract_id,
+                'vo_number' => $validated['vo_number'] ?? $order->vo_number,
+                'description' => array_key_exists('description', $validated) ? $validated['description'] : $order->description,
+                'reason' => array_key_exists('reason', $validated) ? $validated['reason'] : $order->reason,
+                'amount_change' => $amountChange,
+                'time_impact_days' => array_key_exists('time_impact_days', $validated) ? $validated['time_impact_days'] : $order->time_impact_days,
+                'approval_remarks' => array_key_exists('approval_remarks', $validated) ? $validated['approval_remarks'] : $order->approval_remarks,
+            ]);
+
+            if ($itemsProvided) {
+                $this->syncItems($order, $items ?? []);
+            }
 
             AuditLogger::record(
                 $request,
@@ -193,7 +277,7 @@ class VariationOrderController extends Controller
 
         return response()->json([
             'message' => 'Variation order updated successfully.',
-            'data' => $this->formatOrder($order->fresh(['contract', 'submitter', 'reviewer', 'approver'])),
+            'data' => $this->formatOrder($order->fresh(['contract.project', 'contract.contractor', 'submitter', 'reviewer', 'approver', 'items'])),
         ]);
     }
 
@@ -221,7 +305,7 @@ class VariationOrderController extends Controller
 
         return response()->json([
             'message' => 'Variation order submitted successfully.',
-            'data' => $this->formatOrder($order->fresh(['contract', 'submitter'])),
+            'data' => $this->formatOrder($order->fresh(['contract.project', 'contract.contractor', 'submitter', 'items'])),
         ]);
     }
 
@@ -276,7 +360,7 @@ class VariationOrderController extends Controller
             'message' => $validated['review_action'] === 'Rejected'
                 ? 'Variation order rejected successfully.'
                 : 'Variation order reviewed successfully.',
-            'data' => $this->formatOrder($order->fresh(['contract', 'submitter', 'reviewer', 'approver'])),
+            'data' => $this->formatOrder($order->fresh(['contract.project', 'contract.contractor', 'submitter', 'reviewer', 'approver', 'items'])),
         ]);
     }
 
@@ -354,15 +438,34 @@ class VariationOrderController extends Controller
 
     private function formatOrder(VariationOrder $order): array
     {
+        $originalAmount = (float) ($order->contract?->original_contract_amount ?? 0);
+        $currentRevisedAmount = (float) ($order->contract?->revised_contract_amount ?? $originalAmount);
+        $items = $order->relationLoaded('items')
+            ? $order->items->map(fn (VariationOrderItem $item) => $this->formatItem($item))->values()
+            : collect();
+        $totals = $this->summarizeWorksheetItems($items->all());
+        $revisedAmount = in_array($order->status, ['Approved', 'Rejected', 'Archived'], true)
+            ? $currentRevisedAmount
+            : $currentRevisedAmount + ($items->isNotEmpty() ? $totals['net_amount'] : (float) $order->amount_change);
+
         return [
             'id' => $order->id,
             'contract_id' => $order->contract_id,
             'contract_number' => $order->contract?->contract_number,
             'contract_title' => $order->contract?->contract_title,
+            'project_name' => $order->contract?->project?->project_name,
+            'project_ref' => $order->contract?->project?->project_code,
+            'contractor_name' => $order->contract?->contractor?->company_name,
+            'original_contract_amount' => $originalAmount,
             'vo_number' => $order->vo_number,
             'description' => $order->description,
             'reason' => $order->reason,
-            'amount_change' => (float) $order->amount_change,
+            'items_count' => $order->items_count ?? $items->count(),
+            'items' => $items->all(),
+            'amount_change' => $items->isNotEmpty() ? $totals['net_amount'] : (float) $order->amount_change,
+            'additive_amount' => $items->isNotEmpty() ? $totals['additive_total'] : max((float) $order->amount_change, 0),
+            'deductive_amount' => $items->isNotEmpty() ? $totals['deductive_total'] : max(0 - (float) $order->amount_change, 0),
+            'revised_contract_amount' => $revisedAmount,
             'time_impact_days' => $order->time_impact_days,
             'status' => $order->status,
             'submitted_by' => $order->submitter?->name,
@@ -392,6 +495,129 @@ class VariationOrderController extends Controller
             'uploaded_at' => optional($document->uploaded_at)->format('Y-m-d H:i:s'),
             'remarks' => $document->remarks,
         ];
+    }
+
+    private function formatItem(VariationOrderItem $item): array
+    {
+        return [
+            'id' => $item->id,
+            'line_number' => $item->line_number,
+            'item_description' => $item->item_description,
+            'original_qty' => (float) $item->original_qty,
+            'original_unit' => $item->original_unit,
+            'original_unit_cost' => (float) $item->original_unit_cost,
+            'original_total_cost' => (float) $item->original_total_cost,
+            'additive_qty' => (float) $item->additive_qty,
+            'additive_unit' => $item->additive_unit,
+            'additive_unit_cost' => (float) $item->additive_unit_cost,
+            'additive_total_cost' => (float) $item->additive_total_cost,
+            'deductive_qty' => (float) $item->deductive_qty,
+            'deductive_unit' => $item->deductive_unit,
+            'deductive_unit_cost' => (float) $item->deductive_unit_cost,
+            'deductive_total_cost' => (float) $item->deductive_total_cost,
+            'net_line_cost' => (float) $item->net_line_cost,
+            'remarks' => $item->remarks,
+        ];
+    }
+
+    private function normalizeItems(array $items): array
+    {
+        return collect($items)
+            ->filter(fn (array $item) => $this->itemHasData($item))
+            ->values()
+            ->map(function (array $item, int $index) {
+                $originalQty = (float) ($item['original_qty'] ?? 0);
+                $originalUnitCost = (float) ($item['original_unit_cost'] ?? 0);
+                $additiveQty = (float) ($item['additive_qty'] ?? 0);
+                $additiveUnitCost = (float) ($item['additive_unit_cost'] ?? 0);
+                $deductiveQty = (float) ($item['deductive_qty'] ?? 0);
+                $deductiveUnitCost = (float) ($item['deductive_unit_cost'] ?? 0);
+
+                $originalTotal = round($originalQty * $originalUnitCost, 2);
+                $additiveTotal = round($additiveQty * $additiveUnitCost, 2);
+                $deductiveTotal = round($deductiveQty * $deductiveUnitCost, 2);
+
+                return [
+                    'line_number' => (int) ($item['line_number'] ?? ($index + 1)),
+                    'item_description' => trim((string) ($item['item_description'] ?? '')),
+                    'original_qty' => $originalQty,
+                    'original_unit' => $item['original_unit'] ?? null,
+                    'original_unit_cost' => $originalUnitCost,
+                    'original_total_cost' => $originalTotal,
+                    'additive_qty' => $additiveQty,
+                    'additive_unit' => $item['additive_unit'] ?? null,
+                    'additive_unit_cost' => $additiveUnitCost,
+                    'additive_total_cost' => $additiveTotal,
+                    'deductive_qty' => $deductiveQty,
+                    'deductive_unit' => $item['deductive_unit'] ?? null,
+                    'deductive_unit_cost' => $deductiveUnitCost,
+                    'deductive_total_cost' => $deductiveTotal,
+                    'net_line_cost' => round($additiveTotal - $deductiveTotal, 2),
+                    'remarks' => $item['remarks'] ?? null,
+                ];
+            })
+            ->all();
+    }
+
+    private function itemHasData(array $item): bool
+    {
+        $description = trim((string) ($item['item_description'] ?? ''));
+
+        return $description !== ''
+            || (float) ($item['original_qty'] ?? 0) != 0.0
+            || (float) ($item['additive_qty'] ?? 0) != 0.0
+            || (float) ($item['deductive_qty'] ?? 0) != 0.0
+            || (float) ($item['original_unit_cost'] ?? 0) != 0.0
+            || (float) ($item['additive_unit_cost'] ?? 0) != 0.0
+            || (float) ($item['deductive_unit_cost'] ?? 0) != 0.0;
+    }
+
+    private function summarizeWorksheetItems(array $items): array
+    {
+        $additiveTotal = collect($items)->sum(fn (array $item) => (float) ($item['additive_total_cost'] ?? 0));
+        $deductiveTotal = collect($items)->sum(fn (array $item) => (float) ($item['deductive_total_cost'] ?? 0));
+
+        return [
+            'additive_total' => round($additiveTotal, 2),
+            'deductive_total' => round($deductiveTotal, 2),
+            'net_amount' => round($additiveTotal - $deductiveTotal, 2),
+        ];
+    }
+
+    private function calculateWorksheetNetAmount(array $items): float
+    {
+        return $this->summarizeWorksheetItems($items)['net_amount'];
+    }
+
+    private function syncItems(VariationOrder $order, array $items): void
+    {
+        $order->items()->delete();
+
+        if ($items === []) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            VariationOrderItem::create([
+                'variation_order_id' => $order->id,
+                'line_number' => $item['line_number'] ?? null,
+                'item_description' => $item['item_description'],
+                'original_qty' => $item['original_qty'],
+                'original_unit' => $item['original_unit'],
+                'original_unit_cost' => $item['original_unit_cost'],
+                'original_total_cost' => $item['original_total_cost'],
+                'additive_qty' => $item['additive_qty'],
+                'additive_unit' => $item['additive_unit'],
+                'additive_unit_cost' => $item['additive_unit_cost'],
+                'additive_total_cost' => $item['additive_total_cost'],
+                'deductive_qty' => $item['deductive_qty'],
+                'deductive_unit' => $item['deductive_unit'],
+                'deductive_unit_cost' => $item['deductive_unit_cost'],
+                'deductive_total_cost' => $item['deductive_total_cost'],
+                'net_line_cost' => $item['net_line_cost'],
+                'remarks' => $item['remarks'] ?? null,
+            ]);
+        }
     }
 
     private function calculateAverageApprovalDays($query): float
