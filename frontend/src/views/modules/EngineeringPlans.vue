@@ -537,7 +537,7 @@ import EngineeringPlanService from "@/services/engineering-plan.service";
 const FILE_TYPE_ICON = {
   PDF: { icon: "picture_as_pdf", color: "#2563eb" },
   DWG: { icon: "description", color: "#ea580c" },
-  PNG: { icon: "image", color: "#dc2626" },
+  PNG: { icon: "image", color: "#1565C0" },
   DOCX: { icon: "article", color: "#2563eb" },
 };
 
@@ -1329,8 +1329,8 @@ export default {
 }
 
 .engineering-primary-btn {
-  background: #c0392b;
-  border-color: #c0392b;
+  background: #1565C0;
+  border-color: #1565C0;
 }
 
 .engineering-toolbar-btn i {
@@ -1412,7 +1412,7 @@ export default {
 .engineering-tab.active {
   background: #fff;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-  color: #e91e63;
+  color: #1565C0;
 }
 
 .engineering-table-wrap {
@@ -1587,9 +1587,9 @@ export default {
 
 .engineering-page-btn:hover:not(:disabled),
 .engineering-page-number.active {
-  background: #ef476f;
-  border-color: #ef476f;
-  box-shadow: 0 8px 18px rgba(239, 71, 111, 0.22);
+  background: #1565C0;
+  border-color: #1565C0;
+  box-shadow: 0 8px 18px rgba(21, 101, 192, 0.22);
   color: #fff;
 }
 
@@ -1680,7 +1680,7 @@ export default {
 
 .tuao-upload-panel.drag-over {
   background: rgba(192, 57, 43, 0.04);
-  border-color: #c0392b;
+  border-color: #1565C0;
 }
 
 .selected-plan-files {

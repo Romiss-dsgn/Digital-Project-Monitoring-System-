@@ -91,7 +91,7 @@ export default {
     },
     computed: {
         backgroundImageUrl() {
-            return `linear-gradient(180deg, rgba(200,17,32,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
+            return `linear-gradient(180deg, rgba(21,101,192,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
         },
     },
     methods: {
@@ -257,12 +257,12 @@ export default {
     height: 64px;
     margin: 0 auto 1.1rem;
     border-radius: 50%;
-    background: linear-gradient(135deg, #c0392b 0%, #1a4fa0 100%);
+    background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 10px 28px rgba(160, 20, 20, 0.25);
+    box-shadow: 0 10px 28px rgba(21, 101, 192, 0.25);
 }
 
 .recovery-icon i {
@@ -275,7 +275,7 @@ export default {
 
 .eyebrow {
     margin: 0 0 0.35rem;
-    color: #c0392b;
+    color: #1565C0;
     font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -340,12 +340,12 @@ export default {
 }
 
 .recovery-note i {
-    color: #c0392b;
+    color: #1565C0;
     font-size: 1.05rem;
 }
 
 .btn-reset {
-    background: linear-gradient(135deg, #c0392b 0%, #1a4fa0 100%);
+    background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%);
     border: none;
     border-radius: 0.85rem;
     display: inline-flex;
@@ -356,7 +356,7 @@ export default {
     font-weight: 800;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    box-shadow: 0 8px 24px rgba(160, 20, 20, 0.25);
+    box-shadow: 0 8px 24px rgba(21, 101, 192, 0.25);
     transition: opacity 0.2s, transform 0.2s;
 }
 
@@ -383,7 +383,7 @@ export default {
 }
 
 .login-link {
-    color: #c0392b;
+    color: #1565C0;
     font-weight: 700;
     text-decoration: none;
 }

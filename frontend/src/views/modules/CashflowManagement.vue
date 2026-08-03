@@ -32,7 +32,7 @@
               @click.stop
             >
               <button class="cashflow-action-menu-item" type="button" role="menuitem" @click="handleExportReport('pdf')">
-                <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #e53935;">picture_as_pdf</i>
+                <i class="material-icons-round align-middle me-2 dropdown-icon" style="color: #1565C0;">picture_as_pdf</i>
                 Export as PDF
               </button>
               <button class="cashflow-action-menu-item" type="button" role="menuitem" @click="handleExportReport('excel')">
@@ -1612,7 +1612,7 @@ export default {
               font-weight: 600;
               cursor: pointer;
             }
-            .btn-download { background: #d32f2f; color: #fff; }
+            .btn-download { background: #1565C0; color: #fff; }
             .btn-close { background: #4b5563; color: #fff; }
             .report-sheet {
               max-width: 900px;
@@ -1969,7 +1969,7 @@ export default {
 }
 
 .document-info .material-icons-round {
-  color: #c0392b;
+  color: #1565C0;
   font-size: 20px;
   flex-shrink: 0;
 }

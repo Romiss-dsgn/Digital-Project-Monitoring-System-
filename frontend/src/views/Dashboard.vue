@@ -743,8 +743,8 @@ h4 {
 }
 
 .fiscal-year-btn:hover {
-  border-color: #c82a3e;
-  box-shadow: 0 0 0 3px rgba(200, 42, 62, 0.08);
+  border-color: #1565C0;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.08);
 }
 
 .fiscal-year-btn:disabled {
@@ -766,7 +766,7 @@ h4 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #c82a3e;
+  background: #1565C0;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -984,7 +984,7 @@ h4 {
 .btn-link {
   background: none;
   border: none;
-  color: #c82a3e;
+  color: #1565C0;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -1285,10 +1285,10 @@ h4 {
 }
 
 .quick-action-btn:hover {
-  border-color: #c82a3e;
-  color: #c82a3e;
+  border-color: #1565C0;
+  color: #1565C0;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(200, 42, 62, 0.12);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.12);
 }
 
 .quick-action-btn i {
@@ -1393,7 +1393,7 @@ h4 {
 }
 
 .modal-icon-red i {
-  color: #c82a3e;
+  color: #1565C0;
 }
 
 .modal-title {
@@ -1483,7 +1483,7 @@ h4 {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: #c82a3e;
+  background: #1565C0;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -1528,12 +1528,12 @@ h4 {
 }
 
 .fy-option:hover {
-  border-color: #c82a3e;
+  border-color: #1565C0;
   background: #fff5f5;
 }
 
 .fy-option-active {
-  border-color: #c82a3e !important;
+  border-color: #1565C0 !important;
   background: #fff5f5 !important;
 }
 
@@ -1549,7 +1549,7 @@ h4 {
 }
 
 .fy-option-active .fy-option-left > i {
-  color: #c82a3e;
+  color: #1565C0;
 }
 
 .fy-label {
@@ -1590,7 +1590,7 @@ h4 {
 
 .fy-check {
   font-size: 1.1rem !important;
-  color: #c82a3e !important;
+  color: #1565C0 !important;
 }
 
 .export-format-grid {
@@ -1622,22 +1622,22 @@ h4 {
 }
 
 .export-format-btn:hover {
-  border-color: #c82a3e;
-  color: #c82a3e;
+  border-color: #1565C0;
+  color: #1565C0;
 }
 
 .export-format-btn:hover i {
-  color: #c82a3e;
+  color: #1565C0;
 }
 
 .export-format-active {
-  border-color: #c82a3e !important;
+  border-color: #1565C0 !important;
   background: #fff5f5 !important;
-  color: #c82a3e !important;
+  color: #1565C0 !important;
 }
 
 .export-format-active i {
-  color: #c82a3e !important;
+  color: #1565C0 !important;
 }
 
 .export-scope-list {
@@ -1665,7 +1665,7 @@ h4 {
 .scope-checkbox {
   width: 16px;
   height: 16px;
-  accent-color: #c82a3e;
+  accent-color: #1565C0;
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -1729,7 +1729,7 @@ h4 {
 }
 
 .date-input:focus {
-  border-color: #c82a3e;
+  border-color: #1565C0;
 }
 
 .export-date-sep {

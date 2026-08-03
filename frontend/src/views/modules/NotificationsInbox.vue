@@ -132,7 +132,7 @@ export default {
 }
 
 .tab-btn.active {
-  color: #c82a3e;
+  color: #1565C0;
 }
 
 .tab-btn.active::after {
@@ -142,7 +142,7 @@ export default {
   left: 0;
   right: 0;
   height: 2px;
-  background: #c82a3e;
+  background: #1565C0;
 }
 
 .tab-btn .badge {

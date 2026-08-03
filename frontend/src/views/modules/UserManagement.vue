@@ -497,7 +497,7 @@
     >
       <div class="tuao-section">
         <div class="delete-confirm-body">
-          <i class="material-icons-round delete-warn-icon" style="color:#c0392b;">block</i>
+          <i class="material-icons-round delete-warn-icon" style="color:#1565C0;">block</i>
           <p>You are about to <strong>reject and permanently delete</strong> the account of:</p>
           <div class="delete-user-card" v-if="actionTargetUser">
             <div class="user-avatar user-avatar-icon"><i class="material-icons-round">person</i></div>
@@ -1046,7 +1046,7 @@ export default {
 }
 .breadcrumb-parent { color: #8b92ab; }
 .breadcrumb-sep { font-size: 0.9rem; color: #c2c8d4; }
-.breadcrumb-current { color: #c0392b; font-weight: 600; }
+.breadcrumb-current { color: #1565C0; font-weight: 600; }
 
 .page-title {
   font-size: 1.35rem;
@@ -1069,8 +1069,8 @@ export default {
   gap: 6px;
 }
 .btn-header .material-icons-round { font-size: 1.1rem; }
-.btn-danger { background: #c0392b; border-color: #c0392b; }
-.btn-danger:hover { background: #a93226; border-color: #a93226; }
+.btn-danger { background: #1565C0; border-color: #1565C0; }
+.btn-danger:hover { background: #0d47a1; border-color: #0d47a1; }
 
 /* ── Stat cards ─────────────────────────────────────────────── */
 .stat-card {
@@ -1124,7 +1124,7 @@ export default {
 .stat-icon .material-icons-round { font-size: 1.4rem; color: #fff; }
 .stat-icon-blue   { background: linear-gradient(135deg, #1a56db, #3b82f6); }
 .stat-icon-indigo { background: linear-gradient(135deg, #5145cd, #818cf8); }
-.stat-icon-red    { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+.stat-icon-red    { background: linear-gradient(135deg, #1565C0, #e74c3c); }
 .stat-icon-gold   { background: linear-gradient(135deg, #d97706, #fbbf24); }
 
 /* ── Filter card ────────────────────────────────────────────── */
@@ -1155,7 +1155,7 @@ export default {
   font-size: 1rem; color: #a0aec0; pointer-events: none;
 }
 .search-input:focus, .filter-select:focus {
-  border-color: #c0392b;
+  border-color: #1565C0;
   box-shadow: 0 0 0 2px rgba(192,57,43,.12);
   background: #fff;
 }
@@ -1246,7 +1246,7 @@ export default {
   letter-spacing: .04em;
   white-space: nowrap;
 }
-.role-admin    { background: #fdecea; color: #c0392b; }
+.role-admin    { background: #fdecea; color: #1565C0; }
 .role-finance  { background: #e8f4fd; color: #1a56db; }
 .role-engineer { background: #e6f9f1; color: #16a34a; }
 .role-records  { background: #eef2ff; color: #6366f1; }
@@ -1296,14 +1296,14 @@ export default {
 .action-activate:hover { background: #e6f9f1; border-color: #16a34a; }
 .action-deactivate       { color: #718096; }
 .action-deactivate:hover { background: #f0f4f8; border-color: #718096; }
-.action-delete       { color: #c0392b; }
-.action-delete:hover { background: #fdecea; border-color: #c0392b; }
+.action-delete       { color: #1565C0; }
+.action-delete:hover { background: #fdecea; border-color: #1565C0; }
 
 /* NEW: Accept / Reject buttons */
 .action-accept       { color: #16a34a; }
 .action-accept:hover { background: #e6f9f1; border-color: #16a34a; }
-.action-reject       { color: #c0392b; }
-.action-reject:hover { background: #fdecea; border-color: #c0392b; }
+.action-reject       { color: #1565C0; }
+.action-reject:hover { background: #fdecea; border-color: #1565C0; }
 
 /* Table footer / pagination */
 .table-footer {
@@ -1324,8 +1324,8 @@ export default {
 }
 .page-link:hover { background: #f0f4f8; }
 .page-item.active .page-link {
-  background: #c0392b;
-  border-color: #c0392b;
+  background: #1565C0;
+  border-color: #1565C0;
   color: #fff;
   font-weight: 700;
 }
@@ -1365,7 +1365,7 @@ export default {
 }
 .tuao-error {
   display: block;
-  color: #c0392b;
+  color: #1565C0;
   font-size: 0.72rem;
   margin-top: 3px;
 }

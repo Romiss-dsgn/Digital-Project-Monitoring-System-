@@ -97,7 +97,7 @@ export default {
     },
     computed: {
         backgroundImageUrl() {
-            return `linear-gradient(180deg, rgba(200,17,32,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
+            return `linear-gradient(180deg, rgba(21,101,192,.45) 0%, rgba(20,40,90,.55) 100%), url(${this.bgImage})`;
         },
     },
     methods: {
@@ -175,12 +175,12 @@ export default {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #c0392b 0%, #1a4fa0 100%);
+    background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    box-shadow: 0 6px 20px rgba(160, 20, 20, 0.3);
+    box-shadow: 0 6px 20px rgba(21, 101, 192, 0.3);
 }
 
 .forgot-icon-wrap .material-icons-round {
@@ -194,7 +194,7 @@ export default {
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 3px;
-    color: #c0392b;
+    color: #1565C0;
     text-transform: uppercase;
     margin-bottom: 0.4rem;
 }
@@ -263,7 +263,7 @@ export default {
 }
 
 .forgot-notice .material-icons-round {
-    color: #c0392b;
+    color: #1565C0;
     font-size: 1.1rem;
     flex-shrink: 0;
     margin-top: 0.05rem;
@@ -277,7 +277,7 @@ export default {
 
 /* ─── Button ──────────────────────────────────────────────── */
 .btn-forgot {
-    background: linear-gradient(135deg, #c0392b 0%, #1a4fa0 100%);
+    background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%);
     border: none;
     padding: 0.95rem 1rem;
     border-radius: 0.85rem;
@@ -285,7 +285,7 @@ export default {
     letter-spacing: 1.5px;
     color: #fff;
     font-size: 0.88rem;
-    box-shadow: 0 8px 24px rgba(160, 20, 20, 0.25);
+    box-shadow: 0 8px 24px rgba(21, 101, 192, 0.25);
     transition: opacity 0.2s;
     cursor: pointer;
 }
@@ -345,7 +345,7 @@ export default {
 }
 
 .back-link {
-    color: #c0392b;
+    color: #1565C0;
     font-weight: 600;
     text-decoration: none;
 }
