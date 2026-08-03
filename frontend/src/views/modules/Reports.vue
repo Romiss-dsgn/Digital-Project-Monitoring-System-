@@ -10,7 +10,7 @@
           <i class="bi bi-sliders"></i> Filters<span v-if="activeFilterCount" class="badge bg-danger ms-1">{{ activeFilterCount }}</span>
         </button>
         <button class="btn btn-outline-secondary btn-sm" :disabled="isLoading || !canExport" @click="showExcelModal = true"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-        <button class="btn btn-danger btn-sm" :disabled="isLoading || !canExport" @click="showPdfModal = true"><i class="bi bi-file-earmark-pdf"></i> PDF Export</button>
+        <button class="btn btn-primary btn-sm" :disabled="isLoading || !canExport" @click="showPdfModal = true"><i class="bi bi-file-earmark-pdf"></i> PDF Export</button>
       </div>
     </div>
 
@@ -79,15 +79,9 @@
       </div>
 
       <h6 class="fw-semibold mb-2 small text-uppercase text-secondary">2. Refine Results</h6>
-      <div class="tuao-form-grid">
-        <div class="tuao-field-half">
-          <label class="tuao-label">Date From</label>
-          <input v-model="draftDateFrom" type="date" class="tuao-input" />
-        </div>
-        <div class="tuao-field-half">
-          <label class="tuao-label">Date To</label>
-          <input v-model="draftDateTo" type="date" class="tuao-input" />
-        </div>
+      <div class="mb-3">
+        <label class="tuao-label">Report Month</label>
+        <input v-model="draftMonth" type="month" class="tuao-input" />
       </div>
       <div class="mb-3">
         <label class="tuao-label">Project Portfolio</label>
@@ -140,6 +134,7 @@ export default {
 
       // Applied (active) filters — used to actually fetch data
       selectedReport: "project-status",
+      selectedMonth: "",
       dateFrom: "",
       dateTo: "",
       selectedPortfolio: "all",
@@ -147,8 +142,7 @@ export default {
 
       // Draft filters — edited inside the modal, applied on confirm
       draftReport: "project-status",
-      draftDateFrom: "",
-      draftDateTo: "",
+      draftMonth: "",
       draftPortfolio: "all",
       draftContractor: "",
 
@@ -175,10 +169,18 @@ export default {
     currentReportMeta() {
       return this.reportTypes.find((r) => r.value === this.selectedReport) || {};
     },
+    monthDateFrom() {
+      return this.draftMonth ? `${this.draftMonth}-01` : "";
+    },
+    monthDateTo() {
+      if (!this.draftMonth) return "";
+      const [y, m] = this.draftMonth.split("-").map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      return `${this.draftMonth}-${String(lastDay).padStart(2, "0")}`;
+    },
     activeFilterCount() {
       let count = 0;
-      if (this.dateFrom) count++;
-      if (this.dateTo) count++;
+      if (this.selectedMonth) count++;
       if (this.selectedPortfolio && this.selectedPortfolio !== "all") count++;
       if (this.selectedContractor) count++;
       return count;
@@ -198,31 +200,23 @@ export default {
     openFilters() {
       // sync draft with currently applied values whenever modal opens
       this.draftReport = this.selectedReport;
-      this.draftDateFrom = this.dateFrom;
-      this.draftDateTo = this.dateTo;
+      this.draftMonth = this.selectedMonth;
       this.draftPortfolio = this.selectedPortfolio;
       this.draftContractor = this.selectedContractor;
       this.showFilterModal = true;
     },
     async applyFilters() {
-      if (this.draftDateFrom && this.draftDateTo && this.draftDateFrom > this.draftDateTo) {
-        this.filterError = "The start date must be before the end date.";
-        return;
-      }
       this.filterError = null;
       this.selectedReport = this.draftReport;
-      this.dateFrom = this.draftDateFrom;
-      this.dateTo = this.draftDateTo;
+      this.selectedMonth = this.draftMonth;
+      this.dateFrom = this.monthDateFrom;
+      this.dateTo = this.monthDateTo;
       this.selectedPortfolio = this.draftPortfolio;
       this.selectedContractor = this.draftContractor;
       this.showFilterModal = false;
       await this.loadReport();
     },
     async loadReport() {
-      if (this.dateFrom && this.dateTo && this.dateFrom > this.dateTo) {
-        this.filterError = "The start date must be before the end date.";
-        return;
-      }
       this.isLoading = true;
       this.loadError = null;
       this.filterError = null;
@@ -298,8 +292,8 @@ export default {
 .module-page{min-height:100vh;background:#f8f9fc}
 .card{border-radius:1rem}
 .report-type-option{display:flex;align-items:flex-start;padding:.65rem .75rem;border:1px solid #e0e0e0;border-radius:.5rem;cursor:pointer}
-.report-type-option.active{background:#fef2f2;border-color:#c0392b;color:#c0392b}
-.report-type-option input{margin-top:2px;accent-color:#c0392b}
+.report-type-option.active{background:#e8f0fe;border-color:#1565C0;color:#1565C0}
+.report-type-option input{margin-top:2px;accent-color:#1565C0}
 .option-desc{font-size:.78rem}
 .report-document{border:1px solid #e0e0e0;border-radius:.5rem;background:#fff;min-height:70vh}
 .report-table-wrap{max-height:none}

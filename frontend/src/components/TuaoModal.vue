@@ -347,7 +347,7 @@ export default {
 }
 
 .tuao-btn-save:hover {
-  background: #a93226;
+  background: #0d47a1;
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(21, 101, 192, 0.35);
 }

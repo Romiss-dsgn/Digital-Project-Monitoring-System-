@@ -1390,12 +1390,12 @@ export default {
 }
 
 .infra-search-input:focus {
-  border-color: #ef476f;
-  box-shadow: 0 0 0 0.18rem rgba(239, 71, 111, 0.12);
+  border-color: #1565C0;
+  box-shadow: 0 0 0 0.18rem rgba(21, 101, 192, 0.12);
 }
 
 .infra-primary-btn {
-  box-shadow: 0 12px 20px rgba(239, 71, 111, 0.18);
+  box-shadow: 0 12px 20px rgba(21, 101, 192, 0.18);
 }
 
 .stat-card {
@@ -1615,7 +1615,7 @@ export default {
 
 .inventory-tab.active {
   background: #fff;
-  color: #ef476f;
+  color: #1565C0;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
 }
 
@@ -1644,8 +1644,8 @@ export default {
 
 .project-code {
   font-weight: 800;
-  color: #ef476f;
-  background: rgba(239, 71, 111, 0.08);
+  color: #1565C0;
+  background: rgba(21, 101, 192, 0.08);
   padding: 0.25rem 0.55rem;
   border-radius: 0.5rem;
   white-space: nowrap;
@@ -1945,10 +1945,10 @@ export default {
 
 .infra-page-btn:hover:not(:disabled),
 .infra-page-number.active {
-  background: #ef476f;
-  border-color: #ef476f;
+  background: #1565C0;
+  border-color: #1565C0;
   color: #fff;
-  box-shadow: 0 8px 18px rgba(239, 71, 111, 0.22);
+  box-shadow: 0 8px 18px rgba(21, 101, 192, 0.22);
 }
 
 .infra-page-btn:disabled {
@@ -1971,7 +1971,7 @@ export default {
   gap: 0.35rem;
   border: 0;
   background: transparent;
-  color: #ef476f;
+  color: #1565C0;
   font-weight: 800;
   font-size: 0.9rem;
 }
@@ -2027,7 +2027,7 @@ export default {
 }
 
 .location-progress-bar {
-  background: linear-gradient(90deg, #ef476f 0%, #f66f8d 100%);
+  background: linear-gradient(90deg, #1565C0 0%, #42a5f5 100%);
 }
 
 .location-insights {
@@ -2188,10 +2188,9 @@ export default {
   font-size: 1.1rem;
 }
 
-.tuao-duration-display.duration-inactive {
-  background: rgba(148, 163, 184, 0.14);
-  color: #64748b;
-  font-style: italic;
+.tuao-slider {
+  width: 100%;
+  accent-color: #1565C0;
 }
 
 .tuao-duration-display.duration-invalid {
@@ -2233,7 +2232,7 @@ export default {
 }
 
 .tuao-check-option input {
-  accent-color: #c0392b;
+  accent-color: #1565C0;
 }
 
 .tuao-filter-grid {

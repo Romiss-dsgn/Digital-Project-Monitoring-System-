@@ -11,7 +11,7 @@
           <div class="card h-100" style="border-radius:1rem;">
             <div class="card-body d-flex flex-column justify-content-between p-4">
               <div>
-                <h6 class="fw-bold mb-1" style="color:#c0392b;font-size:0.95rem;">Active Contracts & Procurement</h6>
+                <h6 class="fw-bold mb-1" style="color:#1565C0;font-size:0.95rem;">Active Contracts & Procurement</h6>
                 <p class="text-secondary small mb-4">
                   Manage municipal infrastructure contracts, procurement, and maintenance
                   services across LGU Tuao. Monitor timelines, budget utilization, and document
@@ -253,7 +253,7 @@
                 @dragleave.prevent="dragOver = false"
                 @drop.prevent="handleFileDrop"
               >
-                <i class="material-icons-round" style="font-size:36px;color:#c0392b;display:block;margin-bottom:8px;">add_circle_outline</i>
+                <i class="material-icons-round" style="font-size:36px;color:#1565C0;display:block;margin-bottom:8px;">add_circle_outline</i>
                 <span style="font-size:0.875rem;color:#374151;">Click to select files</span><br>
                 <span style="font-size:0.75rem;color:#9ca3af;">PDF, DOCX, XLSX only. Maximum file size: 25MB</span>
               </div>
@@ -385,7 +385,7 @@
         <div class="tuao-modal-footer">
           <div class="tuao-footer-note">
             <i class="material-icons-round" style="font-size:14px;vertical-align:-2px">info</i>
-            Fields marked <span style="color:#c0392b;font-weight:700">*</span> are required.
+            Fields marked <span style="color:#1565C0;font-weight:700">*</span> are required.
           </div>
           <div class="tuao-footer-actions">
             <button class="tuao-btn-cancel" @click="showNewProjectModal = false">Cancel</button>
@@ -1373,7 +1373,7 @@ export default {
       const label = String(status || "");
       if (label === "Completed") return "#22c55e";
       if (label === "Delayed" || label.includes("left")) return "#f97316";
-      return "#c0392b";
+      return "#1565C0";
     }
   }
 };
@@ -1389,13 +1389,13 @@ export default {
 }
 
 .btn-primary {
-  background: #c0392b;
-  border-color: #c0392b;
+  background: #1565C0;
+  border-color: #1565C0;
   color: #fff;
 }
 .btn-primary:hover {
-  background: #a93226;
-  border-color: #a93226;
+  background: #0d47a1;
+  border-color: #0d47a1;
 }
 .btn-outline-secondary {
   color: #6c757d;
@@ -1473,7 +1473,7 @@ export default {
   background: transparent;
 }
 .tab-pill.active-tab {
-  background: #c0392b;
+  background: #1565C0;
   color: #fff;
 }
 .tab-pill:not(.active-tab):hover {
@@ -1622,7 +1622,7 @@ export default {
 }
 .quick-upload-area:hover,
 .quick-upload-area.drag-over {
-  border-color: #c0392b;
+  border-color: #1565C0;
   background: rgba(192, 57, 43, 0.04);
 }
 
@@ -1748,10 +1748,10 @@ export default {
   display: flex; align-items: center; gap: 7px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; color: #7f1d1d;
-  background: #fef2f2; border-left: 3px solid #c0392b;
+  background: #fef2f2; border-left: 3px solid #1565C0;
   padding: 7px 12px; border-radius: 0 8px 8px 0; margin-bottom: 14px;
 }
-.tuao-section-label .material-icons-round { font-size: 15px; color: #c0392b; }
+.tuao-section-label .material-icons-round { font-size: 15px; color: #1565C0; }
 .tuao-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .tuao-field-half { grid-column: span 1; }
 .tuao-field-full { grid-column: 1 / -1; }
@@ -1760,7 +1760,7 @@ export default {
   font-size: 11.5px; font-weight: 600; color: #374151;
   margin-bottom: 5px; letter-spacing: 0.01em;
 }
-.tuao-required { color: #c0392b; font-size: 13px; }
+.tuao-required { color: #1565C0; font-size: 13px; }
 .tuao-input-wrap { position: relative; }
 .tuao-input-icon {
   position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
@@ -1773,7 +1773,7 @@ export default {
   outline: none; transition: border-color 0.15s, box-shadow 0.15s;
   -webkit-appearance: none; appearance: none;
 }
-.tuao-input:focus { border-color: #c0392b; background: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,0.10); }
+.tuao-input:focus { border-color: #1565C0; background: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,0.10); }
 .tuao-select {
   cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -1795,11 +1795,11 @@ export default {
 .tuao-btn-cancel:hover { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
 .tuao-btn-save {
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 22px; background: #c0392b; border: none; border-radius: 9px;
+  padding: 9px 22px; background: #1565C0; border: none; border-radius: 9px;
   font-size: 13px; font-weight: 600; color: #fff;
   cursor: pointer; transition: all 0.15s;
 }
-.tuao-btn-save:hover { background: #a93226; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(192,57,43,0.35); }
+.tuao-btn-save:hover { background: #0d47a1; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(192,57,43,0.35); }
 .tuao-btn-save .material-icons-round { font-size: 17px; }
 
 /* Upload Modal Styles */
@@ -1808,14 +1808,14 @@ export default {
   padding: 28px 20px; text-align: center; cursor: pointer;
   transition: all 0.2s; background: #fafafa;
 }
-.tuao-upload-area:hover, .tuao-upload-area.drag-over { border-color: #c0392b; background: rgba(192,57,43,0.04); }
-.tuao-upload-icon { font-size: 36px !important; color: #c0392b; margin-bottom: 8px; display: block; }
+.tuao-upload-area:hover, .tuao-upload-area.drag-over { border-color: #1565C0; background: rgba(192,57,43,0.04); }
+.tuao-upload-icon { font-size: 36px !important; color: #1565C0; margin-bottom: 8px; display: block; }
 .tuao-upload-title { font-size: 14px; font-weight: 600; color: #1a202c; margin-bottom: 4px; }
 .tuao-upload-sub { font-size: 12px; color: #9ca3af; margin-bottom: 14px; }
 .tuao-upload-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border: 1.5px solid #c0392b; border-radius: 8px;
-  background: transparent; color: #c0392b; font-size: 12px; font-weight: 600; cursor: pointer;
+  padding: 7px 16px; border: 1.5px solid #1565C0; border-radius: 8px;
+  background: transparent; color: #1565C0; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 .tuao-upload-btn:hover { background: rgba(192,57,43,0.08); }
 .tuao-format-pills { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
@@ -1832,7 +1832,7 @@ export default {
 .tuao-file-name { font-size: 13px; color: #374151; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tuao-file-size { font-size: 11px; color: #9ca3af; white-space: nowrap; }
 .tuao-file-remove { background: transparent; border: none; cursor: pointer; color: #9ca3af; display: flex; align-items: center; padding: 0; }
-.tuao-file-remove:hover { color: #c0392b; }
+.tuao-file-remove:hover { color: #1565C0; }
 .tuao-file-remove .material-icons-round { font-size: 18px; }
 .tuao-modal::-webkit-scrollbar { width: 5px; }
 .tuao-modal::-webkit-scrollbar-track { background: transparent; }
@@ -1980,7 +1980,7 @@ export default {
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #c0392b;
+  accent-color: #1565C0;
 }
 
 .filter-checkbox span {

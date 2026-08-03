@@ -1124,7 +1124,7 @@ export default {
   gap: 0.25rem;
 }
 .report-link:hover { color: #1f2633; }
-.report-icon-pdf   { font-size: 0.95rem; color: #ef4444; }
+.report-icon-pdf   { font-size: 0.95rem; color: #1565C0; }
 .report-icon-upload{ font-size: 0.95rem; color: #2563eb; }
 .report-icon-warn  { font-size: 0.95rem; color: #f59e0b; }
 

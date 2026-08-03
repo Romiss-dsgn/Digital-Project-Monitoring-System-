@@ -12,7 +12,7 @@
           <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" @click="showAdvancedFilterModal = true">
             <i class="bi bi-sliders"></i> Advanced Filters
           </button>
-          <button class="btn btn-danger btn-sm d-flex align-items-center gap-1" @click="openExportModal">
+          <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" @click="openExportModal">
             <i class="bi bi-download"></i> Export Logs
           </button>
         </div>
@@ -189,7 +189,7 @@
                     v-for="page in visiblePages"
                     :key="page"
                     class="btn btn-sm"
-                    :class="page === pagination.current_page ? 'btn-danger' : 'btn-outline-secondary'"
+                    :class="page === pagination.current_page ? 'btn-primary' : 'btn-outline-secondary'"
                     @click="changePage(page)"
                   >
                     {{ page }}
