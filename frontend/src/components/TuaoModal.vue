@@ -457,4 +457,11 @@ export default {
     gap: 3px;
   }
 }
+
+@media (min-width: 1200px) {
+  body.app-shell-sidenav-pinned .tuao-modal-overlay {
+    padding-left: calc(1rem + var(--contrack-sidebar-width, 17.125rem));
+    padding-right: 1rem;
+  }
+}
 </style>

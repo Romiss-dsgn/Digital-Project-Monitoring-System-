@@ -79,15 +79,14 @@
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table align-items-center mb-0 vo-table">
-                  <thead>
-                    <tr>
-                      <th>VO #</th>
-                      <th>Rows</th>
-                      <th>Contract / Project</th>
-                      <th>Original Contract Cost</th>
-                      <th>VO Amount</th>
-                      <th>Additive</th>
+	                <table class="table align-items-center mb-0 vo-table">
+	                  <thead>
+	                    <tr>
+	                      <th>VO #</th>
+	                      <th>Contract / Project</th>
+	                      <th>Original Contract Cost</th>
+	                      <th>VO Amount</th>
+	                      <th>Additive</th>
                       <th>Deductive</th>
                       <th>Revised Contract Cost</th>
                       <th>Time Impact (Days)</th>
@@ -96,14 +95,13 @@
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr v-for="order in orders" :key="order.id">
-                      <td><strong class="vo-num">{{ order.vo_number }}</strong></td>
-                      <td>{{ order.items_count ?? order.items?.length ?? 0 }}</td>
-                      <td>
-                        <div class="proj-name">{{ order.contract_title || order.project_name }}</div>
-                        <div class="proj-ref">{{ order.contract_number || order.project_ref }}</div>
-                        <div class="proj-ref text-muted">{{ order.contractor_name || '-' }}</div>
+	                  <tbody>
+	                    <tr v-for="order in orders" :key="order.id">
+	                      <td><strong class="vo-num">{{ order.vo_number }}</strong></td>
+	                      <td>
+	                        <div class="proj-name">{{ order.contract_title || order.project_name }}</div>
+	                        <div class="proj-ref">{{ order.contract_number || order.project_ref }}</div>
+	                        <div class="proj-ref text-muted">{{ order.contractor_name || '-' }}</div>
                       </td>
                       <td><strong>{{ formatCurrency(getOriginalContractAmount(order)) }}</strong></td>
                       <td><strong>{{ formatCurrency(getVariationAmount(order)) }}</strong></td>
@@ -185,11 +183,11 @@
                         </div>
                       </td>
                     </tr>
-                    <tr v-if="orders.length === 0">
-                      <td colspan="12" class="text-center py-4">
-                        <span class="text-secondary">No variation orders found</span>
-                      </td>
-                    </tr>
+	                    <tr v-if="orders.length === 0">
+	                      <td colspan="11" class="text-center py-4">
+	                        <span class="text-secondary">No variation orders found</span>
+	                      </td>
+	                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -218,41 +216,7 @@
 
       <!-- Analytics Bottom Row -->
       <div class="row mt-4">
-        <div class="col-12 col-md-6 mb-3">
-          <div class="card h-100">
-            <div class="card-header pb-0">
-              <h6>Approval Efficiency</h6>
-            </div>
-            <div class="card-body">
-              <div class="d-flex align-items-baseline gap-3 mb-3">
-                <span class="text-secondary small">Average Approval Time:</span>
-                <strong>{{ summary?.average_approval_days || 0 }} Days</strong>
-                <span class="text-success small" v-if="summary?.average_approval_days">-2.1 Days vs Last Quarter</span>
-              </div>
-              <div class="approval-pipeline">
-                <div class="pipeline-labels">
-                  <span>Draft</span>
-                  <span>Submission</span>
-                  <span>Evaluation</span>
-                  <span>Final Approval</span>
-                </div>
-                <div class="pipeline-track">
-                  <div class="pipeline-fill" :style="{ width: pipelineProgress + '%' }"></div>
-                  <div class="pipeline-dot" style="left:0%"></div>
-                  <div class="pipeline-dot" :style="{ left: '25%' }"></div>
-                  <div class="pipeline-dot active" :style="{ left: '50%' }" v-if="summary?.status_distribution?.under_review > 0"></div>
-                  <div class="pipeline-dot active" :style="{ left: '50%' }" v-else></div>
-                  <div class="pipeline-dot done" :style="{ left: '75%' }" v-if="summary?.status_distribution?.approved > 0"></div>
-                  <div class="pipeline-dot done" :style="{ left: '75%' }" v-else></div>
-                </div>
-              </div>
-              <p class="text-secondary small mt-3 mb-0">
-                {{ getBottleneckStage() }}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 mb-3">
+        <div class="col-12 mb-3">
           <div class="card h-100">
             <div class="card-header pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
               <h6>Monthly Impact</h6>
@@ -398,19 +362,11 @@
             <strong>{{ formatCurrency(getNewOrderRevisedAmount()) }}</strong>
           </div>
         </div>
-        <div class="vo-worksheet-toolbar mb-3">
-          <div>
-            <p class="vo-worksheet-help mb-1">
-              Keep the request header short, then add line items one at a time in the separate VO Item form.
-            </p>
-            <p class="text-secondary small mb-0">
-              Each saved item is normalized and reflected immediately in the worksheet totals below.
-            </p>
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-primary vo-add-item-btn" @click="openItemModal()">
-            <i class="material-icons-round">playlist_add</i> Add VO Item
-          </button>
-        </div>
+	        <div class="vo-worksheet-toolbar mb-3">
+	          <button type="button" class="btn btn-sm btn-outline-primary vo-add-item-btn" @click="openItemModal()">
+	            <i class="material-icons-round">playlist_add</i> Add VO Item
+	          </button>
+	        </div>
         <div class="table-responsive vo-item-table-wrap">
           <table class="table table-sm align-items-middle mb-0 vo-item-table">
             <thead>
@@ -497,7 +453,7 @@
       stripe="VARIATION ORDER ITEM"
       :confirm-text="itemEditorIndex === null ? 'Add Item' : 'Update Item'"
       confirm-icon="save"
-      width="980px"
+      width="min(920px, calc(100vw - 2rem))"
       @close="closeItemModal"
       @confirm="saveWorksheetItem"
     >
@@ -507,12 +463,12 @@
           Capture one line item at a time so the worksheet stays easy to review and totals remain accurate.
         </p>
         <div class="tuao-form-grid">
-          <div class="tuao-field-half">
-            <label class="tuao-label">Line Number</label>
-            <div class="tuao-input-wrap">
-              <input class="tuao-input" type="number" min="1" v-model="itemForm.line_number" />
-            </div>
-          </div>
+	          <div class="tuao-field-half">
+	            <label class="tuao-label">Line Number</label>
+	            <div class="tuao-input-wrap">
+	              <input class="tuao-input" type="number" min="1" :value="itemForm.line_number" readonly />
+	            </div>
+	          </div>
           <div class="tuao-field-full">
             <label class="tuao-label">Item Description <span class="tuao-required">*</span></label>
             <div class="tuao-input-wrap">
@@ -1058,13 +1014,6 @@ export default {
     selectedContract() {
       return this.contracts.find((contract) => String(contract.id) === String(this.newOrder.contract_id)) || null;
     },
-    pipelineProgress() {
-      const dist = this.summary?.status_distribution || {};
-      const total = (dist.draft || 0) + (dist.submitted || 0) + (dist.under_review || 0) + (dist.approved || 0);
-      if (total === 0) return 0;
-      const completed = (dist.approved || 0) + (dist.submitted || 0) + (dist.under_review || 0);
-      return Math.min(Math.round((completed / total) * 100), 100);
-    }
   },
   mounted() {
     this.loadPermissions();
@@ -1439,24 +1388,6 @@ export default {
       const total = this.summary?.total_cost_impact || 0;
       const maxBudget = 20000000;
       return Math.min(Math.round((total / maxBudget) * 100), 100);
-    },
-
-    getBottleneckStage() {
-      const dist = this.summary?.status_distribution || {};
-      const maxCount = Math.max(dist.draft || 0, dist.submitted || 0, dist.under_review || 0, dist.approved || 0, dist.rejected || 0);
-      
-      if (maxCount === 0) return 'No data available';
-      
-      if (dist.under_review >= maxCount && maxCount > 0) {
-        return 'Current bottleneck identified at "Under Review" stage.';
-      }
-      if (dist.submitted >= maxCount && maxCount > 0) {
-        return 'Current bottleneck identified at "Submission" stage.';
-      }
-      if (dist.draft >= maxCount && maxCount > 0) {
-        return 'Most orders are in Draft stage.';
-      }
-      return 'No significant bottlenecks identified.';
     },
 
     startNewRequest() {
@@ -2206,53 +2137,6 @@ export default {
 .date-app { font-size: 0.75rem; color: #555; }
 .date-app.muted { color: #aaa; font-style: italic; }
 
-.approval-pipeline { margin: 1rem 0; }
-
-.pipeline-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: #888;
-  margin-bottom: 0.4rem;
-}
-
-.pipeline-track {
-  position: relative;
-  height: 6px;
-  background: #e0e5ee;
-  border-radius: 4px;
-}
-
-.pipeline-fill {
-  position: absolute;
-  left: 0;
-  width: 72%;
-  height: 100%;
-  background: #d32f2f;
-  border-radius: 4px;
-}
-
-.pipeline-dot {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #ccc;
-}
-
-.pipeline-dot.active {
-  border-color: #fb8500;
-  background: #fb8500;
-}
-
-.pipeline-dot.done {
-  border-color: #4caf50;
-  background: #4caf50;
-}
-
 .monthly-bar-bg {
   background: #eef0f3;
   border-radius: 4px;
@@ -2335,17 +2219,6 @@ export default {
   .vo-action-menu {
     min-width: 160px;
     max-width: calc(100vw - 1.5rem);
-  }
-
-  .pipeline-labels {
-    flex-wrap: wrap;
-    gap: 6px 10px;
-    justify-content: flex-start;
-  }
-
-  .pipeline-labels span {
-    flex: 1 1 calc(50% - 10px);
-    min-width: 120px;
   }
 
   .monthly-row .d-flex {

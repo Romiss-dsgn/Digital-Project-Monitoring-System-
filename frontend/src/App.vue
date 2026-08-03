@@ -90,6 +90,17 @@ export default {
   },
   methods: {
     ...mapMutations(["navbarMinimize", "closeMobileSidenav"]),
+    syncShellSidebarClass() {
+      const sidenav = document.getElementsByClassName("g-sidenav-show")[0];
+      if (!sidenav) return;
+
+      const isDesktop = window.innerWidth > 1199.98;
+      if (isDesktop && sidenav.classList.contains("g-sidenav-pinned")) {
+        document.body.classList.add("app-shell-sidenav-pinned");
+      } else {
+        document.body.classList.remove("app-shell-sidenav-pinned");
+      }
+    },
     handleViewportChange() {
       const sidenav = document.getElementsByClassName("g-sidenav-show")[0];
 
@@ -99,6 +110,8 @@ export default {
           sidenav.classList.add("g-sidenav-pinned");
         }
       }
+
+      this.syncShellSidebarClass();
     }
   },
   beforeMount() {
@@ -111,6 +124,8 @@ export default {
     } else if (sidenav) {
       sidenav.classList.remove("g-sidenav-pinned");
     }
+
+    this.syncShellSidebarClass();
   }
 };
 </script>
