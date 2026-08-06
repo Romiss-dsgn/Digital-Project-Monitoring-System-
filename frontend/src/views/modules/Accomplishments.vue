@@ -109,13 +109,15 @@
             <div class="card-header pb-0 d-flex align-items-center justify-content-between">
               <h6>Project Milestones &amp; Accomplishments</h6>
               <div class="d-flex gap-2">
-                <button v-if="permissions.export" class="btn btn-sm btn-icon btn-light text-secondary" @click="openExportModal">
-                  <i class="material-icons-round">download</i>
-                </button>
-                <button class="btn btn-sm btn-icon btn-light text-secondary" @click="showPrintModal = true">
-                  <i class="material-icons-round">print</i>
-                </button>
-              </div>
+  <button v-if="permissions.export" class="btn btn-sm btn-light text-secondary d-flex align-items-center gap-1" @click="openExportModal">
+    <i class="material-icons-round">download</i>
+    Download
+  </button>
+  <button class="btn btn-sm btn-light text-secondary d-flex align-items-center gap-1" @click="showPrintModal = true">
+    <i class="material-icons-round">print</i>
+    Print
+  </button>
+</div>
             </div>
             <div class="card-body">
               <div class="table-responsive">
