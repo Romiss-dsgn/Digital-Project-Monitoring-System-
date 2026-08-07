@@ -86,7 +86,7 @@ export default {
     applySidebarWidth() {
       document.documentElement.style.setProperty(
         "--contrack-sidebar-width",
-        this.isCollapsed ? "5.25rem" : "17.125rem"
+        this.isCollapsed ? "84px" : "274px"
       );
     },
   },
@@ -95,23 +95,41 @@ export default {
 
 <style>
 .sidenav {
+  background-color: #0d3b78;
   background-size: cover !important;
-  background-position: center !important;
-  background-attachment: fixed !important;
+  background-position: center bottom !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll !important;
   position: fixed;
   top: 0 !important;
   bottom: 0 !important;
-  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   margin: 0 !important;
   border-radius: 0 !important;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   scrollbar-width: thin;
   color: #fff;
   box-shadow: none !important;
-  width: var(--contrack-sidebar-width, 17.125rem) !important;
-  max-width: var(--contrack-sidebar-width, 17.125rem) !important;
+  width: var(--contrack-sidebar-width, 274px) !important;
+  max-width: var(--contrack-sidebar-width, 274px) !important;
   transition: width 0.3s ease, max-width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav #sidenav-collapse-main {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+}
+
+.sidenav .sidenav-header {
+  flex-shrink: 0 !important;
 }
 
 /* Overlay layer */
@@ -139,7 +157,7 @@ export default {
 
 .sidenav .sidenav-header {
   height: auto !important;
-  min-height: 76px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -254,8 +272,8 @@ export default {
 
 /* ── Navbar brand padding ─────────────────────── */
 .sidenav .navbar-brand {
-  min-height: 76px;
-  padding: 0.6rem 1.25rem;
+  min-height: 48px;
+  padding: 0.1rem 1.25rem;
   gap: 1rem;
   overflow: visible;
   width: 100%;
@@ -285,8 +303,8 @@ export default {
 
 .sidenav .nav-link {
   border-radius: 4px;
-  min-height: 46px;
-  margin: 0 1rem 0.125rem;
+  min-height: 34px;
+  margin: 0 1rem 0.02rem;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
@@ -319,8 +337,8 @@ export default {
 
 /* ── Collapsed state ──────────────────────────── */
 .sidenav.sidenav-collapsed {
-  width: 5.25rem !important;
-  max-width: 5.25rem !important;
+  width: 84px !important;
+  max-width: 84px !important;
 }
 
 .sidenav.sidenav-collapsed .navbar-brand {
@@ -363,9 +381,10 @@ export default {
 @media (max-width: 1199.98px) {
   .sidenav {
     top: var(--contrack-shell-header-height) !important;
-    height: calc(100vh - var(--contrack-shell-header-height)) !important;
-    width: min(86vw, var(--contrack-sidebar-width, 17.125rem)) !important;
-    max-width: min(86vw, var(--contrack-sidebar-width, 17.125rem)) !important;
+    height: calc(100dvh - var(--contrack-shell-header-height)) !important;
+    min-height: calc(100dvh - var(--contrack-shell-header-height)) !important;
+    width: min(86vw, var(--contrack-sidebar-width, 274px)) !important;
+    max-width: min(86vw, var(--contrack-sidebar-width, 274px)) !important;
     z-index: 1030;
     overflow-y: auto;
     overflow-x: hidden;
