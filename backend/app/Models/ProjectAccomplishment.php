@@ -13,8 +13,13 @@ class ProjectAccomplishment extends Model
 
     protected $casts = [
         'target_date' => 'date',
+        'report_period' => 'date',
         'completion_date' => 'date',
         'percent_complete' => 'decimal:2',
+        'expected_percent' => 'decimal:2',
+        'variance_percent' => 'decimal:2',
+        'elapsed_days' => 'integer',
+        'duration_days' => 'integer',
         'validated_at' => 'datetime',
         'is_archived' => 'boolean',
     ];

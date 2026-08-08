@@ -126,23 +126,28 @@
                     <tr>
                       <th>Project</th>
                       <th>Milestone Phase</th>
+                      <th>Report Month</th>
                       <th>Target Completion</th>
-                      <th>Progress %</th>
+                      <th>Expected %</th>
+                      <th>Actual %</th>
+                      <th>Variance</th>
                       <th>Status</th>
                       <th>Reports</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-if="isLoading"><td colspan="7" class="text-center py-4">Loading accomplishments...</td></tr>
-                    <tr v-else-if="filteredAccomplishments.length === 0"><td colspan="7" class="text-center py-4 text-secondary">No milestone records found.</td></tr>
+                    <tr v-if="isLoading"><td colspan="10" class="text-center py-4">Loading accomplishments...</td></tr>
+                    <tr v-else-if="filteredAccomplishments.length === 0"><td colspan="10" class="text-center py-4 text-secondary">No milestone records found.</td></tr>
                     <tr v-for="milestone in displayedAccomplishments" :key="milestone.id">
                       <td>
                         <div class="fw-semibold">{{ milestone.project_name }}</div>
                         <div class="text-secondary small">{{ milestone.project_location }}</div>
                       </td>
                       <td>{{ milestone.milestone_title }}</td>
+                      <td>{{ formatMonth(milestone.report_period || milestone.target_date) }}</td>
                       <td>{{ formatDate(milestone.target_date) }}</td>
+                      <td>{{ formatPercent(milestone.expected_percent) }}</td>
                       <td>
                         <div class="d-flex align-items-center gap-2">
                           <div class="progress-bar-wrapper">
@@ -154,6 +159,11 @@
                           </div>
                           <span class="progress-text-outside">{{ milestone.percent_complete }}%</span>
                         </div>
+                      </td>
+                      <td>
+                        <span class="variance-pill" :class="varianceClass(milestone.variance_percent)">
+                          {{ formatVariance(milestone.variance_percent) }}
+                        </span>
                       </td>
                       <td><status-badge :status="milestone.status" /></td>
                       <td>
@@ -300,9 +310,9 @@
             </div>
           </div>
 
-          <!-- Completion % -->
+          <!-- Actual Completion % -->
           <div class="tuao-field-half">
-            <label class="tuao-label">Completion %</label>
+            <label class="tuao-label">Actual Accomplishment %</label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">percent</i>
               <input v-model.number="accomplishmentForm.percent_complete" class="tuao-input" type="number" min="0" max="100" placeholder="0" />
@@ -311,18 +321,16 @@
 
           <!-- Status -->
           <div class="tuao-field-half">
-            <label class="tuao-label">Status</label>
+            <label class="tuao-label">Computed Status</label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">fact_check</i>
-              <select v-model="accomplishmentForm.status" class="tuao-input tuao-select">
-                <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
-              </select>
+              <input :value="computedStatusPreview" class="tuao-input" type="text" disabled />
             </div>
           </div>
 
           <!-- Target Date -->
           <div class="tuao-field-half">
-            <label class="tuao-label">Target Date <span class="tuao-required">*</span></label>
+            <label class="tuao-label">Report / Cut-off Date <span class="tuao-required">*</span></label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">event</i>
               <input v-model="accomplishmentForm.target_date" class="tuao-input" type="date" />
@@ -335,6 +343,29 @@
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">event_available</i>
               <input v-model="accomplishmentForm.completion_date" class="tuao-input" type="date" />
+            </div>
+          </div>
+
+          <div v-if="formulaPreview" class="tuao-field-full">
+            <div class="formula-preview">
+              <div>
+                <span>Project Duration</span>
+                <strong>{{ formulaPreview.elapsedDays }} / {{ formulaPreview.durationDays }} days</strong>
+              </div>
+              <div>
+                <span>Expected</span>
+                <strong>{{ formatPercent(formulaPreview.expectedPercent) }}</strong>
+              </div>
+              <div>
+                <span>Actual</span>
+                <strong>{{ formatPercent(accomplishmentForm.percent_complete) }}</strong>
+              </div>
+              <div>
+                <span>Variance</span>
+                <strong :class="varianceTextClass(formulaPreview.variancePercent)">
+                  {{ formatVariance(formulaPreview.variancePercent) }}
+                </strong>
+              </div>
             </div>
           </div>
 
@@ -457,7 +488,7 @@
           </div>
 
           <p class="text-secondary small tuao-field-full mb-0">
-            {{ exportMonth ? 'Exports records with a target date in the selected month.' : 'Exports include the currently filtered milestone records, formatted like the standard Contract Summary Report.' }}
+            {{ exportMonth ? 'Exports records for the selected report month.' : 'Exports include the currently filtered milestone records, formatted like the standard Contract Summary Report.' }}
           </p>
         </div>
       </div>
@@ -479,6 +510,7 @@ const emptyAccomplishmentForm = () => ({
   milestone_title: "",
   description: "",
   target_date: "",
+  report_period: "",
   completion_date: "",
   percent_complete: 0,
   status: "Not Started",
@@ -572,12 +604,13 @@ export default {
       return Math.min(this.currentPage * this.rowsPerPage, this.filteredAccomplishments.length);
     },
 
-    // Distinct months present in the table's target dates, newest first
+    // Distinct report months present in the table, newest first
     availableExportMonths() {
       const seen = new Map();
       this.accomplishments.forEach((item) => {
-        if (!item.target_date) return;
-        const key = item.target_date.slice(0, 7); // "YYYY-MM"
+        const date = item.report_period || item.target_date;
+        if (!date) return;
+        const key = date.slice(0, 7); // "YYYY-MM"
         if (!seen.has(key)) {
           const label = new Intl.DateTimeFormat("en-PH", { month: "long", year: "numeric" })
             .format(new Date(`${key}-01T00:00:00`));
@@ -593,8 +626,49 @@ export default {
     exportRows() {
       if (!this.exportMonth) return this.filteredAccomplishments;
       return this.filteredAccomplishments.filter(
-        (item) => item.target_date && item.target_date.slice(0, 7) === this.exportMonth
+        (item) => (item.report_period || item.target_date || "").slice(0, 7) === this.exportMonth
       );
+    },
+
+    selectedProject() {
+      return [...this.modalProjects, ...this.projects].find(
+        (project) => String(project.id) === String(this.accomplishmentForm.project_id)
+      );
+    },
+
+    formulaPreview() {
+      const project = this.selectedProject;
+      const startDate = this.parseDateOnly(project?.target_start_date);
+      const endDate = this.parseDateOnly(project?.target_end_date);
+      const reportDate = this.parseDateOnly(this.accomplishmentForm.target_date);
+
+      if (!startDate || !endDate || !reportDate) return null;
+
+      const safeEndDate = endDate < startDate ? startDate : endDate;
+      const durationDays = Math.max(1, this.daysBetween(startDate, safeEndDate) + 1);
+      let elapsedDays = 0;
+
+      if (reportDate > safeEndDate) {
+        elapsedDays = durationDays;
+      } else if (reportDate >= startDate) {
+        elapsedDays = Math.min(durationDays, this.daysBetween(startDate, reportDate) + 1);
+      }
+
+      const expectedPercent = Math.round(Math.min(100, Math.max(0, (elapsedDays / durationDays) * 100)) * 100) / 100;
+      const actualPercent = Number(this.accomplishmentForm.percent_complete || 0);
+      const variancePercent = Math.round((actualPercent - expectedPercent) * 100) / 100;
+
+      return {
+        durationDays,
+        elapsedDays,
+        expectedPercent,
+        variancePercent,
+        status: this.statusFromFormula(actualPercent, expectedPercent),
+      };
+    },
+
+    computedStatusPreview() {
+      return this.formulaPreview?.status || this.accomplishmentForm.status || "Computed after save";
     },
   },
 
@@ -683,6 +757,7 @@ export default {
         milestone_title: item.milestone_title,
         description: item.description || "",
         target_date: item.target_date || "",
+        report_period: item.report_period || "",
         completion_date: item.completion_date || "",
         percent_complete: item.percent_complete,
         status: item.status,
@@ -743,9 +818,59 @@ export default {
       return "";
     },
 
+    parseDateOnly(value) {
+      if (!value) return null;
+      const datePart = String(value).slice(0, 10);
+      const date = new Date(`${datePart}T00:00:00`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    },
+
+    daysBetween(startDate, endDate) {
+      const millisecondsPerDay = 24 * 60 * 60 * 1000;
+      return Math.round((endDate - startDate) / millisecondsPerDay);
+    },
+
+    statusFromFormula(actualPercent, expectedPercent) {
+      if (actualPercent >= 100) return "Completed";
+      if (actualPercent <= 0 && expectedPercent <= 0) return "Not Started";
+      if (actualPercent + 2 < expectedPercent) return "Delayed";
+      return "In Progress";
+    },
+
+    formatPercent(value) {
+      const number = Number(value || 0);
+      return `${number.toFixed(2).replace(/\.00$/, "")}%`;
+    },
+
+    formatVariance(value) {
+      const number = Number(value || 0);
+      const prefix = number > 0 ? "+" : "";
+      return `${prefix}${this.formatPercent(number)}`;
+    },
+
+    varianceClass(value) {
+      const number = Number(value || 0);
+      if (number < -2) return "variance-negative";
+      if (number > 2) return "variance-positive";
+      return "variance-neutral";
+    },
+
+    varianceTextClass(value) {
+      const number = Number(value || 0);
+      if (number < -2) return "text-danger";
+      if (number > 2) return "text-success";
+      return "text-secondary";
+    },
+
     formatDate(value) {
       if (!value) return "-";
       return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(new Date(`${value}T00:00:00`));
+    },
+
+    formatMonth(value) {
+      const date = this.parseDateOnly(value);
+      if (!date) return "-";
+      return new Intl.DateTimeFormat("en-PH", { month: "short", year: "numeric" }).format(date);
     },
 
     formatDateTime(value) {
@@ -794,12 +919,15 @@ export default {
     },
 
     exportCsv() {
-      const headers = ["Project", "Milestone", "Target Date", "Progress", "Status", "Remarks"];
+      const headers = ["Project", "Milestone", "Report Month", "Target Date", "Expected %", "Actual %", "Variance %", "Status", "Remarks"];
       const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
+        this.formatMonth(item.report_period || item.target_date),
         item.target_date,
+        item.expected_percent,
         item.percent_complete,
+        item.variance_percent,
         item.status,
         item.remarks || "",
       ]);
@@ -814,12 +942,15 @@ export default {
     },
 
     exportExcel() {
-      const headers = ["Project", "Milestone", "Target Date", "Progress %", "Status", "Remarks"];
+      const headers = ["Project", "Milestone", "Report Month", "Target Date", "Expected %", "Actual %", "Variance %", "Status", "Remarks"];
       const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
+        this.formatMonth(item.report_period || item.target_date),
         item.target_date,
+        item.expected_percent,
         item.percent_complete,
+        item.variance_percent,
         item.status,
         item.remarks || "",
       ]);
@@ -844,6 +975,9 @@ export default {
         { wch: 28 },
         { wch: 24 },
         { wch: 14 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 12 },
         { wch: 12 },
         { wch: 14 },
         { wch: 30 },
@@ -900,12 +1034,14 @@ export default {
       });
 
       // Table
-      const headers = [["Project", "Milestone", "Target Date", "Progress", "Status"]];
+      const headers = [["Project", "Milestone", "Report Month", "Expected", "Actual", "Variance", "Status"]];
       const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
-        this.formatDate(item.target_date),
-        `${item.percent_complete}%`,
+        this.formatMonth(item.report_period || item.target_date),
+        this.formatPercent(item.expected_percent),
+        this.formatPercent(item.percent_complete),
+        this.formatVariance(item.variance_percent),
         item.status,
       ]);
 
@@ -1114,6 +1250,63 @@ export default {
   font-weight: 600;
   color: #374151;
   white-space: nowrap;
+}
+
+.formula-preview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid #dbe4f0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.formula-preview span {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #7b8498;
+  text-transform: uppercase;
+}
+
+.formula-preview strong {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.95rem;
+}
+
+.variance-pill {
+  display: inline-flex;
+  align-items: center;
+  min-width: 64px;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.variance-negative {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.variance-positive {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.variance-neutral {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .formula-preview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Report Links */

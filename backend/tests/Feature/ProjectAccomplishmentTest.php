@@ -24,6 +24,8 @@ class ProjectAccomplishmentTest extends TestCase
             'project_name' => 'Accomplishment Test Project',
             'status' => 'ongoing',
             'progress_percent' => 0,
+            'target_start_date' => '2026-01-01',
+            'target_end_date' => '2026-04-10',
             'is_archived' => false,
         ]);
 
@@ -31,13 +33,17 @@ class ProjectAccomplishmentTest extends TestCase
             'project_id' => $project->id,
             'milestone_title' => 'Foundation Works',
             'description' => 'Feature test milestone',
-            'target_date' => '2026-12-01',
-            'percent_complete' => 60,
-            'status' => 'In Progress',
+            'target_date' => '2026-02-19',
+            'percent_complete' => 45,
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.percent_complete', 60);
-        $this->assertEquals(60.0, (float) $project->fresh()->progress_percent);
+        $response->assertCreated();
+        $this->assertEquals(45.0, (float) $response->json('data.percent_complete'));
+        $this->assertEquals(50.0, (float) $response->json('data.expected_percent'));
+        $this->assertEquals(-5.0, (float) $response->json('data.variance_percent'));
+        $this->assertEquals('Delayed', $response->json('data.status'));
+        $this->assertEquals(45.0, (float) $project->fresh()->progress_percent);
+        $this->assertEquals('delayed', $project->fresh()->status);
         $this->assertDatabaseHas('audit_logs', [
             'module' => 'project_accomplishments',
             'action' => 'created',
@@ -60,6 +66,38 @@ class ProjectAccomplishmentTest extends TestCase
                     'recent_activity',
                 ],
             ]);
+    }
+
+    public function test_latest_monthly_report_controls_project_progress(): void
+    {
+        $user = $this->authorizedUser(['view', 'create']);
+        Passport::actingAs($user);
+        $project = Project::create([
+            'project_code' => 'LATEST-ACC-' . uniqid(),
+            'project_name' => 'Latest Accomplishment Project',
+            'status' => 'ongoing',
+            'progress_percent' => 0,
+            'target_start_date' => '2026-01-01',
+            'target_end_date' => '2026-04-10',
+            'is_archived' => false,
+        ]);
+
+        $this->postJson('/api/v2/project-accomplishments', [
+            'project_id' => $project->id,
+            'milestone_title' => 'January 2026 Monthly SWA',
+            'target_date' => '2026-01-31',
+            'percent_complete' => 30,
+        ])->assertCreated();
+
+        $this->postJson('/api/v2/project-accomplishments', [
+            'project_id' => $project->id,
+            'milestone_title' => 'February 2026 Monthly SWA',
+            'target_date' => '2026-02-19',
+            'percent_complete' => 45,
+        ])->assertCreated();
+
+        $this->assertEquals(45.0, (float) $project->fresh()->progress_percent);
+        $this->assertEquals('delayed', $project->fresh()->status);
     }
 
     public function test_accomplishment_can_be_validated_and_archived(): void
