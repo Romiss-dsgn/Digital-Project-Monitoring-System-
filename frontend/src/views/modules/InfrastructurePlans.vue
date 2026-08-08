@@ -125,9 +125,9 @@
                   <div class="project-contractor" :title="project.contractor">{{ project.contractor }}</div>
                 </td>
                 <td class="align-middle text-sm">
-                  <span class="duration-badge" :class="durationInfo(project.phase, project.start_date, project.end_date).cssClass">
-                    <i class="material-icons-round duration-icon">{{ durationInfo(project.phase, project.start_date, project.end_date).icon }}</i>
-                    {{ durationInfo(project.phase, project.start_date, project.end_date).text }}
+                  <span class="duration-badge" :class="calendarDurationInfo(project.start_date, project.end_date).cssClass">
+                    <i class="material-icons-round duration-icon">{{ calendarDurationInfo(project.start_date, project.end_date).icon }}</i>
+                    {{ calendarDurationInfo(project.start_date, project.end_date, project.duration_days).text }}
                   </span>
                 </td>
                 <td class="align-middle text-sm">{{ project.phase }}</td>
@@ -430,6 +430,14 @@
             </span>
           </div>
 
+          <div class="tuao-field tuao-field-full">
+            <div class="tuao-duration-display" :class="formDurationInfo.cssClass">
+              <i class="material-icons-round">{{ formDurationInfo.icon }}</i>
+              <span>Project Duration:</span>
+              <strong>{{ formDurationInfo.text }}</strong>
+            </div>
+          </div>
+
           <div class="tuao-field tuao-field-half">
             <label class="tuao-label" for="m-start">Start Date</label>
             <div class="tuao-input-wrap">
@@ -443,14 +451,6 @@
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">event_available</i>
               <input id="m-end" v-model="form.endDate" type="date" class="tuao-input" />
-            </div>
-          </div>
-
-          <div class="tuao-field tuao-field-full">
-            <div class="tuao-duration-display" :class="formDurationInfo.cssClass">
-              <i class="material-icons-round">{{ formDurationInfo.icon }}</i>
-              <span>Project Duration:</span>
-              <strong>{{ formDurationInfo.text }}</strong>
             </div>
           </div>
 
@@ -499,23 +499,19 @@
 
           <div class="tuao-field tuao-field-half">
             <label class="tuao-label" for="m-status">
-              Project Status <span class="tuao-required">*</span>
+              Project Status
             </label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">flag</i>
-              <select
+              <input
                 id="m-status"
-                v-model="form.status"
-                class="tuao-input tuao-select"
-                :class="{ 'tuao-input-error': errors.status }"
-              >
-                <option value="">Select status</option>
-                <option value="planning">Planning</option>
-                <option value="completed">Construction</option>
-                <option value="suspended">Post Evaluation</option>
-              </select>
+                class="tuao-input tuao-readonly"
+                type="text"
+                :value="statusLabel(computedFormStatus)"
+                readonly
+              />
             </div>
-            <span v-if="errors.status" class="tuao-error-msg">{{ errors.status }}</span>
+            <p class="tuao-system-note">System computed from phase, calendar dates, and latest accomplishment.</p>
           </div>
         </div>
       </div>
@@ -653,7 +649,7 @@ export default {
       contractors: [],
       filters: { name: "", code: "", location: "", status: "", phase: "" },
       locations: ["Municipal Hall Compound", "Public Market Area", "Rural Health Unit Compound", "Tuao Municipal Roads"],
-      phases: ["Planning", "Construction", "Post-Eval"],
+      phases: ["Planning", "Construction", "Post Evaluation"],
       statusTabs: [
         { label: "All", value: "" },
         { label: "On Time", value: "on_time" },
@@ -732,7 +728,25 @@ export default {
     },
 
     formDurationInfo() {
-      return this.durationInfo(this.form.phase, this.form.startDate, this.form.endDate);
+      return this.calendarDurationInfo(this.form.startDate, this.form.endDate);
+    },
+
+    computedFormStatus() {
+      if (!this.form.phase) {
+        return "";
+      }
+
+      const scheduleStatus = this.durationInfo(this.form.phase, this.form.startDate, this.form.endDate);
+
+      if (scheduleStatus.cssClass === "duration-overdue" && this.form.status !== "completed") {
+        return "delayed";
+      }
+
+      if (this.form.status) {
+        return this.form.status;
+      }
+
+      return this.isPlanningPhase(this.form.phase) ? "planning" : "on_time";
     },
 
     paginationPages() {
@@ -995,7 +1009,6 @@ export default {
         e.new_contractor_name = "New contractor name is required.";
       }
       if (!this.form.phase) e.phase = "Please select a phase.";
-      if (!this.form.status) e.status = "Please select a status.";
       this.errors = e;
       return Object.keys(e).length === 0;
     },
@@ -1037,7 +1050,6 @@ export default {
           endDate: this.form.endDate || null,
           budget: this.parseBudget(this.form.budget),
           phase: this.form.phase,
-          status: this.form.status,
           notes: this.form.notes || null,
         };
 
@@ -1111,6 +1123,7 @@ export default {
     },
 
     statusLabel(status) {
+      const normalizedStatus = String(status || "");
       const labels = {
         on_time: "ON TIME",
         delayed: "DELAYED",
@@ -1120,7 +1133,7 @@ export default {
         suspended: "SUSPENDED",
       };
 
-      return labels[status] || status.toUpperCase();
+      return labels[normalizedStatus] || normalizedStatus.toUpperCase() || "SYSTEM GENERATED";
     },
 
     // Visual-only override: an overdue project displays as "Delayed" in the
@@ -1208,6 +1221,45 @@ export default {
         text: `${remainingDays} days left`,
         cssClass: "duration-ok",
         icon: "schedule",
+      };
+    },
+
+    calendarDurationInfo(start, end, durationDays = null) {
+      if (Number(durationDays) > 0) {
+        const days = Number(durationDays);
+        return {
+          text: `${days} calendar day${days === 1 ? "" : "s"}`,
+          cssClass: "duration-ok",
+          icon: "date_range",
+        };
+      }
+
+      if (!start || !end) {
+        return {
+          text: "Set start and completion dates",
+          cssClass: "duration-neutral",
+          icon: "date_range",
+        };
+      }
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+        return { text: "N/A", cssClass: "duration-neutral", icon: "date_range" };
+      }
+
+      if (endDate < startDate) {
+        return { text: "Invalid date range", cssClass: "duration-invalid", icon: "error_outline" };
+      }
+
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const days = Math.round((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
+
+      return {
+        text: `${days} calendar day${days === 1 ? "" : "s"}`,
+        cssClass: "duration-ok",
+        icon: "date_range",
       };
     },
 
@@ -2186,6 +2238,19 @@ export default {
 
 .tuao-duration-display .material-icons-round {
   font-size: 1.1rem;
+}
+
+.tuao-readonly {
+  background: #f8fafc;
+  color: #1f2937;
+  cursor: default;
+}
+
+.tuao-system-note {
+  margin: 0.35rem 0 0;
+  color: #6b7280;
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 .tuao-slider {

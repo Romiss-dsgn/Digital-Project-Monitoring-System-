@@ -36,7 +36,9 @@ class ContractManagementTest extends TestCase
             'status' => 'Draft',
         ]);
 
-        $response->assertCreated()->assertJsonPath('data.contract_number', 'LGU-TUAO-CON-2026-901');
+        $response->assertCreated()
+            ->assertJsonPath('data.contract_number', 'LGU-TUAO-CON-2026-901')
+            ->assertJsonPath('data.duration_days', 184);
         $this->assertDatabaseHas('contracts', ['contract_number' => 'LGU-TUAO-CON-2026-901']);
         $this->assertDatabaseHas('audit_logs', [
             'module' => 'contracts',

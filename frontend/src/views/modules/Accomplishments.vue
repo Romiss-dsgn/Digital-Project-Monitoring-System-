@@ -172,6 +172,9 @@
                             <i class="material-icons-round report-icon-pdf">picture_as_pdf</i>
                             {{ milestone.documents[0].file_name }}
                           </a>
+                          <span class="report-uploaded-at">
+                            Uploaded {{ formatDateTime(milestone.documents[0].uploaded_at) }}
+                          </span>
                         </span>
                         <span v-else class="text-secondary small">No report</span>
                       </td>
@@ -283,12 +286,7 @@
             <label class="tuao-label">Project <span class="tuao-required">*</span></label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">business</i>
-              <!--
-                Only projects without an existing active accomplishment
-                report are selectable. When editing, the project already
-                tied to this record is included too (fetched separately via
-                include_project_id) so the field doesn't show blank.
-              -->
+              <!-- Monthly SWA reports can be added repeatedly for the same project. -->
               <select v-model="accomplishmentForm.project_id" class="tuao-input tuao-select" :disabled="isLoadingModalProjects">
                 <option value="">{{ isLoadingModalProjects ? 'Loading projects...' : 'Select project' }}</option>
                 <option v-for="project in modalProjects" :key="project.id" :value="project.id">
@@ -297,7 +295,7 @@
               </select>
             </div>
             <p v-if="!isLoadingModalProjects && modalProjects.length === 0 && !accomplishmentForm.id" class="text-secondary small mt-1 mb-0">
-              All active projects already have an accomplishment report.
+              Create an active project in Infrastructure Plans before adding monthly SWA reports.
             </p>
           </div>
 
@@ -683,7 +681,7 @@ export default {
         return;
       }
       if (!this.projects.length) {
-        alert("Every active project already has an accomplishment report. Edit an existing record instead.");
+        alert("No active projects are available for monthly SWA reporting.");
         return;
       }
       this.accomplishmentForm = emptyAccomplishmentForm();
@@ -704,8 +702,6 @@ export default {
 
         this.accomplishments = records.data || [];
         this.summary = summary;
-        // `options.projects` already excludes projects that have an active
-        // accomplishment report (filtered server-side).
         this.projects = options.projects || [];
         this.allProjectsCount = typeof options.all_projects_count === "number"
           ? options.all_projects_count
@@ -769,9 +765,6 @@ export default {
       this.isLoadingModalProjects = true;
 
       try {
-        // Re-fetch with include_project_id so this record's own project
-        // still shows up as a selectable option, even though it already
-        // "has" a report (this one).
         const options = await accomplishmentService.getOptions({ include_project_id: item.project_id });
         this.modalProjects = options.projects || [];
       } catch (error) {
@@ -1319,6 +1312,13 @@ export default {
   gap: 0.25rem;
 }
 .report-link:hover { color: #1f2633; }
+.report-uploaded-at {
+  display: block;
+  margin-top: 0.2rem;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
 .report-icon-pdf   { font-size: 0.95rem; color: #1565C0; }
 .report-icon-upload{ font-size: 0.95rem; color: #2563eb; }
 .report-icon-warn  { font-size: 0.95rem; color: #f59e0b; }
