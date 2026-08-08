@@ -71,7 +71,7 @@ class ContractManagementSeeder extends Seeder
                     'end_date' => $endDate->toDateString(),
                     'notice_to_proceed_date' => $startDate->copy()->subDays(5)->toDateString(),
                     'signed_date' => $startDate->copy()->subDays(10)->toDateString(),
-                    'duration_days' => $startDate->diffInDays($endDate),
+                    'duration_days' => $startDate->diffInDays($endDate) + 1,
                     'status' => $contract['status'],
                     'remarks' => 'QA seed contract for end-to-end contract monitoring tests.',
                     'created_by' => $admin?->id,

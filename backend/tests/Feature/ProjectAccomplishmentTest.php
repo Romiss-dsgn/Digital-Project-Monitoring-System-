@@ -100,6 +100,38 @@ class ProjectAccomplishmentTest extends TestCase
         $this->assertEquals('delayed', $project->fresh()->status);
     }
 
+    public function test_project_options_allow_monthly_reports_for_existing_project(): void
+    {
+        $user = $this->authorizedUser(['view']);
+        Passport::actingAs($user);
+        $project = Project::create([
+            'project_code' => 'MONTHLY-OPT-' . uniqid(),
+            'project_name' => 'Monthly Options Project',
+            'status' => 'ongoing',
+            'progress_percent' => 20,
+            'target_start_date' => '2026-01-01',
+            'target_end_date' => '2026-04-10',
+            'is_archived' => false,
+        ]);
+
+        ProjectAccomplishment::create([
+            'project_id' => $project->id,
+            'milestone_title' => 'January 2026 Monthly SWA',
+            'target_date' => '2026-01-31',
+            'percent_complete' => 20,
+            'status' => 'In Progress',
+            'is_archived' => false,
+        ]);
+
+        $response = $this->getJson('/api/v2/project-accomplishments/options')
+            ->assertOk();
+
+        $this->assertTrue(
+            collect($response->json('projects'))->contains('id', $project->id),
+            'Projects with existing monthly reports must remain selectable for the next monthly SWA.'
+        );
+    }
+
     public function test_accomplishment_can_be_validated_and_archived(): void
     {
         $user = $this->authorizedUser(['approve', 'delete']);

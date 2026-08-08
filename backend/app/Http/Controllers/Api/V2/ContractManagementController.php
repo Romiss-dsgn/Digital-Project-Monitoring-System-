@@ -461,7 +461,7 @@ class ContractManagementController extends Controller
             return null;
         }
 
-        return Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate));
+        return Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1;
     }
 
     private function perPage(Request $request): int

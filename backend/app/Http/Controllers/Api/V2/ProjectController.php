@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Contractor;
 use App\Models\Project;
+use App\Models\ProjectAccomplishment;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -118,9 +120,10 @@ class ProjectController extends Controller
             'budget' => $project->approved_budget,
             'progress' => (int) $project->progress_percent,
             'phase' => $project->phase,
-            'status' => $project->status,
+            'status' => $this->effectiveProjectStatus($project),
             'start_date' => $project->target_start_date?->format('Y-m-d'),
             'end_date' => $project->target_end_date?->format('Y-m-d'),
+            'duration_days' => $this->durationDays($project->target_start_date, $project->target_end_date),
             'notes' => $project->description,
             'created_at' => $project->created_at?->toIso8601String(),
             'updated_at' => $project->updated_at?->toIso8601String(),
@@ -222,8 +225,8 @@ class ProjectController extends Controller
             'startDate' => ['nullable', 'date'],
             'endDate' => ['nullable', 'date'],
             'budget' => ['nullable', 'numeric', 'min:0'],
-            'phase' => ['required', 'string', 'max:255'],
-            'status' => ['required', 'string', 'max:255'],
+            'phase' => ['required', 'string', Rule::in(['Planning', 'Construction', 'Post Evaluation'])],
+            'status' => ['nullable', 'string', 'max:255'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
         ], [
@@ -234,6 +237,7 @@ class ProjectController extends Controller
 
         $project = DB::transaction(function () use ($data, $user) {
             $contractor = $this->resolveContractor($data);
+            $status = $this->defaultProjectStatus($data['phase'], $data['startDate'] ?? null, $data['endDate'] ?? null, 0);
 
             $project = Project::create([
                 'project_code' => $data['code'],
@@ -245,8 +249,8 @@ class ProjectController extends Controller
                 'target_end_date' => $data['endDate'] ?? null,
                 'approved_budget' => $data['budget'] ?? 0,
                 'phase' => $data['phase'],
-                'status' => $data['status'],
-                'progress_percent' => $data['progress'] ?? 0,
+                'status' => $status,
+                'progress_percent' => 0,
                 'description' => $data['notes'] ?? null,
                 'created_by' => $user->id,
             ]);
@@ -284,8 +288,8 @@ class ProjectController extends Controller
             'startDate' => ['nullable', 'date'],
             'endDate' => ['nullable', 'date'],
             'budget' => ['nullable', 'numeric', 'min:0'],
-            'phase' => ['sometimes', 'required', 'string', 'max:255'],
-            'status' => ['sometimes', 'required', 'string', 'max:255'],
+            'phase' => ['sometimes', 'required', 'string', Rule::in(['Planning', 'Construction', 'Post Evaluation'])],
+            'status' => ['nullable', 'string', 'max:255'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
         ], [
@@ -303,6 +307,10 @@ class ProjectController extends Controller
         $project = DB::transaction(function () use ($data, $project, $oldValues, $user) {
             $contractor = $this->resolveContractor($data, $project);
             $shouldUpdateContractor = array_key_exists('contractor_id', $data) || !empty($data['new_contractor_name']);
+            $phase = $data['phase'] ?? $project->phase;
+            $startDate = $data['startDate'] ?? $project->target_start_date;
+            $endDate = $data['endDate'] ?? $project->target_end_date;
+            $derivedState = $this->derivedProjectState($project, $phase, $startDate, $endDate);
 
             $project->update([
                 'project_code' => $data['code'] ?? $project->project_code,
@@ -310,12 +318,12 @@ class ProjectController extends Controller
                 'location' => $data['location'] ?? $project->location,
                 'contractor_id' => $shouldUpdateContractor ? $contractor?->id : $project->contractor_id,
                 'implementing_office' => $shouldUpdateContractor ? $contractor?->company_name : $project->implementing_office,
-                'target_start_date' => $data['startDate'] ?? $project->target_start_date,
-                'target_end_date' => $data['endDate'] ?? $project->target_end_date,
+                'target_start_date' => $startDate,
+                'target_end_date' => $endDate,
                 'approved_budget' => $data['budget'] ?? $project->approved_budget,
-                'phase' => $data['phase'] ?? $project->phase,
-                'status' => $data['status'] ?? $project->status,
-                'progress_percent' => $data['progress'] ?? $project->progress_percent,
+                'phase' => $phase,
+                'status' => $derivedState['status'],
+                'progress_percent' => $derivedState['progress'],
                 'description' => $data['notes'] ?? $project->description,
             ]);
 
@@ -334,6 +342,93 @@ class ProjectController extends Controller
             'message' => 'Project updated successfully.',
             'data' => $this->formatProject($project),
         ]);
+    }
+
+    private function derivedProjectState(Project $project, ?string $phase, mixed $startDate, mixed $endDate): array
+    {
+        $latest = ProjectAccomplishment::query()
+            ->where('project_id', $project->id)
+            ->where('is_archived', false)
+            ->orderByDesc('target_date')
+            ->orderByDesc('created_at')
+            ->first();
+
+        if ($latest) {
+            return [
+                'progress' => round((float) $latest->percent_complete, 2),
+                'status' => $this->projectStatusFromAccomplishment($latest->status),
+            ];
+        }
+
+        return [
+            'progress' => 0,
+            'status' => $this->defaultProjectStatus($phase, $startDate, $endDate, 0),
+        ];
+    }
+
+    private function effectiveProjectStatus(Project $project): string
+    {
+        if ($project->status === 'completed') {
+            return 'completed';
+        }
+
+        return $this->defaultProjectStatus(
+            $project->phase,
+            $project->target_start_date,
+            $project->target_end_date,
+            (float) $project->progress_percent,
+            $project->status
+        );
+    }
+
+    private function projectStatusFromAccomplishment(?string $status): string
+    {
+        return match ($status) {
+            'Completed' => 'completed',
+            'Delayed' => 'delayed',
+            'Not Started' => 'planning',
+            default => 'on_time',
+        };
+    }
+
+    private function defaultProjectStatus(
+        ?string $phase,
+        mixed $startDate,
+        mixed $endDate,
+        float $progress,
+        ?string $fallback = null
+    ): string {
+        $normalizedPhase = strtolower(trim((string) $phase));
+
+        if ($progress >= 100) {
+            return 'completed';
+        }
+
+        if ($normalizedPhase === 'planning') {
+            return 'planning';
+        }
+
+        if ($endDate && Carbon::parse($endDate)->endOfDay()->isPast()) {
+            return 'delayed';
+        }
+
+        return $fallback ?: 'on_time';
+    }
+
+    private function durationDays(mixed $startDate, mixed $endDate): ?int
+    {
+        if (! $startDate || ! $endDate) {
+            return null;
+        }
+
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end = Carbon::parse($endDate)->startOfDay();
+
+        if ($end->lessThan($start)) {
+            return null;
+        }
+
+        return $start->diffInDays($end) + 1;
     }
 
     public function destroy(Request $request, Project $project): JsonResponse
