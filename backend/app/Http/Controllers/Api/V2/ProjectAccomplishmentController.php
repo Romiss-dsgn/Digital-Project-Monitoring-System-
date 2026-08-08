@@ -7,6 +7,7 @@ use App\Models\AccomplishmentDocument;
 use App\Models\Project;
 use App\Models\ProjectAccomplishment;
 use App\Services\AuditLogger;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,8 @@ use Throwable;
 class ProjectAccomplishmentController extends Controller
 {
     private const STATUSES = ['Not Started', 'In Progress', 'Delayed', 'Completed'];
+    private const FORMULA_VERSION = 'linear-calendar-days-v1';
+    private const DELAY_TOLERANCE_PERCENT = 2.0;
 
     public function index(Request $request): JsonResponse
     {
@@ -81,6 +84,8 @@ class ProjectAccomplishmentController extends Controller
                 'project_name' => $item->project?->project_name,
                 'status' => $item->status,
                 'percent_complete' => (float) $item->percent_complete,
+                'expected_percent' => (float) $item->expected_percent,
+                'variance_percent' => (float) $item->variance_percent,
                 'updated_at' => optional($item->updated_at)->format('Y-m-d H:i:s'),
             ]);
 
@@ -96,6 +101,8 @@ class ProjectAccomplishmentController extends Controller
                     'contract_number' => $featured->project?->contracts?->first()?->contract_number,
                     'milestone_title' => $featured->milestone_title,
                     'percent_complete' => (float) $featured->percent_complete,
+                    'expected_percent' => (float) $featured->expected_percent,
+                    'variance_percent' => (float) $featured->variance_percent,
                     'target_date' => optional($featured->target_date)->format('Y-m-d'),
                 ] : null,
                 'recent_activity' => $recentActivity,
@@ -105,17 +112,22 @@ class ProjectAccomplishmentController extends Controller
     }
 
     public function options(Request $request): JsonResponse
-{
-    return response()->json([
-        'projects' => Project::query()
-            ->where('is_archived', false)
-            ->orderBy('project_name')
-            ->get(['id', 'project_code', 'project_name', 'location']),
-        'all_projects_count' => Project::query()->where('is_archived', false)->count(),
-        'statuses' => self::STATUSES,
-        'permissions' => $request->user()->modulePermissions('project_accomplishments'),
-    ]);
-}
+    {
+        return response()->json([
+            'projects' => Project::query()
+                ->where('is_archived', false)
+                ->orderBy('project_name')
+                ->get(['id', 'project_code', 'project_name', 'location', 'target_start_date', 'target_end_date', 'progress_percent']),
+            'all_projects_count' => Project::query()->where('is_archived', false)->count(),
+            'statuses' => self::STATUSES,
+            'formula' => [
+                'version' => self::FORMULA_VERSION,
+                'delay_tolerance_percent' => self::DELAY_TOLERANCE_PERCENT,
+                'description' => 'Expected % = elapsed calendar days / total project calendar days * 100.',
+            ],
+            'permissions' => $request->user()->modulePermissions('project_accomplishments'),
+        ]);
+    }
 
     public function store(Request $request): JsonResponse
     {
@@ -126,6 +138,7 @@ class ProjectAccomplishmentController extends Controller
         try {
             $accomplishment = DB::transaction(function () use ($request, $validated, $attachment, &$storedPath) {
                 $attributes = collect($validated)->except('attachment')->all();
+                $attributes = $this->applyScheduleFormula($attributes);
                 $attributes['reported_by'] = $request->user()->id;
 
                 // ── NULL fix: never persist remarks/description as NULL ──
@@ -186,6 +199,7 @@ class ProjectAccomplishmentController extends Controller
     {
         abort_if($accomplishment->is_archived, 404);
         $validated = collect($this->validatedAccomplishment($request, $accomplishment->id))->except('attachment')->all();
+        $validated = $this->applyScheduleFormula($validated);
 
         $validated['remarks'] = $validated['remarks'] ?? '';
         $validated['description'] = $validated['description'] ?? '';
@@ -194,9 +208,9 @@ class ProjectAccomplishmentController extends Controller
         $oldProjectId = $accomplishment->project_id;
 
         DB::transaction(function () use ($request, $accomplishment, $validated, $oldValues, $oldProjectId) {
-            if ($validated['status'] === 'Completed' && empty($validated['completion_date'])) {
-                $validated['completion_date'] = now()->toDateString();
-            }
+            $validated['completion_date'] = $validated['status'] === 'Completed'
+                ? ($validated['completion_date'] ?? now()->toDateString())
+                : ($validated['completion_date'] ?? null);
 
             $accomplishment->update($validated);
             $this->syncProjectProgress($accomplishment->project_id);
@@ -308,34 +322,97 @@ class ProjectAccomplishmentController extends Controller
         return Storage::disk('local')->download($document->file_path, $document->file_name);
     }
 
-   private function validatedAccomplishment(Request $request, ?int $ignoreAccomplishmentId = null): array
-{
-    return $request->validate([
-        'project_id' => [
-            'required',
-            Rule::exists('projects', 'id')->where(fn ($query) => $query->where('is_archived', false)),
-        ],
-        'milestone_title' => [
-            'required',
-            'string',
-            'max:255',
-            Rule::unique('project_accomplishments', 'milestone_title')
-                ->where(fn ($query) => $query
-                    ->where('project_id', $request->integer('project_id'))
-                    ->where('is_archived', false))
-                ->ignore($ignoreAccomplishmentId),
-        ],
-        'description' => ['nullable', 'string', 'max:5000'],
-        'target_date' => ['required', 'date'],
-        'completion_date' => ['nullable', 'date'],
-        'percent_complete' => ['required', 'numeric', 'between:0,100'],
-        'status' => ['required', Rule::in(self::STATUSES)],
-        'remarks' => ['nullable', 'string', 'max:5000'],
-        'attachment' => ['nullable', 'file', 'mimes:pdf,docx,jpg,jpeg,png', 'max:25600'],
-    ], [
-        'milestone_title.unique' => 'This project already has an active milestone with the same title.',
-    ]);
-}
+    private function validatedAccomplishment(Request $request, ?int $ignoreAccomplishmentId = null): array
+    {
+        return $request->validate([
+            'project_id' => [
+                'required',
+                Rule::exists('projects', 'id')->where(fn ($query) => $query->where('is_archived', false)),
+            ],
+            'milestone_title' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('project_accomplishments', 'milestone_title')
+                    ->where(fn ($query) => $query
+                        ->where('project_id', $request->integer('project_id'))
+                        ->where('is_archived', false))
+                    ->ignore($ignoreAccomplishmentId),
+            ],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'target_date' => ['required', 'date'],
+            'report_period' => ['nullable', 'date'],
+            'completion_date' => ['nullable', 'date'],
+            'percent_complete' => ['required', 'numeric', 'between:0,100'],
+            'status' => ['nullable', Rule::in(self::STATUSES)],
+            'remarks' => ['nullable', 'string', 'max:5000'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,docx,jpg,jpeg,png', 'max:25600'],
+        ], [
+            'milestone_title.unique' => 'This project already has an active milestone with the same title.',
+        ]);
+    }
+
+    private function applyScheduleFormula(array $attributes): array
+    {
+        $project = Project::find($attributes['project_id']);
+        $targetDate = ! empty($attributes['target_date'])
+            ? Carbon::parse($attributes['target_date'])->startOfDay()
+            : null;
+        $actualPercent = round((float) ($attributes['percent_complete'] ?? 0), 2);
+
+        $durationDays = null;
+        $elapsedDays = null;
+        $expectedPercent = 0.0;
+
+        if ($project?->target_start_date && $project?->target_end_date && $targetDate) {
+            $startDate = Carbon::parse($project->target_start_date)->startOfDay();
+            $endDate = Carbon::parse($project->target_end_date)->startOfDay();
+
+            if ($endDate->lessThan($startDate)) {
+                $endDate = $startDate->copy();
+            }
+
+            $durationDays = max(1, $startDate->diffInDays($endDate) + 1);
+
+            if ($targetDate->lessThan($startDate)) {
+                $elapsedDays = 0;
+            } elseif ($targetDate->greaterThan($endDate)) {
+                $elapsedDays = $durationDays;
+            } else {
+                $elapsedDays = min($durationDays, $startDate->diffInDays($targetDate) + 1);
+            }
+
+            $expectedPercent = round(min(100, max(0, ($elapsedDays / $durationDays) * 100)), 2);
+        }
+
+        $attributes['report_period'] = $attributes['report_period']
+            ?? ($targetDate ? $targetDate->copy()->startOfMonth()->toDateString() : null);
+        $attributes['expected_percent'] = $expectedPercent;
+        $attributes['variance_percent'] = round($actualPercent - $expectedPercent, 2);
+        $attributes['elapsed_days'] = $elapsedDays;
+        $attributes['duration_days'] = $durationDays;
+        $attributes['formula_version'] = self::FORMULA_VERSION;
+        $attributes['status'] = $this->computedStatus($actualPercent, $expectedPercent);
+
+        return $attributes;
+    }
+
+    private function computedStatus(float $actualPercent, float $expectedPercent): string
+    {
+        if ($actualPercent >= 100) {
+            return 'Completed';
+        }
+
+        if ($actualPercent <= 0 && $expectedPercent <= 0) {
+            return 'Not Started';
+        }
+
+        if ($actualPercent + self::DELAY_TOLERANCE_PERCENT < $expectedPercent) {
+            return 'Delayed';
+        }
+
+        return 'In Progress';
+    }
 
     private function createDocument(
         Request $request,
@@ -369,18 +446,46 @@ class ProjectAccomplishmentController extends Controller
     }
 
     /**
-     * Project progress is derived from its non-archived milestone records.
+     * Project progress follows the latest monthly accomplishment record.
      */
     private function syncProjectProgress(int $projectId): void
     {
-        $average = ProjectAccomplishment::query()
+        $project = Project::find($projectId);
+
+        if (! $project) {
+            return;
+        }
+
+        $latest = ProjectAccomplishment::query()
             ->where('project_id', $projectId)
             ->where('is_archived', false)
-            ->avg('percent_complete');
+            ->orderByDesc('target_date')
+            ->orderByDesc('created_at')
+            ->first();
 
-        Project::whereKey($projectId)->update([
-            'progress_percent' => round((float) ($average ?? 0), 2),
+        if (! $latest) {
+            $project->update([
+                'progress_percent' => 0,
+                'status' => strtolower((string) $project->phase) === 'planning' ? 'planning' : 'ongoing',
+            ]);
+
+            return;
+        }
+
+        $project->update([
+            'progress_percent' => round((float) $latest->percent_complete, 2),
+            'status' => $this->projectStatusFromAccomplishment($latest),
         ]);
+    }
+
+    private function projectStatusFromAccomplishment(ProjectAccomplishment $accomplishment): string
+    {
+        return match ($accomplishment->status) {
+            'Completed' => 'completed',
+            'Delayed' => 'delayed',
+            'Not Started' => 'planning',
+            default => 'on_time',
+        };
     }
 
     private function formatAccomplishment(ProjectAccomplishment $accomplishment): array
@@ -394,8 +499,14 @@ class ProjectAccomplishmentController extends Controller
             'milestone_title' => $accomplishment->milestone_title,
             'description' => $accomplishment->description,
             'target_date' => optional($accomplishment->target_date)->format('Y-m-d'),
+            'report_period' => optional($accomplishment->report_period)->format('Y-m-d'),
             'completion_date' => optional($accomplishment->completion_date)->format('Y-m-d'),
             'percent_complete' => (float) $accomplishment->percent_complete,
+            'expected_percent' => (float) $accomplishment->expected_percent,
+            'variance_percent' => (float) $accomplishment->variance_percent,
+            'elapsed_days' => $accomplishment->elapsed_days,
+            'duration_days' => $accomplishment->duration_days,
+            'formula_version' => $accomplishment->formula_version,
             'status' => $accomplishment->status,
             'reported_by' => $accomplishment->reporter?->name,
             'validated_by' => $accomplishment->validator?->name,
