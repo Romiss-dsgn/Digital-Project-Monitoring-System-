@@ -233,7 +233,8 @@
                     <tr>
                       <th>Invoice #</th>
                       <th>Contract</th>
-                      <th>Amount</th>
+                      <th>Previous Accomplishment (%)</th>
+                      <th>Accomplishment Today (%)</th>
                       <th>Payment Schedule</th>
                       <th>Payment Status</th>
                       <th>Actions</th>
@@ -243,7 +244,8 @@
                     <tr v-for="invoice in invoices" :key="invoice.id">
                       <td><strong>{{ invoice.invoice_number }}</strong></td>
                       <td>{{ invoice.contract_number }}</td>
-                      <td>{{ formatCurrency(invoice.invoice_amount) }}</td>
+                      <td>{{ invoice.previous_accomplishment_percent !== null ? invoice.previous_accomplishment_percent + '%' : 'N/A' }}</td>
+                      <td>{{ invoice.accomplishment_today_percent !== null ? invoice.accomplishment_today_percent + '%' : 'N/A' }}</td>
                       <td>{{ invoice.billing_period }}</td>
                       <td><status-badge :status="invoice.status" /></td>
                       <td class="align-middle text-end cashflow-actions-cell">
@@ -565,6 +567,20 @@
             </div>
           </div>
           <div class="tuao-field-half">
+            <label class="tuao-label">Previous Accomplishment (%)</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">trending_up</i>
+              <input class="tuao-input" type="number" min="0" max="100" step="0.01" v-model="newInvoice.previous_accomplishment_percent" placeholder="0.00" />
+            </div>
+          </div>
+          <div class="tuao-field-half">
+            <label class="tuao-label">Accomplishment Today (%)</label>
+            <div class="tuao-input-wrap">
+              <i class="material-icons-round tuao-input-icon">trending_up</i>
+              <input class="tuao-input" type="number" min="0" max="100" step="0.01" v-model="newInvoice.accomplishment_today_percent" placeholder="0.00" />
+            </div>
+          </div>
+          <div class="tuao-field-half">
             <label class="tuao-label">Invoice Date</label>
             <div class="tuao-input-wrap">
               <i class="material-icons-round tuao-input-icon">event</i>
@@ -796,6 +812,8 @@ export default {
         contract_id: "",
         cashflow_period_id: "",
         invoice_amount: 0,
+        previous_accomplishment_percent: null,
+        accomplishment_today_percent: null,
         invoice_date: "",
         due_date: "",
         billing_period: "",
@@ -1710,6 +1728,8 @@ export default {
           contract_id: this.newInvoice.contract_id,
           cashflow_period_id: this.newInvoice.cashflow_period_id || null,
           invoice_amount: this.newInvoice.invoice_amount,
+          previous_accomplishment_percent: this.newInvoice.previous_accomplishment_percent,
+          accomplishment_today_percent: this.newInvoice.accomplishment_today_percent,
           invoice_date: this.newInvoice.invoice_date,
           due_date: this.newInvoice.due_date,
           billing_period: this.newInvoice.billing_period,
@@ -1760,6 +1780,8 @@ export default {
         contract_id: invoice.contract_id,
         cashflow_period_id: invoice.cashflow_period_id || "",
         invoice_amount: invoice.invoice_amount,
+        previous_accomplishment_percent: invoice.previous_accomplishment_percent,
+        accomplishment_today_percent: invoice.accomplishment_today_percent,
         invoice_date: invoice.invoice_date || "",
         due_date: invoice.due_date || "",
         billing_period: invoice.billing_period || "",
@@ -1775,6 +1797,8 @@ export default {
           contract_id: this.newInvoice.contract_id,
           cashflow_period_id: this.newInvoice.cashflow_period_id || null,
           invoice_amount: this.newInvoice.invoice_amount,
+          previous_accomplishment_percent: this.newInvoice.previous_accomplishment_percent,
+          accomplishment_today_percent: this.newInvoice.accomplishment_today_percent,
           invoice_date: this.newInvoice.invoice_date,
           due_date: this.newInvoice.due_date,
           billing_period: this.newInvoice.billing_period,
@@ -1794,6 +1818,8 @@ export default {
         contract_id: "",
         cashflow_period_id: "",
         invoice_amount: 0,
+        previous_accomplishment_percent: null,
+        accomplishment_today_percent: null,
         invoice_date: "",
         due_date: "",
         billing_period: "",
