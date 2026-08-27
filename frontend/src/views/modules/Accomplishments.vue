@@ -153,7 +153,7 @@
                           <div class="progress-bar-wrapper">
                             <div
                               class="progress-bar"
-                              :class="getProgressClass(milestone.status)"
+                              :class="getProgressClass(milestone.status, milestone.percent_complete)"
                               :style="{ width: milestone.percent_complete + '%' }"
                             ></div>
                           </div>
@@ -363,6 +363,10 @@
                 <strong :class="varianceTextClass(formulaPreview.variancePercent)">
                   {{ formatVariance(formulaPreview.variancePercent) }}
                 </strong>
+              </div>
+              <div>
+                <span>Performance Alignment</span>
+                <strong>{{ formatPercent(formulaPreview.performanceAlignment) }}</strong>
               </div>
             </div>
           </div>
@@ -644,6 +648,7 @@ export default {
 
       const safeEndDate = endDate < startDate ? startDate : endDate;
       const durationDays = Math.max(1, this.daysBetween(startDate, safeEndDate) + 1);
+      const alignmentElapsedDays = Math.max(1, this.daysBetween(startDate, reportDate) + 1);
       let elapsedDays = 0;
 
       if (reportDate > safeEndDate) {
@@ -655,12 +660,16 @@ export default {
       const expectedPercent = Math.round(Math.min(100, Math.max(0, (elapsedDays / durationDays) * 100)) * 100) / 100;
       const actualPercent = Number(this.accomplishmentForm.percent_complete || 0);
       const variancePercent = Math.round((actualPercent - expectedPercent) * 100) / 100;
+      const performanceAlignment = Math.round(
+        50 * (Math.sin((180 * (alignmentElapsedDays / durationDays) - 90) * Math.PI / 180) + 1) * 100
+      ) / 100;
 
       return {
         durationDays,
         elapsedDays,
         expectedPercent,
         variancePercent,
+        performanceAlignment,
         status: this.statusFromFormula(actualPercent, expectedPercent),
       };
     },
@@ -804,7 +813,8 @@ export default {
       this.showFilterModal = false;
     },
 
-    getProgressClass(status) {
+    getProgressClass(status, percentComplete) {
+      if (Number(percentComplete) === 100) return "progress-bar-complete-green";
       if (status === "Completed") return "progress-bar-completed";
       if (status === "Delayed") return "progress-bar-delayed";
       if (status === "Not Started") return "progress-bar-empty";
@@ -912,7 +922,7 @@ export default {
     },
 
     exportCsv() {
-      const headers = ["Project", "Milestone", "Report Month", "Target Date", "Expected %", "Actual %", "Variance %", "Status", "Remarks"];
+      const headers = ["Project", "Milestone", "Report Month", "Target Date", "Expected %", "Actual %", "Variance %", "Performance Alignment %", "Status", "Remarks"];
       const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
@@ -921,6 +931,7 @@ export default {
         item.expected_percent,
         item.percent_complete,
         item.variance_percent,
+        item.performance_alignment,
         item.status,
         item.remarks || "",
       ]);
@@ -935,7 +946,7 @@ export default {
     },
 
     exportExcel() {
-      const headers = ["Project", "Milestone", "Report Month", "Target Date", "Expected %", "Actual %", "Variance %", "Status", "Remarks"];
+      const headers = ["Project", "Milestone", "Report Month", "Target Date", "Expected %", "Actual %", "Variance %", "Performance Alignment %", "Status", "Remarks"];
       const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
@@ -944,6 +955,7 @@ export default {
         item.expected_percent,
         item.percent_complete,
         item.variance_percent,
+        item.performance_alignment,
         item.status,
         item.remarks || "",
       ]);
@@ -972,6 +984,7 @@ export default {
         { wch: 12 },
         { wch: 12 },
         { wch: 12 },
+        { wch: 24 },
         { wch: 14 },
         { wch: 30 },
       ];
@@ -1027,7 +1040,7 @@ export default {
       });
 
       // Table
-      const headers = [["Project", "Milestone", "Report Month", "Expected", "Actual", "Variance", "Status"]];
+      const headers = [["Project", "Milestone", "Report Month", "Expected", "Actual", "Variance", "Performance Alignment", "Status"]];
       const rows = this.exportRows.map((item) => [
         item.project_name,
         item.milestone_title,
@@ -1035,6 +1048,7 @@ export default {
         this.formatPercent(item.expected_percent),
         this.formatPercent(item.percent_complete),
         this.formatVariance(item.variance_percent),
+        this.formatPercent(item.performance_alignment),
         item.status,
       ]);
 
@@ -1230,6 +1244,10 @@ export default {
   background: linear-gradient(90deg, #2563eb, #3b82f6) !important;
 }
 
+.progress-bar-complete-green {
+  background: linear-gradient(90deg, #16a34a, #4ade80) !important;
+}
+
 .progress-bar-delayed {
   background: linear-gradient(90deg, #ef4444, #f87171) !important;
 }
@@ -1247,7 +1265,7 @@ export default {
 
 .formula-preview {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.75rem;
   padding: 0.8rem;
   border: 1px solid #dbe4f0;
