@@ -82,11 +82,12 @@
 	                <table class="table align-items-center mb-0 vo-table">
 	                  <thead>
 	                    <tr>
-	                      <th>VO #</th>
-	                      <th>Contract / Project</th>
-	                      <th>Original Contract Cost</th>
-	                      <th>VO Amount</th>
-	                      <th>Additive</th>
+		                      <th>VO #</th>
+		                      <th>Contract / Project</th>
+		                      <th>Approved Budget for Contract</th>
+		                      <th>Original Contract Cost</th>
+		                      <th>VO Amount</th>
+		                      <th>Additive</th>
                       <th>Deductive</th>
                       <th>Revised Contract Cost</th>
                       <th>Time Impact (Days)</th>
@@ -102,8 +103,9 @@
 	                        <div class="proj-name">{{ order.contract_title || order.project_name }}</div>
 	                        <div class="proj-ref">{{ order.contract_number || order.project_ref }}</div>
 	                        <div class="proj-ref text-muted">{{ order.contractor_name || '-' }}</div>
-                      </td>
-                      <td><strong>{{ formatCurrency(getOriginalContractAmount(order)) }}</strong></td>
+	                      </td>
+	                      <td><strong>{{ formatCurrency(getApprovedBudgetForContract(order)) }}</strong></td>
+	                      <td><strong>{{ formatCurrency(getOriginalContractAmount(order)) }}</strong></td>
                       <td><strong>{{ formatCurrency(getVariationAmount(order)) }}</strong></td>
                       <td>{{ formatCurrency(getAdditiveAmount(order)) }}</td>
                       <td>{{ formatCurrency(getDeductiveAmount(order)) }}</td>
@@ -184,7 +186,7 @@
                       </td>
                     </tr>
 	                    <tr v-if="orders.length === 0">
-	                      <td colspan="11" class="text-center py-4">
+		                      <td colspan="12" class="text-center py-4">
 	                        <span class="text-secondary">No variation orders found</span>
 	                      </td>
 	                    </tr>
@@ -282,10 +284,16 @@
               <input class="tuao-input" type="text" :value="selectedContract.contract_number || '-'" readonly />
             </div>
           </div>
-          <div class="tuao-field-half">
-            <label class="tuao-label">Original Contract Cost</label>
-            <div class="tuao-input-wrap">
-              <input class="tuao-input" type="text" :value="formatCurrency(selectedContract.original_contract_amount)" readonly />
+	          <div class="tuao-field-half">
+	            <label class="tuao-label">Approved Budget for Contract</label>
+	            <div class="tuao-input-wrap">
+	              <input class="tuao-input" type="text" :value="formatCurrency(selectedContract.approved_budget_for_contract)" readonly />
+	            </div>
+	          </div>
+	          <div class="tuao-field-half">
+	            <label class="tuao-label">Original Contract Cost</label>
+	            <div class="tuao-input-wrap">
+	              <input class="tuao-input" type="text" :value="formatCurrency(selectedContract.original_contract_amount)" readonly />
             </div>
           </div>
           <div class="tuao-field-half">
@@ -713,10 +721,16 @@
               <textarea class="tuao-input tuao-textarea" rows="3" :value="detailOrder.description" readonly></textarea>
             </div>
           </div>
-          <div class="tuao-field-half">
-            <label class="tuao-label">Original Contract Cost</label>
-            <div class="tuao-input-wrap">
-              <input class="tuao-input" type="text" :value="formatCurrency(getOriginalContractAmount(detailOrder))" readonly />
+	          <div class="tuao-field-half">
+	            <label class="tuao-label">Approved Budget for Contract</label>
+	            <div class="tuao-input-wrap">
+	              <input class="tuao-input" type="text" :value="formatCurrency(getApprovedBudgetForContract(detailOrder))" readonly />
+	            </div>
+	          </div>
+	          <div class="tuao-field-half">
+	            <label class="tuao-label">Original Contract Cost</label>
+	            <div class="tuao-input-wrap">
+	              <input class="tuao-input" type="text" :value="formatCurrency(getOriginalContractAmount(detailOrder))" readonly />
             </div>
           </div>
           <div class="tuao-field-half">
@@ -1255,10 +1269,15 @@ export default {
       return Number.isFinite(numeric) ? numeric.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 3 }) : '-';
     },
 
-    getOriginalContractAmount(order) {
-      if (!order) return 0;
-      return Number(order.original_contract_amount ?? 0);
-    },
+	    getOriginalContractAmount(order) {
+	      if (!order) return 0;
+	      return Number(order.original_contract_amount ?? 0);
+	    },
+
+	    getApprovedBudgetForContract(order) {
+	      if (!order) return 0;
+	      return Number(order.approved_budget_for_contract ?? order.approved_budget ?? 0);
+	    },
 
     getVariationAmount(order) {
       if (!order) return 0;
@@ -1489,13 +1508,17 @@ export default {
 
     async createVariationOrder() {
       try {
-        const items = this.serializeWorksheetItems();
-        if (items.length === 0) {
-          this.openSaveResultModal('error', 'Validation Error', 'Add at least one worksheet line item before submitting.');
-          return;
-        }
+	        const items = this.serializeWorksheetItems();
+	        if (items.length === 0) {
+	          this.openSaveResultModal('error', 'Validation Error', 'Add at least one worksheet line item before submitting.');
+	          return;
+	        }
+	        if (this.getWorksheetDeductiveTotal(items) <= 0) {
+	          this.openSaveResultModal('error', 'Validation Error', 'Deductive amount must be greater than zero.');
+	          return;
+	        }
 
-        await variationOrderService.createVariationOrder({
+	        await variationOrderService.createVariationOrder({
           vo_number: this.newOrder.vo_number,
           contract_id: this.newOrder.contract_id,
           description: this.newOrder.description,
@@ -1523,13 +1546,17 @@ export default {
     async updateVariationOrder() {
       if (!this.editingOrder) return;
       try {
-        const items = this.serializeWorksheetItems();
-        if (items.length === 0) {
-          this.openSaveResultModal('error', 'Validation Error', 'Add at least one worksheet line item before updating.');
-          return;
-        }
+	        const items = this.serializeWorksheetItems();
+	        if (items.length === 0) {
+	          this.openSaveResultModal('error', 'Validation Error', 'Add at least one worksheet line item before updating.');
+	          return;
+	        }
+	        if (this.getWorksheetDeductiveTotal(items) <= 0) {
+	          this.openSaveResultModal('error', 'Validation Error', 'Deductive amount must be greater than zero.');
+	          return;
+	        }
 
-        await variationOrderService.updateVariationOrder(this.editingOrder.id, {
+	        await variationOrderService.updateVariationOrder(this.editingOrder.id, {
           vo_number: this.newOrder.vo_number,
           contract_id: this.newOrder.contract_id,
           description: this.newOrder.description,

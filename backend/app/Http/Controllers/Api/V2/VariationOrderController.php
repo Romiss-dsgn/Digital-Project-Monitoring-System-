@@ -27,7 +27,7 @@ class VariationOrderController extends Controller
             ->withCount('items')
             ->with([
                 'contract:id,contract_number,contract_title,project_id,contractor_id,original_contract_amount,revised_contract_amount',
-                'contract.project:id,project_code,project_name',
+                'contract.project:id,project_code,project_name,approved_budget',
                 'contract.contractor:id,company_name',
                 'submitter:id,name',
                 'reviewer:id,name',
@@ -105,7 +105,7 @@ class VariationOrderController extends Controller
             'contracts' => Contract::query()
                 ->where('is_archived', false)
                 ->with([
-                    'project:id,project_code,project_name',
+                    'project:id,project_code,project_name,approved_budget',
                     'contractor:id,company_name',
                 ])
                 ->orderBy('contract_number')
@@ -116,6 +116,7 @@ class VariationOrderController extends Controller
                     'contract_title' => $contract->contract_title,
                     'project_name' => $contract->project?->project_name,
                     'project_ref' => $contract->project?->project_code,
+                    'approved_budget_for_contract' => (float) ($contract->project?->approved_budget ?? 0),
                     'contractor_name' => $contract->contractor?->company_name,
                     'original_contract_amount' => (float) $contract->original_contract_amount,
                     'revised_contract_amount' => (float) $contract->revised_contract_amount,
@@ -136,7 +137,7 @@ class VariationOrderController extends Controller
             'vo_number' => ['required', 'string', 'max:255', 'unique:variation_orders,vo_number'],
             'description' => ['nullable', 'string', 'max:5000'],
             'reason' => ['nullable', 'string', 'max:5000'],
-            'amount_change' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'amount_change' => ['nullable', 'numeric', 'max:9999999999999.99'],
             'time_impact_days' => ['nullable', 'integer', 'min:0'],
             'status' => ['sometimes', Rule::in(self::STATUSES)],
             'items' => ['nullable', 'array', 'min:1'],
@@ -156,6 +157,7 @@ class VariationOrderController extends Controller
 
         $order = DB::transaction(function () use ($request, $validated) {
             $items = $this->normalizeItems($validated['items'] ?? []);
+            $this->ensureDeductiveTotalIsPresent($items, (float) ($validated['amount_change'] ?? 0));
             $amountChange = $items !== []
                 ? $this->calculateWorksheetNetAmount($items)
                 : (float) ($validated['amount_change'] ?? 0);
@@ -196,7 +198,7 @@ class VariationOrderController extends Controller
     {
         $order->load([
             'contract:id,contract_number,contract_title,project_id,contractor_id,original_contract_amount,revised_contract_amount',
-            'contract.project:id,project_code,project_name',
+            'contract.project:id,project_code,project_name,approved_budget',
             'contract.contractor:id,company_name',
             'submitter:id,name',
             'reviewer:id,name',
@@ -223,7 +225,7 @@ class VariationOrderController extends Controller
             ],
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'reason' => ['sometimes', 'nullable', 'string', 'max:5000'],
-            'amount_change' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
+            'amount_change' => ['nullable', 'numeric', 'max:9999999999999.99'],
             'time_impact_days' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'approval_remarks' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'items' => ['sometimes', 'array', 'min:1'],
@@ -246,6 +248,9 @@ class VariationOrderController extends Controller
         DB::transaction(function () use ($request, $order, $validated, $oldValues) {
             $itemsProvided = array_key_exists('items', $validated);
             $items = $itemsProvided ? $this->normalizeItems($validated['items'] ?? []) : null;
+            if ($itemsProvided) {
+                $this->ensureDeductiveTotalIsPresent($items ?? [], (float) ($validated['amount_change'] ?? $order->amount_change));
+            }
             $amountChange = $itemsProvided
                 ? ($items !== [] ? $this->calculateWorksheetNetAmount($items) : 0)
                 : ($validated['amount_change'] ?? $order->amount_change);
@@ -439,6 +444,7 @@ class VariationOrderController extends Controller
     private function formatOrder(VariationOrder $order): array
     {
         $originalAmount = (float) ($order->contract?->original_contract_amount ?? 0);
+        $approvedBudget = (float) ($order->contract?->project?->approved_budget ?? 0);
         $currentRevisedAmount = (float) ($order->contract?->revised_contract_amount ?? $originalAmount);
         $items = $order->relationLoaded('items')
             ? $order->items->map(fn (VariationOrderItem $item) => $this->formatItem($item))->values()
@@ -456,6 +462,7 @@ class VariationOrderController extends Controller
             'project_name' => $order->contract?->project?->project_name,
             'project_ref' => $order->contract?->project?->project_code,
             'contractor_name' => $order->contract?->contractor?->company_name,
+            'approved_budget_for_contract' => $approvedBudget,
             'original_contract_amount' => $originalAmount,
             'vo_number' => $order->vo_number,
             'description' => $order->description,
@@ -587,6 +594,15 @@ class VariationOrderController extends Controller
     private function calculateWorksheetNetAmount(array $items): float
     {
         return $this->summarizeWorksheetItems($items)['net_amount'];
+    }
+
+    private function ensureDeductiveTotalIsPresent(array $items, float $amountChange): void
+    {
+        $deductiveTotal = $items !== []
+            ? $this->summarizeWorksheetItems($items)['deductive_total']
+            : max(0 - $amountChange, 0);
+
+        abort_if($deductiveTotal <= 0, 422, 'Deductive amount must be greater than zero.');
     }
 
     private function syncItems(VariationOrder $order, array $items): void

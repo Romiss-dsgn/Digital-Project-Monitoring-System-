@@ -205,6 +205,8 @@ These endpoints are DB-backed and connected to `contracts`, `variation_orders`, 
 Important rule:
 
 - Approved variation orders update the contract revised amount once and affect financial summaries.
+- VO worksheet data must include a deductive amount greater than zero.
+- VO contract payloads expose `approved_budget_for_contract` from the related project approved budget.
 
 ### Admin Access Requests
 
