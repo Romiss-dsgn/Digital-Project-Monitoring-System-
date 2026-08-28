@@ -27,7 +27,7 @@ class ProjectAccomplishmentController extends Controller
     {
         $query = ProjectAccomplishment::query()
             ->with([
-                'project:id,project_code,project_name,location,progress_percent',
+                'project:id,project_code,project_name,location,progress_percent,target_start_date,target_end_date',
                 'documents.uploader:id,name',
                 'reporter:id,name',
                 'validator:id,name',
@@ -490,6 +490,8 @@ class ProjectAccomplishmentController extends Controller
 
     private function formatAccomplishment(ProjectAccomplishment $accomplishment): array
     {
+        $expectedPercent = $this->expectedPercent($accomplishment);
+
         return [
             'id' => $accomplishment->id,
             'project_id' => $accomplishment->project_id,
@@ -502,10 +504,11 @@ class ProjectAccomplishmentController extends Controller
             'report_period' => optional($accomplishment->report_period)->format('Y-m-d'),
             'completion_date' => optional($accomplishment->completion_date)->format('Y-m-d'),
             'percent_complete' => (float) $accomplishment->percent_complete,
-            'expected_percent' => (float) $accomplishment->expected_percent,
-            'variance_percent' => (float) $accomplishment->variance_percent,
+            'expected_percent' => $expectedPercent,
+            'variance_percent' => round((float) $accomplishment->percent_complete - $expectedPercent, 2),
             'elapsed_days' => $accomplishment->elapsed_days,
             'duration_days' => $accomplishment->duration_days,
+            'performance_alignment' => $this->performanceAlignment($accomplishment),
             'formula_version' => $accomplishment->formula_version,
             'status' => $accomplishment->status,
             'reported_by' => $accomplishment->reporter?->name,
@@ -536,6 +539,50 @@ class ProjectAccomplishmentController extends Controller
     private function perPage(Request $request): int
     {
         return min(max($request->integer('per_page', 10), 1), 100);
+    }
+
+    private function performanceAlignment(ProjectAccomplishment $accomplishment): float
+    {
+        $project = $accomplishment->project;
+        $targetDate = $accomplishment->target_date;
+
+        if (! $project?->target_start_date || ! $project?->target_end_date || ! $targetDate) {
+            return 0.0;
+        }
+
+        $startDate = Carbon::parse($project->target_start_date)->startOfDay();
+        $endDate = Carbon::parse($project->target_end_date)->startOfDay();
+        $durationDays = max(1, $startDate->diffInDays($endDate) + 1);
+        $elapsedDays = $startDate->diffInDays(Carbon::parse((string) $targetDate)->startOfDay()) + 1;
+
+        return round(50 * (sin(deg2rad((180 * ($elapsedDays / $durationDays)) - 90)) + 1), 2);
+    }
+
+    private function expectedPercent(ProjectAccomplishment $accomplishment): float
+    {
+        $project = $accomplishment->project;
+        $targetDate = $accomplishment->target_date;
+
+        if (! $project?->target_start_date || ! $project?->target_end_date || ! $targetDate) {
+            return (float) $accomplishment->expected_percent;
+        }
+
+        $startDate = Carbon::parse($project->target_start_date)->startOfDay();
+        $endDate = Carbon::parse($project->target_end_date)->startOfDay();
+        $targetDate = Carbon::parse((string) $targetDate)->startOfDay();
+
+        if ($endDate->lessThan($startDate)) {
+            $endDate = $startDate->copy();
+        }
+
+        $durationDays = max(1, $startDate->diffInDays($endDate) + 1);
+        $elapsedDays = $targetDate->lessThan($startDate)
+            ? 0
+            : ($targetDate->greaterThan($endDate)
+                ? $durationDays
+                : min($durationDays, $startDate->diffInDays($targetDate) + 1));
+
+        return round(min(100, max(0, ($elapsedDays / $durationDays) * 100)), 2);
     }
 
     private function paginationMeta($paginator): array
