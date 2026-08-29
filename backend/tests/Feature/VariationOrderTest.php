@@ -89,9 +89,20 @@ class VariationOrderTest extends TestCase
             'vo_number' => 'VO-' . uniqid(),
             'description' => 'Draft VO',
             'reason' => 'Draft reason',
-            'amount_change' => 50000.00,
             'time_impact_days' => 0,
             'status' => 'Draft',
+            'items' => [
+                [
+                    'line_number' => 1,
+                    'item_description' => 'Draft scope adjustment',
+                    'additive_qty' => 1,
+                    'additive_unit' => 'lot',
+                    'additive_unit_cost' => 60000,
+                    'deductive_qty' => 1,
+                    'deductive_unit' => 'lot',
+                    'deductive_unit_cost' => 10000,
+                ],
+            ],
         ]);
 
         $response->assertCreated();
@@ -145,6 +156,50 @@ class VariationOrderTest extends TestCase
         $item = VariationOrderItem::where('variation_order_id', $vo->id)->orderBy('line_number')->first();
         $this->assertEquals('Additional site works', $item->item_description);
         $this->assertEquals(2500.00, (float) $item->additive_total_cost);
+    }
+
+    public function test_creating_variation_order_rejects_zero_deductive_total(): void
+    {
+        $user = $this->userWithPermissions('variation_orders', ['view', 'create']);
+        Passport::actingAs($user);
+        [$project, $contractor, $contract] = $this->projectAndContractorAndContract();
+
+        $response = $this->postJson('/api/v2/variation-orders', [
+            'contract_id' => $contract->id,
+            'vo_number' => 'VO-' . uniqid(),
+            'description' => 'Itemized VO',
+            'reason' => 'Worksheet breakdown',
+            'time_impact_days' => 4,
+            'items' => [
+                [
+                    'line_number' => 1,
+                    'item_description' => 'Additional site works',
+                    'additive_qty' => 1,
+                    'additive_unit' => 'lot',
+                    'additive_unit_cost' => 2500,
+                ],
+            ],
+        ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Deductive amount must be greater than zero.');
+    }
+
+    public function test_variation_order_options_include_project_approved_budget(): void
+    {
+        $user = $this->userWithPermissions('variation_orders', ['view']);
+        Passport::actingAs($user);
+        [$project, $contractor, $contract] = $this->projectAndContractorAndContract();
+
+        $response = $this->getJson('/api/v2/variation-orders/options')
+            ->assertOk();
+
+        $contractOption = collect($response->json('contracts'))
+            ->firstWhere('id', $contract->id);
+
+        $this->assertNotNull($contractOption);
+        $this->assertEquals(750000.00, (float) $contractOption['approved_budget_for_contract']);
     }
 
     public function test_reviewing_variation_order_twice_does_not_overwrite_reviewed_at(): void
@@ -254,6 +309,7 @@ class VariationOrderTest extends TestCase
         $project = Project::create([
             'project_code' => 'TEST-PROJ-' . uniqid(),
             'project_name' => 'Feature Test Project',
+            'approved_budget' => 750000.00,
             'status' => 'ongoing',
             'is_archived' => false,
         ]);
