@@ -7,6 +7,7 @@ use App\Models\CashflowPeriod;
 use App\Models\Contract;
 use App\Models\Invoice;
 use App\Services\AuditLogger;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,9 +50,24 @@ class CashflowPeriodController extends Controller
 
     public function summary(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+        ]);
+
+        [$rangeMin, $rangeMax] = $this->cashflowRangeBounds();
+        $from = $validated['from'] ?? null;
+        $to = $validated['to'] ?? null;
+
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
         $query = CashflowPeriod::query()
             ->where('is_archived', false)
             ->whereHas('contract', fn (Builder $query) => $query->where('is_archived', false));
+
+        $this->applyDateOverlap($query, $from, $to);
 
         $totalPlanned = (clone $query)->sum('planned_amount');
         $totalActual = (clone $query)->sum('actual_amount');
@@ -59,8 +75,8 @@ class CashflowPeriodController extends Controller
             ->whereIn('id', (clone $query)->distinct()->pluck('contract_id'))
             ->sum('revised_contract_amount');
         $budgetStatus = $this->determineBudgetStatus((float) $totalPlanned, (float) $totalActual);
-
-        $monthlyData = $this->getMonthlyBreakdown($query);
+        $chartStart = Carbon::parse($from ?: $rangeMin)->startOfMonth();
+        $chartEnd = Carbon::parse($to ?: $rangeMax)->endOfMonth();
 
         return response()->json([
             'data' => [
@@ -74,7 +90,9 @@ class CashflowPeriodController extends Controller
                 'at_risk_count' => (clone $query)->where('status', 'At Risk')->count(),
                 'delayed_count' => (clone $query)->where('status', 'Delayed')->count(),
                 'completed_count' => (clone $query)->where('status', 'Completed')->count(),
-                'monthly_breakdown' => $monthlyData,
+                'monthly_breakdown' => $this->getMonthlyBreakdown($query, $chartStart, $chartEnd),
+                'range_min' => $rangeMin,
+                'range_max' => $rangeMax,
                 'permissions' => $request->user()->modulePermissions('cashflow_periods'),
             ],
         ]);
@@ -92,31 +110,82 @@ class CashflowPeriodController extends Controller
         ]);
     }
 
-    private function getMonthlyBreakdown($query): array
+    private function cashflowRangeBounds(): array
     {
-        $monthlyData = [];
-        $now = now();
+        $base = CashflowPeriod::query()
+            ->where('is_archived', false)
+            ->whereHas('contract', fn (Builder $query) => $query->where('is_archived', false));
 
-        for ($i = 11; $i >= 0; $i--) {
-            $date = $now->copy()->subMonths($i);
-            $month = $date->format('Y-m');
-            $planned = (clone $query)
-                ->whereNotNull('period_start')
-                ->whereRaw("DATE_FORMAT(period_start, '%Y-%m') = ?", [$month])
-                ->sum('planned_amount');
-            $actual = (clone $query)
-                ->whereNotNull('period_start')
-                ->whereRaw("DATE_FORMAT(period_start, '%Y-%m') = ?", [$month])
-                ->sum('actual_amount');
+        $minStart = (clone $base)->whereNotNull('period_start')->min('period_start');
+        $maxEnd = (clone $base)->whereNotNull('period_end')->max('period_end');
+        $maxStart = (clone $base)->whereNotNull('period_start')->max('period_start');
+        $today = now();
 
-            $monthlyData[] = [
-                'month' => $date->format('M'),
-                'planned' => (float) $planned,
-                'actual' => (float) $actual,
-            ];
+        $minDate = $minStart
+            ? Carbon::parse($minStart)->startOfMonth()
+            : $today->copy()->startOfYear();
+        $maxCandidate = collect([$maxEnd, $maxStart])->filter()->sort()->last();
+        $maxDate = $maxCandidate
+            ? Carbon::parse($maxCandidate)->endOfMonth()
+            : $today->copy()->endOfYear();
+
+        if ($minDate->greaterThan($today->copy()->startOfYear())) {
+            $minDate = $today->copy()->subYear()->startOfYear();
         }
 
-        return $monthlyData;
+        if ($maxDate->lessThan($today->copy()->endOfYear())) {
+            $maxDate = $today->copy()->addYear()->endOfYear();
+        }
+
+        return [$minDate->toDateString(), $maxDate->toDateString()];
+    }
+
+    private function applyDateOverlap(Builder $query, ?string $from, ?string $to): void
+    {
+        if (! $from || ! $to) {
+            return;
+        }
+
+        $query->whereRaw('COALESCE(period_start, period_end) <= ?', [$to])
+            ->whereRaw('COALESCE(period_end, period_start) >= ?', [$from]);
+    }
+
+    private function getMonthlyBreakdown($query, Carbon $start, Carbon $end): array
+    {
+        $rows = (clone $query)->get(['period_start', 'planned_amount', 'actual_amount']);
+        $buckets = [];
+        $cursor = $start->copy()->startOfMonth();
+        $last = $end->copy()->startOfMonth();
+        $guard = 0;
+
+        while ($cursor->lte($last) && $guard < 36) {
+            $buckets[$cursor->format('Y-m')] = [
+                'month' => $cursor->format('M Y'),
+                'planned' => 0.0,
+                'actual' => 0.0,
+            ];
+            $cursor->addMonth();
+            $guard++;
+        }
+
+        if ($buckets === []) {
+            return [];
+        }
+
+        $firstKey = array_key_first($buckets);
+
+        foreach ($rows as $row) {
+            $key = $row->period_start ? $row->period_start->format('Y-m') : $firstKey;
+
+            if (! isset($buckets[$key])) {
+                $key = $key < $firstKey ? $firstKey : array_key_last($buckets);
+            }
+
+            $buckets[$key]['planned'] += (float) $row->planned_amount;
+            $buckets[$key]['actual'] += (float) $row->actual_amount;
+        }
+
+        return array_values($buckets);
     }
 
     private function determineBudgetStatus(float $plannedAmount, float $actualAmount): string

@@ -143,6 +143,9 @@
                       <td>
                         <div class="fw-semibold">{{ milestone.project_name }}</div>
                         <div class="text-secondary small">{{ milestone.project_location }}</div>
+                        <div class="text-secondary small" :title="milestone.scope_of_work || ''">
+                          Scope of Work: {{ milestone.scope_of_work || "Not set" }}
+                        </div>
                       </td>
                       <td>{{ milestone.milestone_title }}</td>
                       <td>{{ formatMonth(milestone.report_period || milestone.target_date) }}</td>
@@ -296,6 +299,9 @@
             </div>
             <p v-if="!isLoadingModalProjects && modalProjects.length === 0 && !accomplishmentForm.id" class="text-secondary small mt-1 mb-0">
               Create an active project in Infrastructure Plans before adding monthly SWA reports.
+            </p>
+            <p v-else-if="selectedProjectScope" class="text-secondary small mt-1 mb-0">
+              Scope of Work: {{ selectedProjectScope }}
             </p>
           </div>
 
@@ -636,6 +642,10 @@ export default {
       return [...this.modalProjects, ...this.projects].find(
         (project) => String(project.id) === String(this.accomplishmentForm.project_id)
       );
+    },
+
+    selectedProjectScope() {
+      return this.selectedProject?.scope_of_work || "";
     },
 
     formulaPreview() {

@@ -86,6 +86,7 @@
               <tr>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Project Code</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Project Name</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Scope of Work</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Location</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Contractor</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Duration</th>
@@ -96,18 +97,18 @@
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="8" class="align-middle text-center py-4">
+                <td colspan="9" class="align-middle text-center py-4">
                   <div class="spinner-border spinner-border-sm text-primary me-2"></div>
                   Loading projects...
                 </td>
               </tr>
               <tr v-else-if="error">
-                <td colspan="8" class="align-middle text-center py-4 text-danger">
+                <td colspan="9" class="align-middle text-center py-4 text-danger">
                   {{ error }}
                 </td>
               </tr>
               <tr v-else-if="filteredProjects.length === 0">
-                <td colspan="8" class="align-middle text-center py-4 text-secondary">
+                <td colspan="9" class="align-middle text-center py-4 text-secondary">
                   No projects found. Click "Add New Project" to create one.
                 </td>
               </tr>
@@ -117,6 +118,9 @@
                 </td>
                 <td class="align-middle text-sm">
                   <div class="project-name" :title="project.name">{{ project.name }}</div>
+                </td>
+                <td class="align-middle text-sm">
+                  <div class="project-scope" :title="project.scope_of_work || 'No scope of work'">{{ project.scope_of_work || "—" }}</div>
                 </td>
                 <td class="align-middle text-sm">
                   <div class="project-location" :title="project.location">{{ project.location }}</div>
@@ -518,6 +522,27 @@
 
       <div class="tuao-section">
         <div class="tuao-section-label">
+          <i class="material-icons-round">assignment</i>
+          Scope of Work
+        </div>
+        <div class="tuao-form-grid">
+          <div class="tuao-field tuao-field-full">
+            <label class="tuao-label" for="m-scope-of-work">Scope of Work</label>
+            <div class="tuao-input-wrap">
+              <textarea
+                id="m-scope-of-work"
+                v-model="form.scope_of_work"
+                class="tuao-input tuao-textarea"
+                placeholder="Describe the approved scope of work for this project"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tuao-section">
+        <div class="tuao-section-label">
           <i class="material-icons-round">notes</i>
           Additional Remarks
         </div>
@@ -679,6 +704,7 @@ export default {
         phase: "",
         status: "",
         notes: "",
+        scope_of_work: "",
       },
       errors: {},
     };
@@ -864,6 +890,7 @@ export default {
         phase: "",
         status: "",
         notes: "",
+        scope_of_work: "",
       };
     },
 
@@ -1051,6 +1078,7 @@ export default {
           budget: this.parseBudget(this.form.budget),
           phase: this.form.phase,
           notes: this.form.notes || null,
+          scope_of_work: this.form.scope_of_work || null,
         };
 
         if (this.form.id) {
@@ -1106,6 +1134,7 @@ export default {
         phase: project.phase,
         status: project.status,
         notes: project.notes || "",
+        scope_of_work: project.scope_of_work || "",
       };
       this.showModal = true;
     },
@@ -1707,6 +1736,14 @@ export default {
   font-weight: 700;
   color: #1f2937;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-scope {
+  max-width: 220px;
+  color: #374151;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
