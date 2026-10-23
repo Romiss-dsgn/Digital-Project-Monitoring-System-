@@ -125,6 +125,7 @@ class ProjectController extends Controller
             'end_date' => $project->target_end_date?->format('Y-m-d'),
             'duration_days' => $this->durationDays($project->target_start_date, $project->target_end_date),
             'notes' => $project->description,
+            'scope_of_work' => $project->scope_of_work,
             'created_at' => $project->created_at?->toIso8601String(),
             'updated_at' => $project->updated_at?->toIso8601String(),
         ];
@@ -229,6 +230,7 @@ class ProjectController extends Controller
             'status' => ['nullable', 'string', 'max:255'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
+            'scope_of_work' => ['nullable', 'string', 'max:5000'],
         ], [
             'code.unique' => 'A project with this code already exists. Please use a different project code.',
             'new_contractor_name.required_without' => 'Please select a contractor or enter a new contractor name.',
@@ -252,6 +254,7 @@ class ProjectController extends Controller
                 'status' => $status,
                 'progress_percent' => 0,
                 'description' => $data['notes'] ?? null,
+                'scope_of_work' => $data['scope_of_work'] ?? null,
                 'created_by' => $user->id,
             ]);
 
@@ -292,6 +295,7 @@ class ProjectController extends Controller
             'status' => ['nullable', 'string', 'max:255'],
             'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
+            'scope_of_work' => ['nullable', 'string', 'max:5000'],
         ], [
             'code.unique' => 'A project with this code already exists. Please use a different project code.',
             'contractor_id.exists' => 'The selected contractor is not active or does not exist.',
@@ -325,6 +329,7 @@ class ProjectController extends Controller
                 'status' => $derivedState['status'],
                 'progress_percent' => $derivedState['progress'],
                 'description' => $data['notes'] ?? $project->description,
+                'scope_of_work' => array_key_exists('scope_of_work', $data) ? $data['scope_of_work'] : $project->scope_of_work,
             ]);
 
             $this->logAction($user, 'updated', self::MODULE, $project->id, $project->project_code, $oldValues, [

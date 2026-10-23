@@ -28,9 +28,10 @@ export default {
     return response.data;
   },
 
-  async getSummary() {
+  async getSummary(params = {}) {
     const response = await axios.get(`${API_URL}/cashflow-periods/summary`, {
       headers: authHeader(),
+      params,
     });
 
     return response.data.data;

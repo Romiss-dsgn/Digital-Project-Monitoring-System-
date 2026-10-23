@@ -27,7 +27,7 @@ class ProjectAccomplishmentController extends Controller
     {
         $query = ProjectAccomplishment::query()
             ->with([
-                'project:id,project_code,project_name,location,progress_percent,target_start_date,target_end_date',
+                'project:id,project_code,project_name,location,scope_of_work,progress_percent,target_start_date,target_end_date',
                 'documents.uploader:id,name',
                 'reporter:id,name',
                 'validator:id,name',
@@ -117,7 +117,7 @@ class ProjectAccomplishmentController extends Controller
             'projects' => Project::query()
                 ->where('is_archived', false)
                 ->orderBy('project_name')
-                ->get(['id', 'project_code', 'project_name', 'location', 'target_start_date', 'target_end_date', 'progress_percent']),
+                ->get(['id', 'project_code', 'project_name', 'location', 'scope_of_work', 'target_start_date', 'target_end_date', 'progress_percent']),
             'all_projects_count' => Project::query()->where('is_archived', false)->count(),
             'statuses' => self::STATUSES,
             'formula' => [
@@ -498,6 +498,7 @@ class ProjectAccomplishmentController extends Controller
             'project_code' => $accomplishment->project?->project_code,
             'project_name' => $accomplishment->project?->project_name,
             'project_location' => $accomplishment->project?->location,
+            'scope_of_work' => $accomplishment->project?->scope_of_work,
             'milestone_title' => $accomplishment->milestone_title,
             'description' => $accomplishment->description,
             'target_date' => optional($accomplishment->target_date)->format('Y-m-d'),

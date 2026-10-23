@@ -54,6 +54,47 @@
         </div>
       </div>
 
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card cashflow-range-card">
+            <div class="card-body">
+              <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+                <div>
+                  <h6 class="mb-1">Cashflow Date Range</h6>
+                  <p class="text-secondary small mb-0">Drag the handles across past and future months. Totals, the chart, and the period list follow this range.</p>
+                </div>
+                <strong class="cashflow-range-label">{{ sliderRangeLabel }}</strong>
+              </div>
+              <div v-if="monthStops.length" class="cashflow-range-sliders">
+                <label class="cashflow-range-field">
+                  <span>From</span>
+                  <input
+                    type="range"
+                    :min="0"
+                    :max="monthStops.length - 1"
+                    :value="sliderStart"
+                    @input="setSliderHandle('start', $event.target.value)"
+                    @change="applyCashflowRange"
+                  />
+                </label>
+                <label class="cashflow-range-field">
+                  <span>To</span>
+                  <input
+                    type="range"
+                    :min="0"
+                    :max="monthStops.length - 1"
+                    :value="sliderEnd"
+                    @input="setSliderHandle('end', $event.target.value)"
+                    @change="applyCashflowRange"
+                  />
+                </label>
+              </div>
+              <p v-else class="text-secondary small mb-0">Loading the available cashflow months...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Budget Overview Cards -->
       <div class="row mb-4">
         <div class="col-12 col-md-6 col-lg-3 mb-3">
@@ -162,7 +203,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="period in periods" :key="period.id">
+                    <tr v-for="period in visiblePeriods" :key="period.id">
                       <td>
                         <strong>{{ period.period_label }}</strong>
                       </td>
@@ -188,9 +229,9 @@
                         </div>
                       </td>
                     </tr>
-                    <tr v-if="periods.length === 0">
+                    <tr v-if="visiblePeriods.length === 0">
                       <td colspan="9" class="text-center py-4">
-                        <span class="text-secondary">No cashflow periods found</span>
+                        <span class="text-secondary">No cashflow periods in this date range</span>
                       </td>
                     </tr>
                   </tbody>
@@ -819,7 +860,12 @@ export default {
         billing_period: "",
       },
       editingInvoice: null,
-      budgetChart: null
+      budgetChart: null,
+      rangeMin: "",
+      rangeMax: "",
+      sliderStart: 0,
+      sliderEnd: 0,
+      rangeReady: false,
     };
   },
   computed: {
@@ -844,7 +890,61 @@ export default {
 
     selectedCashflowPeriod() {
       return this.periods.find((period) => String(period.id) === String(this.selectedPeriodId)) || null;
-    }
+    },
+
+    monthStops() {
+      if (!this.rangeMin || !this.rangeMax) {
+        return [];
+      }
+
+      const stops = [];
+      const cursor = new Date(`${this.rangeMin}T00:00:00`);
+      const end = new Date(`${this.rangeMax}T00:00:00`);
+      cursor.setDate(1);
+      let guard = 0;
+
+      while (cursor <= end && guard < 36) {
+        const year = cursor.getFullYear();
+        const month = cursor.getMonth();
+        const monthEnd = new Date(year, month + 1, 0);
+        const pad = (value) => String(value).padStart(2, "0");
+        stops.push({
+          label: cursor.toLocaleDateString("en-PH", { month: "short", year: "numeric" }),
+          from: `${year}-${pad(month + 1)}-01`,
+          to: `${year}-${pad(month + 1)}-${pad(monthEnd.getDate())}`,
+        });
+        cursor.setMonth(cursor.getMonth() + 1);
+        guard += 1;
+      }
+
+      return stops;
+    },
+
+    sliderRangeLabel() {
+      const start = this.monthStops[this.sliderStart];
+      const end = this.monthStops[this.sliderEnd];
+      if (!start || !end) {
+        return "Full available range";
+      }
+      return `${start.label} to ${end.label}`;
+    },
+
+    visiblePeriods() {
+      const start = this.monthStops[this.sliderStart];
+      const end = this.monthStops[this.sliderEnd];
+      if (!start || !end) {
+        return this.periods;
+      }
+
+      return this.periods.filter((period) => {
+        const periodStart = period.period_start || period.period_end;
+        const periodEnd = period.period_end || period.period_start;
+        if (!periodStart || !periodEnd) {
+          return false;
+        }
+        return periodStart <= end.to && periodEnd >= start.from;
+      });
+    },
   },
   mounted() {
     this.loadPermissions();
@@ -973,9 +1073,42 @@ export default {
       }
     },
 
-    async loadSummary() {
+    setSliderHandle(handle, value) {
+      const index = Number(value);
+      if (handle === "start") {
+        this.sliderStart = index;
+        if (this.sliderStart > this.sliderEnd) {
+          this.sliderEnd = this.sliderStart;
+        }
+        return;
+      }
+
+      this.sliderEnd = index;
+      if (this.sliderEnd < this.sliderStart) {
+        this.sliderStart = this.sliderEnd;
+      }
+    },
+
+    applyCashflowRange() {
+      const start = this.monthStops[this.sliderStart];
+      const end = this.monthStops[this.sliderEnd];
+      if (!start || !end) {
+        return;
+      }
+
+      this.loadSummary({ from: start.from, to: end.to });
+    },
+
+    async loadSummary(range = null) {
       try {
-        this.summary = await cashflowService.getSummary();
+        this.summary = await cashflowService.getSummary(range || {});
+        if (!this.rangeReady && this.summary?.range_min && this.summary?.range_max) {
+          this.rangeMin = this.summary.range_min;
+          this.rangeMax = this.summary.range_max;
+          this.sliderStart = 0;
+          this.sliderEnd = Math.max(this.monthStops.length - 1, 0);
+          this.rangeReady = true;
+        }
         this.initBudgetChart();
         this.apiError = "";
       } catch (error) {
@@ -1933,6 +2066,36 @@ export default {
 
 .cashflow-action-menu-item.danger:hover {
   background: #fef2f2;
+}
+
+.cashflow-range-card {
+  border: 1px solid #e6edf6;
+}
+
+.cashflow-range-label {
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.cashflow-range-sliders {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cashflow-range-field {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.cashflow-range-field input[type="range"] {
+  width: 100%;
+  accent-color: #1565c0;
 }
 
 .dropdown-icon { font-size: 1rem; }
