@@ -993,8 +993,14 @@ export default {
       return difference > 0 ? "Over Budget" : "Under Budget";
     },
 
+    chartMonthly() {
+      return this.monthStops.length
+        ? this.localMonthlyBreakdown()
+        : (this.summary?.monthly_breakdown || []);
+    },
+
     hasChartAmounts() {
-      return (this.summary?.monthly_breakdown || []).some(
+      return this.chartMonthly.some(
         (month) => Number(month.planned) !== 0 || Number(month.actual) !== 0
       );
     },
@@ -1014,6 +1020,11 @@ export default {
         }
         return periodStart <= end.to && periodEnd >= start.from;
       });
+    },
+  },
+  watch: {
+    chartMonthly() {
+      this.$nextTick(() => this.drawBudgetChart());
     },
   },
   mounted() {
@@ -1421,7 +1432,7 @@ export default {
       const canvas = this.$refs.budgetChartCanvas;
       if (!canvas) return;
 
-      const monthlyData = this.summary?.monthly_breakdown || [];
+      const monthlyData = this.chartMonthly;
       const labels = monthlyData.map((m) => m.month);
       const plannedData = monthlyData.map((m) => Number(m.planned) || 0);
       const actualData = monthlyData.map((m) => Number(m.actual) || 0);
