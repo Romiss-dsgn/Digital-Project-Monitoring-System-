@@ -787,6 +787,7 @@
 </template>
 
 <script>
+import { markRaw } from "vue";
 import StatusBadge from "@/components/StatusBadge.vue";
 import TuaoModal from "@/components/TuaoModal.vue";
 import Chart from "chart.js/auto";
@@ -1433,7 +1434,7 @@ export default {
         return;
       }
 
-      this.budgetChart = new Chart(canvas, {
+      this.budgetChart = markRaw(new Chart(canvas, {
         type: "bar",
         data: {
           labels: labels,
@@ -1497,7 +1498,7 @@ export default {
             }
           }
         }
-      });
+      }));
     },
 
     formatCurrency(value) {
