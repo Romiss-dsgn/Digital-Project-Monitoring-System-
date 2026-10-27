@@ -90,6 +90,24 @@
                 </label>
               </div>
               <p v-else class="text-secondary small mb-0">Loading the available cashflow months...</p>
+              <div class="cashflow-computation">
+                <div>
+                  <span>Planned Budget</span>
+                  <strong>{{ formatCurrency(sliderPlanned) }}</strong>
+                </div>
+                <div>
+                  <span>Actual Expenditure</span>
+                  <strong>{{ formatCurrency(sliderActual) }}</strong>
+                </div>
+                <div class="cashflow-computation-formula">
+                  <span>Remaining Budget = Planned − Actual</span>
+                  <strong>{{ formatCurrency(sliderPlanned) }} − {{ formatCurrency(sliderActual) }} = {{ formatCurrency(sliderRemaining) }}</strong>
+                </div>
+                <div class="cashflow-computation-formula">
+                  <span>Variance = Planned − Actual</span>
+                  <strong>{{ formatCurrency(sliderPlanned) }} − {{ formatCurrency(sliderActual) }} = {{ formatCurrency(sliderVariance) }}</strong>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -100,25 +118,25 @@
         <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card">
             <h6>Planned Budget</h6>
-            <p class="amount">{{ formatCurrency(summary?.planned_total || 0) }}</p>
+            <p class="amount">{{ formatCurrency(sliderPlanned) }}</p>
           </div>
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card warning">
             <h6>Actual Expenditure</h6>
-            <p class="amount">{{ formatCurrency(summary?.actual_total || 0) }}</p>
+            <p class="amount">{{ formatCurrency(sliderActual) }}</p>
           </div>
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card success">
             <h6>Remaining Budget</h6>
-            <p class="amount">{{ formatCurrency(summary?.remaining_total || 0) }}</p>
+            <p class="amount">{{ formatCurrency(sliderRemaining) }}</p>
           </div>
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-3">
           <div class="overview-card danger">
             <h6>Variance</h6>
-            <p class="amount">{{ formatCurrency(summary?.variance_total || 0) }}</p>
+            <p class="amount">{{ formatCurrency(sliderVariance) }}</p>
           </div>
         </div>
       </div>
@@ -135,7 +153,7 @@
           <div class="overview-card">
             <h6>Budget Status</h6>
             <div class="mt-2">
-              <status-badge :status="summary?.budget_status || 'Within Budget'" />
+              <status-badge :status="sliderBudgetStatus" />
             </div>
             <div class="text-secondary small mt-2">Derived from planned vs actual totals with a 1% tolerance band</div>
           </div>
@@ -150,7 +168,10 @@
               <h6>Budget Vs Actual</h6>
             </div>
             <div class="card-body">
-              <canvas id="budgetChart" height="120"></canvas>
+              <p v-if="!hasChartAmounts" class="text-secondary small mb-2">This date range has no cashflow amounts, so every bar stays at zero. Move the slider over a month that has a cashflow period to see the bars again.</p>
+              <div class="cashflow-chart-wrap">
+                <canvas ref="budgetChartCanvas"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -866,6 +887,7 @@ export default {
       sliderStart: 0,
       sliderEnd: 0,
       rangeReady: false,
+      summaryRequestId: 0,
     };
   },
   computed: {
@@ -929,6 +951,53 @@ export default {
       return `${start.label} to ${end.label}`;
     },
 
+    sliderPlanned() {
+      if (!this.monthStops.length) {
+        return Number(this.summary?.planned_total || 0);
+      }
+
+      return this.visiblePeriods.reduce(
+        (sum, period) => sum + Number(period.planned_amount || 0),
+        0
+      );
+    },
+
+    sliderActual() {
+      if (!this.monthStops.length) {
+        return Number(this.summary?.actual_total || 0);
+      }
+
+      return this.visiblePeriods.reduce(
+        (sum, period) => sum + Number(period.actual_amount || 0),
+        0
+      );
+    },
+
+    sliderRemaining() {
+      return this.sliderPlanned - this.sliderActual;
+    },
+
+    sliderVariance() {
+      return this.sliderPlanned - this.sliderActual;
+    },
+
+    sliderBudgetStatus() {
+      const difference = this.sliderActual - this.sliderPlanned;
+      const tolerance = Math.abs(this.sliderPlanned) * 0.01;
+
+      if (Math.abs(difference) <= tolerance) {
+        return "Within Budget";
+      }
+
+      return difference > 0 ? "Over Budget" : "Under Budget";
+    },
+
+    hasChartAmounts() {
+      return (this.summary?.monthly_breakdown || []).some(
+        (month) => Number(month.planned) !== 0 || Number(month.actual) !== 0
+      );
+    },
+
     visiblePeriods() {
       const start = this.monthStops[this.sliderStart];
       const end = this.monthStops[this.sliderEnd];
@@ -951,7 +1020,6 @@ export default {
     this.loadSummary();
     this.loadPeriods();
     this.loadInvoices(1);
-    this.initBudgetChart();
     document.addEventListener("click", this.closeActionMenus);
     window.addEventListener("resize", this.closeActionMenus);
     window.addEventListener("scroll", this.closeActionMenus, true);
@@ -1080,28 +1148,85 @@ export default {
         if (this.sliderStart > this.sliderEnd) {
           this.sliderEnd = this.sliderStart;
         }
-        return;
+      } else {
+        this.sliderEnd = index;
+        if (this.sliderEnd < this.sliderStart) {
+          this.sliderStart = this.sliderEnd;
+        }
       }
 
-      this.sliderEnd = index;
-      if (this.sliderEnd < this.sliderStart) {
-        this.sliderStart = this.sliderEnd;
+      this.updateBudgetChart(this.localMonthlyBreakdown());
+    },
+
+    localMonthlyBreakdown() {
+      const stops = this.monthStops.slice(this.sliderStart, this.sliderEnd + 1);
+      if (!stops.length) {
+        return [];
       }
+
+      const buckets = stops.map((stop) => ({
+        month: stop.label,
+        key: stop.from.slice(0, 7),
+        planned: 0,
+        actual: 0,
+      }));
+      const byKey = Object.fromEntries(buckets.map((bucket) => [bucket.key, bucket]));
+      const firstKey = buckets[0].key;
+      const lastKey = buckets[buckets.length - 1].key;
+      const rangeFrom = stops[0].from;
+      const rangeTo = stops[stops.length - 1].to;
+
+      this.periods.forEach((period) => {
+        const periodStart = period.period_start || period.period_end;
+        const periodEnd = period.period_end || period.period_start;
+        if (!periodStart || !periodEnd || periodStart > rangeTo || periodEnd < rangeFrom) {
+          return;
+        }
+
+        let key = String(period.period_start || periodStart).slice(0, 7);
+        if (!byKey[key]) {
+          key = key < firstKey ? firstKey : lastKey;
+        }
+
+        byKey[key].planned += Number(period.planned_amount) || 0;
+        byKey[key].actual += Number(period.actual_amount) || 0;
+      });
+
+      return buckets;
+    },
+
+    selectedSliderRange() {
+      const start = this.monthStops[this.sliderStart];
+      const end = this.monthStops[this.sliderEnd];
+      if (!this.rangeReady || !start || !end) {
+        return null;
+      }
+
+      return { from: start.from, to: end.to };
     },
 
     applyCashflowRange() {
-      const start = this.monthStops[this.sliderStart];
-      const end = this.monthStops[this.sliderEnd];
-      if (!start || !end) {
+      this.updateBudgetChart(this.localMonthlyBreakdown());
+      const range = this.selectedSliderRange();
+      if (!range) {
         return;
       }
 
-      this.loadSummary({ from: start.from, to: end.to });
+      this.loadSummary(range);
     },
 
     async loadSummary(range = null) {
+      const requestId = (this.summaryRequestId || 0) + 1;
+      this.summaryRequestId = requestId;
+
       try {
-        this.summary = await cashflowService.getSummary(range || {});
+        const selected = range || this.selectedSliderRange();
+        const summary = await cashflowService.getSummary(selected || {});
+        if (requestId !== this.summaryRequestId) {
+          return;
+        }
+
+        this.summary = summary;
         if (!this.rangeReady && this.summary?.range_min && this.summary?.range_max) {
           this.rangeMin = this.summary.range_min;
           this.rangeMax = this.summary.range_max;
@@ -1112,6 +1237,9 @@ export default {
         this.initBudgetChart();
         this.apiError = "";
       } catch (error) {
+        if (requestId !== this.summaryRequestId) {
+          return;
+        }
         this.setApiError(error, 'Failed to load cashflow summary');
       }
     },
@@ -1266,18 +1394,46 @@ export default {
     },
 
     initBudgetChart() {
-      if (this.budgetChart) {
-        this.budgetChart.destroy();
+      this.$nextTick(() => {
+        this.drawBudgetChart();
+      });
+    },
+
+    updateBudgetChart(monthlyData) {
+      this.summary = {
+        ...this.summary,
+        monthly_breakdown: monthlyData,
+      };
+
+      if (!this.budgetChart) {
+        this.initBudgetChart();
+        return;
       }
-      const ctx = document.getElementById("budgetChart")?.getContext("2d");
-      if (!ctx) return;
+
+      this.budgetChart.data.labels = monthlyData.map((month) => month.month);
+      this.budgetChart.data.datasets[0].data = monthlyData.map((month) => Number(month.planned) || 0);
+      this.budgetChart.data.datasets[1].data = monthlyData.map((month) => Number(month.actual) || 0);
+      this.budgetChart.update();
+    },
+
+    drawBudgetChart() {
+      const canvas = this.$refs.budgetChartCanvas;
+      if (!canvas) return;
 
       const monthlyData = this.summary?.monthly_breakdown || [];
       const labels = monthlyData.map((m) => m.month);
-      const plannedData = monthlyData.map((m) => m.planned);
-      const actualData = monthlyData.map((m) => m.actual);
+      const plannedData = monthlyData.map((m) => Number(m.planned) || 0);
+      const actualData = monthlyData.map((m) => Number(m.actual) || 0);
 
-      this.budgetChart = new Chart(ctx, {
+      if (this.budgetChart) {
+        this.budgetChart.data.labels = labels;
+        this.budgetChart.data.datasets[0].data = plannedData;
+        this.budgetChart.data.datasets[1].data = actualData;
+        this.budgetChart.update();
+        return;
+      }
+
+      this.budgetChart = new Chart(canvas, {
         type: "bar",
         data: {
           labels: labels,
@@ -1298,7 +1454,7 @@ export default {
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: {
               position: "top",
@@ -1327,10 +1483,16 @@ export default {
               ticks: { font: { size: 12 } }
             },
             y: {
+              beginAtZero: true,
               grid: { color: "rgba(0,0,0,0.05)" },
               ticks: {
                 font: { size: 12 },
-                callback: (value) => `₱${(value / 1000000).toFixed(0)}M`
+                callback: (value) => {
+                  const amount = Number(value) || 0;
+                  if (Math.abs(amount) >= 1000000) return `₱${(amount / 1000000).toFixed(1)}M`;
+                  if (Math.abs(amount) >= 1000) return `₱${(amount / 1000).toFixed(0)}K`;
+                  return `₱${amount}`;
+                }
               }
             }
           }
@@ -2096,6 +2258,48 @@ export default {
 .cashflow-range-field input[type="range"] {
   width: 100%;
   accent-color: #1565c0;
+}
+
+.cashflow-computation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.cashflow-computation > div {
+  background: #f8fafc;
+  border: 1px solid #e6edf6;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+}
+
+.cashflow-computation span {
+  display: block;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.cashflow-computation strong {
+  color: #1f2937;
+  font-size: 0.92rem;
+}
+
+.cashflow-computation-formula {
+  grid-column: 1 / -1;
+}
+
+.cashflow-chart-wrap {
+  height: 320px;
+  position: relative;
+}
+
+@media (max-width: 767.98px) {
+  .cashflow-computation {
+    grid-template-columns: 1fr;
+  }
 }
 
 .dropdown-icon { font-size: 1rem; }
